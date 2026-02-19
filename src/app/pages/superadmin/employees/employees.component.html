@@ -1,0 +1,172 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+  
+  <!-- HEADER -->
+  <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Data Karyawan</h1>
+      <p class="text-sm text-gray-500">Kelola master data karyawan PT Agro Deli Serdang</p>
+    </div>
+    <div class="flex gap-2">
+      <!-- Tombol Download All -->
+      <button (click)="exportData()" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 flex items-center gap-2 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        Download Excel
+      </button>
+      
+      <!-- Tombol Import Excel -->
+      <button (click)="openImportModal()" class="px-4 py-2 bg-[#F4A47B] text-white rounded-lg hover:bg-[#E08E60] flex items-center gap-2 shadow-sm transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        Import Data
+      </button>
+    </div>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+    <div class="relative w-full md:w-96">
+      <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+        </svg>
+      </span>
+      <input type="text" [(ngModel)]="searchKeyword" (keyup.enter)="loadEmployees()" 
+             class="w-full py-2 pl-10 pr-4 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#F4A47B]/50 focus:bg-white transition-colors" 
+             placeholder="Cari Nama / NIK..." />
+    </div>
+    <button (click)="loadEmployees()" class="text-sm text-[#F4A47B] font-semibold hover:underline">
+      Refresh Data
+    </button>
+  </div>
+
+  <!-- TABEL KARYAWAN -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-gray-50 text-gray-600 text-xs uppercase font-semibold tracking-wider">
+          <tr>
+            <th class="px-6 py-4 border-b border-gray-100">Nama Lengkap</th>
+            <th class="px-6 py-4 border-b border-gray-100">NIK</th>
+            <th class="px-6 py-4 border-b border-gray-100">Posisi / Jabatan</th>
+            <th class="px-6 py-4 border-b border-gray-100">Status</th>
+            <th class="px-6 py-4 border-b border-gray-100 text-center">Aksi</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700 text-sm divide-y divide-gray-100">
+          <!-- Loading State -->
+          <tr *ngIf="isLoading">
+            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+              <div class="flex justify-center items-center gap-2">
+                <svg class="animate-spin h-5 w-5 text-[#F4A47B]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Memuat data...
+              </div>
+            </td>
+          </tr>
+
+          <!-- Empty State -->
+          <tr *ngIf="!isLoading && employees.length === 0">
+            <td colspan="5" class="px-6 py-8 text-center text-gray-500">
+              Belum ada data karyawan. Silakan import excel.
+            </td>
+          </tr>
+
+          <!-- Data Rows -->
+          <tr *ngFor="let emp of employees" class="hover:bg-gray-50 transition-colors">
+            <td class="px-6 py-4 font-medium text-gray-900">
+              <div class="flex items-center gap-3">
+                <div class="h-8 w-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xs font-bold">
+                  {{ emp.nama_lengkap.charAt(0) }}
+                </div>
+                {{ emp.nama_lengkap }}
+              </div>
+            </td>
+            <td class="px-6 py-4 font-mono text-gray-600 text-xs">{{ emp.nik_karyawan || '-' }}</td>
+            <td class="px-6 py-4">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                {{ emp.posisi || 'Unknown' }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span *ngIf="emp.is_active" class="px-2 py-1 text-xs font-semibold text-green-700 bg-green-100 rounded-full">Aktif</span>
+              <span *ngIf="!emp.is_active" class="px-2 py-1 text-xs font-semibold text-red-700 bg-red-100 rounded-full">Non-Aktif</span>
+            </td>
+            <td class="px-6 py-4 text-center">
+              <div class="flex justify-center gap-2">
+                <!-- Detail Button -->
+                <button (click)="viewDetail(emp)" class="text-blue-500 hover:text-blue-700" title="Lihat Detail">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                </button>
+                <!-- Edit Button -->
+                <button (click)="editEmployee(emp)" class="text-yellow-500 hover:text-yellow-700" title="Edit Gaji / Data">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                </button>
+                <!-- Delete Button -->
+                <button (click)="deleteEmployee(emp)" class="text-red-500 hover:text-red-700" title="Hapus Data">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Pagination (Simple) -->
+    <div class="px-6 py-4 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+      <span>Menampilkan {{ employees.length }} data</span>
+      <div class="flex gap-2">
+        <button class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50" disabled>Previous</button>
+        <button class="px-3 py-1 border rounded hover:bg-gray-50 disabled:opacity-50" disabled>Next</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL IMPORT EXCEL -->
+  <div *ngIf="showImportModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+      <!-- Backdrop -->
+      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" (click)="closeImportModal()"></div>
+
+      <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+      <!-- Modal Panel -->
+      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg w-full">
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <div class="sm:flex sm:items-start">
+            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-blue-100 sm:mx-0 sm:h-10 sm:w-10">
+              <svg class="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
+            </div>
+            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Import Data Karyawan</h3>
+              <div class="mt-2">
+                <p class="text-sm text-gray-500 mb-4">
+                  Upload file Excel (.xlsx) atau JSON hasil generate. Data akan otomatis disesuaikan dengan database.
+                </p>
+                
+                <!-- Input File Area -->
+                <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors relative">
+                  <input type="file" (change)="onFileSelected($event)" accept=".json,.xlsx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                  <svg class="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  <p class="text-sm font-medium text-gray-700">Klik untuk upload file</p>
+                  <p class="text-xs text-gray-400 mt-1" *ngIf="selectedFile">{{ selectedFile.name }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+          <button (click)="uploadFile()" [disabled]="!selectedFile || isProcessing" type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-[#F4A47B] text-base font-medium text-white hover:bg-[#E08E60] focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
+            {{ isProcessing ? 'Mengupload...' : 'Import Sekarang' }}
+          </button>
+          <button (click)="closeImportModal()" type="button" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
