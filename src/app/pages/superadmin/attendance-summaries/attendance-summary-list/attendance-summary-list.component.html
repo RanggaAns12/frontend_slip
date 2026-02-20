@@ -1,0 +1,98 @@
+<div class="max-w-7xl mx-auto">
+
+  <!-- Filter -->
+  <div class="bg-white rounded-lg shadow p-4 mb-5 flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="block text-xs font-medium mb-1">Bulan</label>
+      <select [(ngModel)]="filterMonth"
+              class="border rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500">
+        <option value="">Semua</option>
+        <option *ngFor="let m of [1,2,3,4,5,6,7,8,9,10,11,12]" [value]="m">
+          {{ getMonthName(m) }}
+        </option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium mb-1">Tahun</label>
+      <input type="number" [(ngModel)]="filterYear" min="2000" max="2100"
+             class="border rounded px-3 py-2 w-24 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+    </div>
+    <div>
+      <label class="block text-xs font-medium mb-1">Cari Nama / NIP</label>
+      <input type="text" [(ngModel)]="filterSearch" placeholder="Cari..."
+             class="border rounded px-3 py-2 text-sm w-52 focus:outline-none focus:ring-1 focus:ring-blue-500" />
+    </div>
+    <button (click)="onSearch()"
+            class="px-5 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+      Cari
+    </button>
+  </div>
+
+  <!-- Tabel -->
+  <div class="bg-white rounded-lg shadow overflow-x-auto">
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="py-10 text-center text-sm text-gray-400">
+      Memuat data...
+    </div>
+
+    <!-- Data -->
+    <table *ngIf="!isLoading && items.length > 0" class="w-full text-sm border-collapse">
+      <thead class="bg-gray-100 text-gray-600 text-xs uppercase">
+        <tr>
+          <th class="border px-3 py-2 text-left">NIP</th>
+          <th class="border px-3 py-2 text-left">Nama</th>
+          <th class="border px-3 py-2 text-left">Jabatan</th>
+          <th class="border px-3 py-2 text-left">Departemen</th>
+          <th class="border px-3 py-2 text-center">Bulan</th>
+          <th class="border px-3 py-2 text-center">Tahun</th>
+          <th class="border px-3 py-2 text-center">Hadir</th>
+          <th class="border px-3 py-2 text-center">Terlambat</th>
+          <th class="border px-3 py-2 text-center">Lembur (J)</th>
+          <th class="border px-3 py-2 text-center">Absen</th>
+          <th class="border px-3 py-2 text-center">Diimport</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of items" class="hover:bg-gray-50 transition-colors">
+          <td class="border px-3 py-2 font-mono text-xs">{{ item.nik_karyawan }}</td>
+          <td class="border px-3 py-2 font-medium">{{ item.nama }}</td>
+          <td class="border px-3 py-2 text-gray-600">{{ item.jabatan ?? '-' }}</td>
+          <td class="border px-3 py-2 text-gray-600">{{ item.departemen ?? '-' }}</td>
+          <td class="border px-3 py-2 text-center">{{ getMonthName(item.month) }}</td>
+          <td class="border px-3 py-2 text-center">{{ item.year }}</td>
+          <td class="border px-3 py-2 text-center font-semibold">{{ item.kehadiran_jml }}</td>
+          <td class="border px-3 py-2 text-center text-orange-500">{{ item.terlambat_jml }}</td>
+          <td class="border px-3 py-2 text-center text-blue-600">{{ item.lembur_jam }}</td>
+          <td class="border px-3 py-2 text-center text-red-500">{{ item.tanpa_izin }}</td>
+          <td class="border px-3 py-2 text-center text-xs text-gray-400">
+            {{ item.imported_at | date:'dd/MM/yyyy HH:mm' }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Kosong -->
+    <div *ngIf="!isLoading && items.length === 0"
+         class="py-12 text-center text-sm text-gray-400">
+      Belum ada data rekap absensi.
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div *ngIf="lastPage > 1" class="flex items-center justify-between mt-4 text-sm">
+    <span class="text-gray-500">Total: {{ total }} data</span>
+    <div class="flex gap-2">
+      <button (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1"
+              class="px-3 py-1 border rounded disabled:opacity-40 hover:bg-gray-100">
+        ‹ Prev
+      </button>
+      <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ currentPage }}</span>
+      <button (click)="goPage(currentPage + 1)" [disabled]="currentPage === lastPage"
+              class="px-3 py-1 border rounded disabled:opacity-40 hover:bg-gray-100">
+        Next ›
+      </button>
+    </div>
+  </div>
+
+</div>

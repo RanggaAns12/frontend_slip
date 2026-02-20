@@ -1,9 +1,11 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+
 import { LayoutComponent } from '../../shared/layout/layout.component';
+
 import { DashboardComponent } from './dashboard/dashboard.component';
-import { EmployeesComponent } from './employees/employees.component';
-import { AttendanceComponent } from './attendance/attendance.component';
+
+// Employees
 import { EmployeeListComponent } from './employees/employee-list/employee-list.component';
 import { EmployeeDatabaseComponent } from './employees/employee-database/employee-database.component';
 import { EmployeeFormComponent } from './employees/employee-form/employee-form.component';
@@ -15,34 +17,46 @@ const routes: Routes = [
     path: '',
     component: LayoutComponent,
     children: [
-      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      // Default
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' }, // pathMatch full untuk redirect root. [web:115]
       { path: 'dashboard', component: DashboardComponent },
 
-      // === ROUTE EMPLOYEES (Perhatikan Urutannya!) ===
-      
-      // 1. List Utama
+      // =========================
+      // EMPLOYEES
+      // =========================
+      // List utama
       { path: 'employees', component: EmployeeListComponent },
-      
-      // 2. Route STATIS (Database, Create) -> WAJIB DI ATAS Route Dinamis (:id)
-      // Tambahkan 'employees/' di depannya agar sesuai dengan tombol navigasi
-      { path: 'employees/database', component: EmployeeDatabaseComponent }, 
+
+      // Route statis (HARUS di atas route dinamis)
+      { path: 'employees/database', component: EmployeeDatabaseComponent },
       { path: 'employees/create', component: EmployeeFormComponent },
-      { path: 'superadmin/employees/salary', component: EmployeeSalaryComponent },
-      
-      // 3. Route DINAMIS (:id) -> WAJIB PALING BAWAH
-      // Karena kalau ditaruh di atas, kata 'database' atau 'create' akan dianggap sebagai ID
+      { path: 'employees/salary', component: EmployeeSalaryComponent },
+
+      // Route dinamis (taruh paling bawah)
       { path: 'employees/edit/:id', component: EmployeeFormComponent },
       { path: 'employees/:id', component: EmployeeDetailComponent },
 
-      // (Opsional) Route sisa/sampah ini sebaiknya dihapus saja biar tidak bingung:
-      // { path: 'database', component: EmployeeDatabaseComponent },
-      // { path: ':id', component: EmployeeDetailComponent }, 
-    ]
-  }
+      // =========================
+      // ATTENDANCE SUMMARY (REKAP)
+      // =========================
+      // Kalau Mas sudah bikin lazy module AttendanceSummariesModule,
+      // ini yang paling clean:
+      {
+        path: 'attendance-summaries',
+        loadChildren: () =>
+          import('./attendance-summaries/attendance-summaries.module').then(
+            (m) => m.AttendanceSummariesModule
+          ),
+      },
+
+      // Optional: fallback (kalau mau)
+      // { path: '**', redirectTo: 'dashboard' },
+    ],
+  },
 ];
 
 @NgModule({
   imports: [RouterModule.forChild(routes)],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
-export class SuperadminRoutingModule { }
+export class SuperadminRoutingModule {}
