@@ -318,35 +318,105 @@
     </div>
   </div>
 
-  <!-- MODAL IMPORT (Kode Mas tetap di sini) -->
-  <div *ngIf="showImportModal" class="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" (click)="closeImportModal()"></div>
-      <div class="flex items-center justify-center min-h-screen p-4">
-         <div class="bg-white rounded-2xl shadow-2xl transform transition-all max-w-lg w-full p-6 animate-scale-up z-10">
-            <div class="flex justify-between items-center mb-2">
-               <h3 class="text-xl font-bold text-gray-800">Import Data Excel</h3>
-               <button (click)="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition">
-                  <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-               </button>
-            </div>
-            <p class="text-sm text-gray-500 mb-6">Upload file .xlsx untuk memperbarui data massal. Pastikan format sesuai template.</p>
-            
-            <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-colors relative mb-6">
-               <input type="file" (change)="onFileSelected($event)" accept=".xlsx" class="absolute inset-0 opacity-0 cursor-pointer">
-               <svg class="h-10 w-10 text-orange-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-               <p class="text-sm font-medium text-gray-600" *ngIf="!selectedFile">Klik untuk browse file</p>
-               <p class="text-sm font-bold text-orange-600" *ngIf="selectedFile">{{ selectedFile.name }}</p>
-            </div>
-
-            <div class="flex gap-3 justify-end">
-               <button (click)="closeImportModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Batal</button>
-               <button (click)="uploadFile()" [disabled]="!selectedFile || isProcessing" class="px-4 py-2 bg-[#F4A47B] hover:bg-[#E08E60] text-white rounded-lg shadow-md transition-all disabled:opacity-50 font-bold">
-                  {{ isProcessing ? 'Mengupload...' : 'Import Sekarang' }}
-               </button>
-            </div>
-         </div>
+  <!-- MODAL IMPORT -->
+<div *ngIf="showImportModal" class="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" (click)="closeImportModal()"></div>
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-2xl shadow-2xl transform transition-all max-w-lg w-full p-6 animate-scale-up z-10">
+      
+      <!-- Header Modal -->
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-xl font-bold text-gray-800">Import Data Excel</h3>
+        <button (click)="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
       </div>
+      <p class="text-sm text-gray-500 mb-6">Upload file .xlsx untuk memperbarui data massal. Pastikan format sesuai template.</p>
+
+      <!-- ── STEP 1: Area Upload File ── -->
+      <div class="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors relative mb-4"
+           [class.border-orange-300]="selectedFile"
+           [class.bg-orange-50]="selectedFile"
+           [class.border-gray-200]="!selectedFile"
+           [class.hover:bg-orange-50]="!selectedFile"
+           [class.hover:border-orange-200]="!selectedFile">
+        <input type="file" (change)="onFileSelected($event)" accept=".xlsx,.xls" class="absolute inset-0 opacity-0 cursor-pointer">
+        <svg class="h-10 w-10 mb-2" [class.text-orange-400]="selectedFile" [class.text-orange-300]="!selectedFile" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+        </svg>
+        <p class="text-sm font-medium text-gray-500" *ngIf="!selectedFile">Klik untuk browse file .xlsx</p>
+        <p class="text-sm font-bold text-orange-600" *ngIf="selectedFile">
+          <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          {{ selectedFile.name }}
+        </p>
+      </div>
+
+      <!-- ── STEP 2: Loading Baca Sheet ── -->
+      <div *ngIf="isLoadingSheets" class="flex items-center justify-center gap-2 my-4 text-orange-500">
+        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-sm font-medium">Membaca daftar sheet...</span>
+      </div>
+
+      <!-- ── STEP 2: Dropdown Pilih Sheet (Muncul setelah file dipilih) ── -->
+      <div *ngIf="sheetNames.length > 0 && !isLoadingSheets" class="mb-6">
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+          <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+          Pilih Sheet Data Karyawan
+        </label>
+        <div class="flex gap-2 flex-wrap">
+          <!-- Tampilkan sebagai tombol tab jika sheet sedikit (<=5), dropdown jika banyak -->
+          <ng-container *ngIf="sheetNames.length <= 5; else dropdownSheet">
+            <button *ngFor="let sheet of sheetNames"
+                    (click)="selectedSheet = sheet"
+                    [class.bg-gradient-to-r]="selectedSheet === sheet"
+                    [class.from-orange-400]="selectedSheet === sheet"
+                    [class.to-orange-500]="selectedSheet === sheet"
+                    [class.text-white]="selectedSheet === sheet"
+                    [class.border-transparent]="selectedSheet === sheet"
+                    [class.bg-gray-50]="selectedSheet !== sheet"
+                    [class.text-gray-600]="selectedSheet !== sheet"
+                    class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 hover:border-orange-300 transition-all shadow-sm">
+              {{ sheet }}
+            </button>
+          </ng-container>
+
+          <ng-template #dropdownSheet>
+            <select [(ngModel)]="selectedSheet"
+                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400 cursor-pointer transition-all">
+              <option value="" disabled>-- Pilih Sheet --</option>
+              <option *ngFor="let sheet of sheetNames" [value]="sheet">{{ sheet }}</option>
+            </select>
+          </ng-template>
+        </div>
+
+        <!-- Info sheet yang dipilih -->
+        <p *ngIf="selectedSheet" class="text-xs text-orange-500 font-medium mt-2">
+          ✓ Sheet "<span class="font-bold">{{ selectedSheet }}</span>" akan diimport.
+        </p>
+      </div>
+
+      <!-- ── Footer Buttons ── -->
+      <div class="flex gap-3 justify-end">
+        <button (click)="closeImportModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Batal</button>
+        
+        <!-- Disabled jika: belum pilih file, sedang baca sheet, belum pilih sheet, atau sedang proses -->
+        <button (click)="uploadFile()" 
+                [disabled]="!selectedFile || isProcessing || isLoadingSheets || !selectedSheet"
+                class="px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] hover:shadow-md text-white rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold flex items-center gap-2">
+          <svg *ngIf="isProcessing" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isProcessing ? 'Mengupload...' : 'Import Sekarang' }}
+        </button>
+      </div>
+
+    </div>
   </div>
+</div>
 
   <!-- === TAMBAHAN BARU: MODAL EDIT GAJI POPUP === -->
   <div *ngIf="showSalaryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">

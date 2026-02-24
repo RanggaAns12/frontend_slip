@@ -34,11 +34,13 @@ export class EmployeeApiService {
     return this.http.delete(`${this.apiUrl}/${id}`);
   }
 
+  // Import Data (Sudah benar: Menerima array JSON hasil parsing sheet dari Frontend)
   import(data: any[]): Observable<any> {
     return this.http.post(`${this.apiUrl}/import`, data);
   }
 
+  // Export Data (PERBAIKAN: Tambahkan responseType 'blob' agar download Excel tidak error)
   export(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/export`);
+    return this.http.get(`${this.apiUrl}/export`, { responseType: 'blob' });
   }
 }

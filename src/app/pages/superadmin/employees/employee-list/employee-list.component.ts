@@ -63,6 +63,11 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   showImportModal = false;
   selectedFile: File | null = null;
   isProcessing = false; // Untuk Import
+  
+  // State Khusus Pilihan Sheet (NEW)
+  sheetNames: string[] = [];
+  selectedSheet: string = '';
+  isLoadingSheets = false;
 
   // === 5. SALARY MODAL STATE (NEW) ===
   showSalaryModal = false;
@@ -236,15 +241,46 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.showImportModal = false; 
     this.selectedFile = null; 
     this.isProcessing = false; 
+    
+    // Reset state sheet
+    this.sheetNames = [];
+    this.selectedSheet = '';
+    this.isLoadingSheets = false;
   }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
-    if (file) this.selectedFile = file;
+    if (file) {
+      this.selectedFile = file;
+      this.isLoadingSheets = true;
+      this.sheetNames = [];
+      this.selectedSheet = '';
+
+      // Ekstrak nama sheet langsung di frontend
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        try {
+          const bstr: string = e.target.result;
+          const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+          
+          this.sheetNames = wb.SheetNames;
+          if (this.sheetNames.length > 0) {
+            this.selectedSheet = this.sheetNames[0]; // Set default ke sheet pertama
+          }
+          this.isLoadingSheets = false;
+        } catch (error) {
+          this.isLoadingSheets = false;
+          console.error(error);
+          this.showToast('Gagal membaca daftar sheet pada file.', 'error');
+        }
+      };
+      reader.readAsBinaryString(file);
+    }
   }
   
   uploadFile() {
-    if (!this.selectedFile) return;
+    // Pastikan file dan sheet sudah dipilih
+    if (!this.selectedFile || !this.selectedSheet) return;
 
     this.isProcessing = true;
     const reader = new FileReader();
@@ -254,7 +290,8 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         const bstr: string = e.target.result;
         const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
         
-        const wsname: string = wb.SheetNames[0];
+        // AMBIL DATA DARI SHEET YANG DIPILIH USER
+        const wsname: string = this.selectedSheet;
         const ws: XLSX.WorkSheet = wb.Sheets[wsname];
 
         /* HARDCODE INDEX MAPPING: Baris 1-4 Header, Data mulai Baris 5 (Index 4) */

@@ -48,7 +48,8 @@ export class LoginComponent {
         console.log('✅ Response Login:', response); 
 
         // A. Validasi Token (Wajib Ada)
-        const token = response.access_token || response.token || response.data?.token;
+        // Ambil dari response.data.token sesuai struktur JSON backend kita
+        const token = response.data?.token || response.token || response.access_token;
 
         if (!token) {
             this.errorMessage = 'Login gagal: Token tidak ditemukan di response server.';
@@ -57,39 +58,49 @@ export class LoginComponent {
         }
 
         localStorage.setItem('auth_token', token);
-
         
-        // C. Ambil Data User (Safe Navigation)
-        const user = response.user; 
-        const role = user?.role; // Ambil role dengan aman
+        // C. Ambil Data User (PERBAIKAN: Harus ambil dari response.data.user)
+        const user = response.data?.user; 
+        const role = user?.role; // Sekarang ini berbentuk object {id, name, slug}
 
         // D. Simpan User Data jika ada
         if (user) {
+          // KODE ASLI MAS:
           localStorage.setItem('user_data', JSON.stringify(user));
-          if (role) {
-            localStorage.setItem('user_role', role);
+          
+          // ==========================================
+          // TAMBAHAN: Jaga-jaga buat sidebar baca dari key 'user'
+          localStorage.setItem('user', JSON.stringify(user));
+          // ==========================================
+
+          // PERBAIKAN: Simpan slug role-nya saja sebagai string
+          if (role && role.slug) {
+            localStorage.setItem('user_role', role.slug);
           }
         } else {
           console.warn('⚠️ Data User kosong di response login');
         }
 
-        // E. Redirect Logic (Berdasarkan Role)
-        console.log('🔀 Redirecting user with role:', role);
+        // E. Redirect Logic (Berdasarkan Role Slug)
+        // PERBAIKAN: Gunakan role?.slug karena role sekarang adalah object
+        const roleSlug = role?.slug;
+        console.log('🔀 Redirecting user with role:', roleSlug);
 
-        if (role === 'superadmin') {
-          this.router.navigate(['/superadmin/dashboard']);
-        } else if (role === 'admin-hrd') {
-          this.router.navigate(['/hrd/dashboard']);
+        // PERBAIKAN: Tambahkan trick "Sapu Jagat" reload() agar sidebar dinamis langsung ter-update
+        if (roleSlug === 'superadmin') {
+          this.router.navigate(['/superadmin/dashboard']).then(() => window.location.reload());
+        } else if (roleSlug === 'admin-hrd') {
+          this.router.navigate(['/hrd/dashboard']).then(() => window.location.reload());
         } else {
           // Fallback Default (Jika role tidak dikenali atau null)
           // Kita paksa ke superadmin dashboard dulu untuk testing dev
           console.warn('⚠️ Role tidak dikenali, memaksa redirect ke dashboard superadmin');
-          this.router.navigate(['/superadmin/dashboard']); 
+          this.router.navigate(['/superadmin/dashboard']).then(() => window.location.reload()); 
         }
       },
 
       // ERROR LOGIN
-      error: (error: any) => { // Tambahkan tipe :any biar TypeScript aman
+      error: (error: any) => { 
         this.isLoading = false;
         console.error('❌ Login Error:', error);
 
@@ -101,8 +112,14 @@ export class LoginComponent {
         } else if (error.status === 0) {
           this.errorMessage = 'Gagal terhubung ke server. Periksa koneksi backend (Laravel mati / CORS blocked).';
         } else if (error.status === 422) {
-          // Error Validasi Laravel (misal format email salah)
-          this.errorMessage = error.error?.message || 'Data input tidak valid.';
+          // PERBAIKAN: Handling Error Validasi Laravel (ValidationException) 
+          // Laravel Validation biasanya ada di error.error.errors
+          const validationErrors = error.error?.errors;
+          if (validationErrors && validationErrors.username) {
+              this.errorMessage = validationErrors.username[0]; // Menampilkan "Username atau password salah." dari controller
+          } else {
+              this.errorMessage = error.error?.message || 'Data input tidak valid.';
+          }
         } else {
           // Error Lainnya
           this.errorMessage = error.error?.message || 'Terjadi kesalahan sistem. Coba lagi nanti.';

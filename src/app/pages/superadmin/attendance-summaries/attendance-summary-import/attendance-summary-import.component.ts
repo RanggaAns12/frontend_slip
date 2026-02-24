@@ -33,6 +33,11 @@ export class AttendanceSummaryImportComponent {
   importSaved  = 0;
   importFailed = 0;
 
+  // ── Toast (Baru) ─────────────────────────────────────────
+  toastMessage = '';
+  toastType    : 'success' | 'error' = 'success';
+  private toastTimer: any;
+
   constructor(private api: AttendanceSummaryApiService) {}
 
   // ── Handlers ─────────────────────────────────────────────
@@ -57,10 +62,16 @@ export class AttendanceSummaryImportComponent {
         this.meta          = res.data.meta;
         this.previewDone   = true;
         this.isLoadingPreview = false;
+
+        // Tampilkan Toast Success
+        this.showToast(`Preview berhasil! ${this.meta.total_valid} valid, ${this.meta.total_errors} error.`, 'success');
       },
       error: (err) => {
         this.errorMessage     = err?.error?.message ?? 'Preview gagal.';
         this.isLoadingPreview = false;
+
+        // Tampilkan Toast Error
+        this.showToast(this.errorMessage, 'error');
       },
     });
   }
@@ -77,10 +88,16 @@ export class AttendanceSummaryImportComponent {
         this.importFailed    = res.data.failed;
         this.importDone      = true;
         this.isLoadingImport = false;
+
+        // Tampilkan Toast Success
+        this.showToast(`Import berhasil! ${this.importSaved} data tersimpan.`, 'success');
       },
       error: (err) => {
         this.errorMessage    = err?.error?.message ?? 'Import gagal.';
         this.isLoadingImport = false;
+
+        // Tampilkan Toast Error
+        this.showToast(this.errorMessage, 'error');
       },
     });
   }
@@ -96,6 +113,20 @@ export class AttendanceSummaryImportComponent {
     this.importSaved   = 0;
     this.importFailed  = 0;
     this.errorMessage  = '';
+  }
+
+  // Helper Toast (Baru)
+  private showToast(message: string, type: 'success' | 'error'): void {
+    this.toastMessage = message;
+    this.toastType    = type;
+    
+    if (this.toastTimer) {
+      clearTimeout(this.toastTimer);
+    }
+    
+    this.toastTimer = setTimeout(() => {
+      this.toastMessage = '';
+    }, 4000);
   }
 
   get canImport(): boolean {

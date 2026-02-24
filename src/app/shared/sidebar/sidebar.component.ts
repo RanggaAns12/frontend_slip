@@ -1,78 +1,81 @@
 import { Component, OnInit } from '@angular/core';
+import { LayoutService } from '../../services/layout.service';
 import { Router } from '@angular/router';
-import { LayoutService } from '../../services/layout.service'; // Import Service Baru
 
 @Component({
   selector: 'app-sidebar',
-  templateUrl: './sidebar.component.html'
-  // Tidak perlu standalone: true jika masuk SharedModule
+  templateUrl: './sidebar.component.html',
+  styleUrls: ['./sidebar.component.scss']
 })
 export class SidebarComponent implements OnInit {
-
-  // Data User
-  userName: string = 'Admin';
-  userRole: string = 'Administrator';
-  userInitials: string = 'AD';
-  userRoles: string[] = [];
+  
+  // Variabel dinamis yang akan di-bind ke HTML
+  userName: string = 'Super Admin';
+  userRole: string = 'Super Admin';
+  userInitials: string = 'S';
 
   constructor(
-    public layoutService: LayoutService, // Public agar bisa diakses HTML
-    public router: Router
+    public layoutService: LayoutService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
+    // 1. Panggil fungsi ini saat sidebar pertama kali muncul / direfresh
     this.loadUserData();
   }
 
-  private loadUserData(): void {
-    const userJson = localStorage.getItem('user_data'); // Sesuaikan key localstorage login
+  loadUserData(): void {
+    // 2. BACA DARI LOCAL STORAGE (Tadi Mas tidak pakai ini, makanya statis!)
+    const userStr = localStorage.getItem('user_data') || localStorage.getItem('user'); 
     
-    if (userJson) {
+    if (userStr) {
       try {
-        const userObj = JSON.parse(userJson);
+        const user = JSON.parse(userStr);
+        
+        // --- 3A. SET NAMA LENGKAP ---
+        this.userName = user.name || 'Super Admin';
+        
+        // --- 3B. SET INISIAL (Huruf Pertama) ---
+        this.userInitials = this.userName.charAt(0).toUpperCase();
 
-        // Nama
-        this.userName = userObj.name || userObj.nama_lengkap || userObj.username || 'Admin';
-
-        // Role
-        this.userRole = userObj.role || userObj.jabatan || 'Administrator';
-
-        // Multi-roles logic
-        if (Array.isArray(userObj.roles)) {
-          this.userRoles = userObj.roles.map((r: any) => String(r).toLowerCase());
-        } else if (userObj.role) {
-          this.userRoles = [String(userObj.role).toLowerCase()];
+        // --- 3C. SET ROLE ---
+        if (user.role?.name) {
+          this.userRole = user.role.name;
+        } else if (user.role_id === 1 || user.username === 'superadmin') {
+          this.userRole = 'Super Admin';
+        } else if (user.role_id === 2 || user.username === 'admin-hrd') {
+          this.userRole = 'Admin HRD';
+        } else {
+          this.userRole = user.role || 'Super Admin';
         }
 
       } catch (e) {
-        console.warn('Gagal parse user JSON', e);
+        console.error('Gagal membaca data dari LocalStorage', e);
+        this.setFallbackUser();
       }
-    } 
-    
-    this.generateInitials(this.userName);
+    } else {
+      // Jika LocalStorage kosong, jalankan ini
+      this.setFallbackUser();
+      
+      // KARENA KITA TAHU JSON RESPONSE BACKEND-NYA, KITA BISA PANGGIL API GET USER KE-1 DI SINI (OPSIONAL)
+      // Tapi kita biarkan saja dulu, karena localStorage sekarang akan otomatis terisi saat klik "Simpan".
+    }
   }
 
-  private generateInitials(name: string): void {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      this.userInitials = (parts[0][0] + parts[1][0]).toUpperCase();
-    } else if (parts.length === 1) {
-      this.userInitials = parts[0].substring(0, 2).toUpperCase();
-    } else {
-      this.userInitials = 'AD';
-    }
+  setFallbackUser(): void {
+    this.userName = 'Super Admin';
+    this.userRole = 'Super Admin';
+    this.userInitials = 'S';
   }
 
   logout(): void {
-    if(confirm('Apakah Anda yakin ingin keluar?')) {
-        localStorage.clear();
-        this.router.navigate(['/auth/login']);
-    }
-  }
-
-  hasRole(roles: string[]): boolean {
-    if (!this.userRoles || this.userRoles.length === 0) return false;
-    const lower = this.userRoles.map(r => r.toLowerCase());
-    return roles.some(r => lower.includes(r.toLowerCase()));
+    // Hapus bersih local storage
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('user');
+    
+    // Redirect ke login
+    this.router.navigate(['/auth/login']);
   }
 }

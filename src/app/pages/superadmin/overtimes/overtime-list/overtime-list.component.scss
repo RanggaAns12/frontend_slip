@@ -1,0 +1,20 @@
+// Badge helper untuk desain baru
+.badge-red {
+  @apply bg-red-50 text-red-600 border-red-200;
+}
+.badge-yellow {
+  @apply bg-amber-50 text-amber-600 border-amber-200;
+}
+.badge-green {
+  @apply bg-emerald-50 text-emerald-600 border-emerald-200;
+}
+
+// Sembunyikan scrollbar bawaan browser tapi tetap bisa di-scroll (Untuk tombol di Mobile)
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
+}

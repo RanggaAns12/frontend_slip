@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 
 // ─── Interfaces ────────────────────────────────────────────────────
@@ -119,13 +120,58 @@ export interface AttendanceSummary {
 export interface AttendanceSummaryListResponse {
   success : boolean;
   data    : {
-    data    : AttendanceSummary[];
-    total   : number;
+    data         : AttendanceSummary[];
+    total        : number;
     current_page : number;
     last_page    : number;
     per_page     : number;
   };
 }
+
+// ─── Tambahan Interface (Di luar class) ────────────────────────────
+
+export interface AttendanceSummaryDetail extends AttendanceSummary {
+  izin_libur                     : number;
+  terlambat_jam_menit            : string;
+  pulang_awal_jml                : number;
+  pulang_awal_jam_menit          : string;
+  istirahat_lebih_jml            : number;
+  istirahat_lebih_jam_menit      : string;
+  scan_kerja_masuk               : number;
+  scan_kerja_keluar              : number;
+  lembur_scan_1x                 : number;
+  rutin_umum                     : number;
+  izin_tidak_masuk_pribadi       : number;
+  izin_pulang_awal_pribadi       : number;
+  izin_datang_terlambat_pribadi  : number;
+  sakit_dengan_surat_dokter      : number;
+  sakit_tanpa_surat_dokter       : number;
+  izin_meninggalkan_tempat_kerja : number;
+  izin_dinas                     : number;
+  izin_datang_terlambat_kantor   : number;
+  izin_pulang_awal_kantor        : number;
+  cuti_normatif                  : number;
+  cuti_pribadi                   : number;
+  tidak_scan_masuk               : number;
+  tidak_scan_pulang              : number;
+  tidak_scan_mulai_istirahat     : number;
+  tidak_scan_selesai_istirahat   : number;
+  tidak_scan_mulai_lembur        : number;
+  tidak_scan_selesai_lembur      : number;
+  izin_lain_lain                 : number;
+}
+
+export interface AttendanceSummaryDetailResponse {
+  success : boolean;
+  data    : AttendanceSummaryDetail;
+}
+
+export interface AttendanceSummaryUpdateResponse {
+  success : boolean;
+  message : string;
+  data    : AttendanceSummaryDetail;
+}
+
 
 // ─── Service ───────────────────────────────────────────────────────
 
@@ -173,5 +219,24 @@ export class AttendanceSummaryApiService {
     return this.http.get<AttendanceSummaryListResponse>(
       `${this.baseUrl}`, { params: params as any }
     );
+  }
+
+  // ─── Tambahan Method GET By ID & UPDATE ──────────────────────────
+
+  getById(id: number): Observable<AttendanceSummaryDetailResponse> {
+    return this.http.get<AttendanceSummaryDetailResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  update(
+    id   : number,
+    data : Partial<AttendanceSummaryDetail>
+  ): Observable<AttendanceSummaryUpdateResponse> {
+    return this.http.put<AttendanceSummaryUpdateResponse>(`${this.baseUrl}/${id}`, data);
+  }
+
+  delete(id: number) {
+    // Sesuaikan this.baseUrl dengan properti URL yang Mas gunakan di service ini
+    // Misalnya jika Mas menggunakan environment.apiUrl + '/superadmin/attendance-summaries'
+    return this.http.delete<any>(`${this.baseUrl}/${id}`);
   }
 }

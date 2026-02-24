@@ -1,0 +1,8 @@
+// Badge helper for dots in detail table
+.badge-red::after { content: '🔴'; }
+.badge-yellow::after { content: '🟡'; }
+.badge-green::after { content: '🟢'; }
+
+tr {
+  transition: all 0.2s ease-in-out;
+}

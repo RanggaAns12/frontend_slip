@@ -1,137 +1,165 @@
-<div class="max-w-7xl mx-auto">
+<div class="p-4 md:p-6 bg-gray-50 min-h-screen font-sans animate-fade-in-up pb-20">
 
-  <!-- ── Form Upload ── -->
-  <div class="bg-white rounded-lg shadow p-5 mb-5">
-    <h3 class="text-base font-semibold mb-4">Import Rekap Absensi (HTML)</h3>
+  <!-- ── TOAST ── -->
+  <div *ngIf="toastMessage"
+       [ngClass]="{
+         'bg-green-50 text-green-700 border-green-200': toastType === 'success',
+         'bg-red-50 text-red-700 border-red-200'      : toastType === 'error'
+       }"
+       class="fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 animate-slide-in-right transition-all duration-300">
+    <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <span class="font-medium text-sm">{{ toastMessage }}</span>
+    <button (click)="toastMessage = ''" class="ml-2 opacity-50 hover:opacity-100">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
 
-    <div class="grid grid-cols-2 gap-4 max-w-xs mb-4">
+  <!-- ── HEADER ── -->
+  <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">Import Rekap Absensi</h1>
+      <p class="text-xs md:text-sm text-gray-500 mt-1">Upload file HTML dari mesin fingerprint untuk mengimpor data absensi bulanan.</p>
+    </div>
+  </div>
+
+  <!-- ── FORM UPLOAD ── -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+
+    <!-- Bulan & Tahun -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
       <div>
-        <label class="block text-sm font-medium mb-1">Bulan</label>
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Bulan</label>
         <input type="number" [(ngModel)]="month" min="1" max="12"
-               class="border rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400 transition-all"/>
       </div>
       <div>
-        <label class="block text-sm font-medium mb-1">Tahun</label>
+        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">Tahun</label>
         <input type="number" [(ngModel)]="year" min="2000" max="2100"
-               class="border rounded px-3 py-2 w-full text-sm focus:outline-none focus:ring-1 focus:ring-blue-500" />
+               class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400 transition-all"/>
       </div>
     </div>
 
+    <!-- Upload Area -->
     <div class="mb-5">
-      <label class="block text-sm font-medium mb-1">File HTML</label>
-      <input type="file" accept=".html,.htm" (change)="onFileChange($event)" class="text-sm" />
-      <p class="text-xs text-gray-400 mt-1">Format mengikuti export mesin fingerprint (absen.html).</p>
+      <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1.5">File HTML</label>
+      <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-colors relative">
+        <input type="file" accept=".html,.htm" (change)="onFileChange($event)" class="absolute inset-0 opacity-0 cursor-pointer">
+        <svg class="h-10 w-10 text-orange-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+        </svg>
+        <p *ngIf="!selectedFile" class="text-sm font-medium text-gray-500">Klik untuk pilih file <span class="text-orange-500 font-bold">.html</span> / drag & drop</p>
+        <p *ngIf="selectedFile" class="text-sm font-bold text-orange-600">{{ selectedFile.name }}</p>
+        <p class="text-xs text-gray-400 mt-1">Format export mesin fingerprint (absen.html), maks. 10 MB</p>
+      </div>
     </div>
 
-    <!-- Error global -->
-    <div *ngIf="errorMessage" class="mb-4 p-3 bg-red-50 border border-red-300 text-red-600 text-sm rounded">
-      {{ errorMessage }}
-    </div>
-
-    <div class="flex gap-3">
+    <!-- Action Buttons -->
+    <div class="flex flex-wrap gap-3">
       <button (click)="doPreview()" [disabled]="!selectedFile || isLoadingPreview"
-              class="px-5 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700
-                     disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-        <span *ngIf="isLoadingPreview" class="animate-spin inline-block w-3 h-3 border-2
-              border-white border-t-transparent rounded-full"></span>
-        {{ isLoadingPreview ? 'Memuat...' : 'Preview' }}
+              class="px-5 py-2.5 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0">
+        <span *ngIf="isLoadingPreview" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+        <svg *ngIf="!isLoadingPreview" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm-6 9a9 9 0 1118 0H3z"/></svg>
+        {{ isLoadingPreview ? 'Memuat...' : 'Preview Data' }}
       </button>
 
       <button (click)="doImport()" [disabled]="!canImport"
-              class="px-5 py-2 bg-green-600 text-white text-sm rounded hover:bg-green-700
-                     disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-        <span *ngIf="isLoadingImport" class="animate-spin inline-block w-3 h-3 border-2
-              border-white border-t-transparent rounded-full"></span>
+              class="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0">
+        <span *ngIf="isLoadingImport" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+        <svg *ngIf="!isLoadingImport" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
         {{ isLoadingImport ? 'Menyimpan...' : 'Confirm Import' }}
       </button>
     </div>
   </div>
 
-  <!-- ── Hasil Import ── -->
+  <!-- ── HASIL IMPORT ── -->
   <div *ngIf="importDone"
-       class="mb-5 p-4 bg-green-50 border border-green-300 rounded-lg text-sm text-green-800">
-    ✅ Import selesai untuk
-    <strong>{{ getMonthName(meta?.month ?? month) }} {{ meta?.year ?? year }}</strong>.
-    &nbsp;Tersimpan: <strong>{{ importSaved }}</strong>,
-    Gagal: <strong class="text-red-600">{{ importFailed }}</strong>.
-  </div>
-
-  <!-- ── Statistik ── -->
-  <div *ngIf="previewDone" class="flex gap-6 mb-4 text-sm">
-    <div class="bg-white rounded shadow px-4 py-3 flex flex-col items-center">
-      <span class="text-gray-500 text-xs">Total Baris</span>
-      <span class="font-bold text-lg">{{ totalRows }}</span>
+       class="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3 text-sm text-emerald-800 shadow-sm">
+    <div class="w-9 h-9 bg-emerald-100 rounded-full flex items-center justify-center shrink-0">
+      <svg class="w-5 h-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
     </div>
-    <div class="bg-white rounded shadow px-4 py-3 flex flex-col items-center">
-      <span class="text-gray-500 text-xs">Valid</span>
-      <span class="font-bold text-lg text-green-600">{{ totalValid }}</span>
-    </div>
-    <div class="bg-white rounded shadow px-4 py-3 flex flex-col items-center">
-      <span class="text-gray-500 text-xs">Error</span>
-      <span class="font-bold text-lg text-red-500">{{ totalErrors }}</span>
+    <div>
+      <p class="font-bold">Import Berhasil!</p>
+      <p class="text-xs text-emerald-600">
+        <strong>{{ importSaved }}</strong> data tersimpan &nbsp;·&nbsp;
+        <strong class="text-red-500">{{ importFailed }}</strong> gagal &nbsp;·&nbsp;
+        {{ getMonthName(meta?.month ?? month) }} {{ meta?.year ?? year }}
+      </p>
     </div>
   </div>
 
-  <!-- ── Tabel Preview ── -->
-  <div *ngIf="previewItems.length > 0" class="bg-white rounded-lg shadow overflow-x-auto">
-    <table class="w-full text-sm border-collapse">
-      <thead class="bg-gray-100 text-gray-700 text-xs uppercase">
+  <!-- ── STATISTIK ── -->
+  <div *ngIf="previewDone && meta" class="grid grid-cols-3 gap-3 mb-5">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center">
+      <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Total Baris</span>
+      <span class="text-2xl font-extrabold text-gray-800">{{ totalRows }}</span>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center">
+      <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Valid</span>
+      <span class="text-2xl font-extrabold text-emerald-600">{{ totalValid }}</span>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 flex flex-col items-center">
+      <span class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Error</span>
+      <span class="text-2xl font-extrabold text-red-500">{{ totalErrors }}</span>
+    </div>
+  </div>
+
+  <!-- ── TABEL PREVIEW (Desktop) ── -->
+  <div *ngIf="previewItems.length > 0" class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <table class="w-full text-left">
+      <thead class="bg-gray-50/50 text-gray-500 text-xs uppercase font-bold">
         <tr>
-          <th class="border px-3 py-2 text-left">#</th>
-          <th class="border px-3 py-2 text-left">PIN</th>
-          <th class="border px-3 py-2 text-left">NIP</th>
-          <th class="border px-3 py-2 text-left">Nama (HTML)</th>
-          <th class="border px-3 py-2 text-left">Nama (DB)</th>
-          <th class="border px-3 py-2 text-center">Hadir</th>
-          <th class="border px-3 py-2 text-center">Durasi</th>
-          <th class="border px-3 py-2 text-center">Terlambat</th>
-          <th class="border px-3 py-2 text-center">Pulang Awal</th>
-          <th class="border px-3 py-2 text-center">Lembur (J)</th>
-          <th class="border px-3 py-2 text-center">Absen</th>
-          <th class="border px-3 py-2 text-left">Status</th>
+          <th class="px-5 py-4">#</th>
+          <th class="px-5 py-4">NIP / PIN</th>
+          <th class="px-5 py-4">Nama (HTML)</th>
+          <th class="px-5 py-4">Nama (DB)</th>
+          <th class="px-5 py-4 text-center">Hadir</th>
+          <th class="px-5 py-4 text-center">Terlambat</th>
+          <th class="px-5 py-4 text-center">Lembur (J)</th>
+          <th class="px-5 py-4 text-center">Absen</th>
+          <th class="px-5 py-4 text-center">Status</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="divide-y divide-gray-100">
         <tr *ngFor="let item of previewItems"
             [class.bg-red-50]="!item.valid"
             [class.bg-yellow-50]="item.valid && !item.found"
-            [class.bg-green-50]="item.valid && item.found"
-            class="hover:brightness-95 transition-all">
+            class="hover:brightness-95 transition-all group">
 
-          <td class="border px-3 py-1.5 text-gray-400 text-xs">{{ item.row_number }}</td>
+          <td class="px-5 py-3 text-xs text-gray-400">{{ item.row_number }}</td>
 
-          <td class="border px-3 py-1.5 font-mono text-xs">{{ item.pin ?? '-' }}</td>
+          <td class="px-5 py-3">
+            <p class="font-mono text-xs font-bold text-gray-700">{{ item.nip ?? '-' }}</p>
+            <p class="font-mono text-[10px] text-gray-400">PIN: {{ item.pin ?? '-' }}</p>
+          </td>
 
-          <td class="border px-3 py-1.5 font-mono text-xs">{{ item.nip ?? '-' }}</td>
+          <td class="px-5 py-3 text-sm text-gray-700">{{ item.data.nama ?? '-' }}</td>
 
-          <td class="border px-3 py-1.5">{{ item.data.nama ?? '-' }}</td>
-
-          <td class="border px-3 py-1.5">
-            <span *ngIf="item.found" class="text-green-700 font-medium">{{ item.nama }}</span>
-            <span *ngIf="!item.found" class="text-red-500 text-xs font-semibold">
-              ✗ Tidak ditemukan
+          <td class="px-5 py-3">
+            <span *ngIf="item.found" class="text-sm font-semibold text-emerald-700 group-hover:text-emerald-600">{{ item.nama }}</span>
+            <span *ngIf="!item.found" class="inline-flex items-center gap-1 text-xs font-bold text-red-500">
+              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+              Tidak ditemukan
             </span>
           </td>
 
-          <td class="border px-3 py-1.5 text-center">{{ item.data.kehadiran_jml }}</td>
-          <td class="border px-3 py-1.5 text-center text-xs">{{ item.data.kehadiran_jam_menit }}</td>
-          <td class="border px-3 py-1.5 text-center">{{ item.data.terlambat_jml }}</td>
-          <td class="border px-3 py-1.5 text-center">{{ item.data.pulang_awal_jml }}</td>
-          <td class="border px-3 py-1.5 text-center">{{ item.data.lembur_jam }}</td>
-          <td class="border px-3 py-1.5 text-center">{{ item.data.tanpa_izin }}</td>
+          <td class="px-5 py-3 text-center font-bold text-gray-700">{{ item.data.kehadiran_jml }}</td>
+          <td class="px-5 py-3 text-center text-orange-500 font-semibold">{{ item.data.terlambat_jml }}</td>
+          <td class="px-5 py-3 text-center text-blue-600 font-semibold">{{ item.data.lembur_jam }}</td>
+          <td class="px-5 py-3 text-center text-red-500 font-semibold">{{ item.data.tanpa_izin }}</td>
 
-          <td class="border px-3 py-1.5">
+          <td class="px-5 py-3 text-center">
             <span *ngIf="item.valid && item.found"
-                  class="inline-block px-2 py-0.5 rounded-full bg-green-100 text-green-700 text-xs font-semibold">
+                  class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-200">
               ✓ Valid
             </span>
             <span *ngIf="item.valid && !item.found"
-                  class="inline-block px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 text-xs font-semibold">
-              ⚠ Tidak match
+                  class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-yellow-100 text-yellow-700 border border-yellow-200">
+              ⚠ Tidak Match
             </span>
             <span *ngIf="!item.valid"
-                  class="text-red-500 text-xs">
-              {{ item.errors.join(' | ') }}
+                  class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-red-100 text-red-600 border border-red-200">
+              ✗ Error
             </span>
           </td>
         </tr>
@@ -139,10 +167,70 @@
     </table>
   </div>
 
-  <!-- ── Belum preview ── -->
+  <!-- ── CARD PREVIEW (Mobile) ── -->
+  <div *ngIf="previewItems.length > 0" class="block md:hidden space-y-3">
+    <div *ngFor="let item of previewItems"
+         [class.border-red-200]="!item.valid"
+         [class.border-yellow-200]="item.valid && !item.found"
+         [class.border-gray-100]="item.valid && item.found"
+         class="bg-white p-4 rounded-xl shadow-sm border relative">
+
+      <!-- Status Badge -->
+      <span *ngIf="item.valid && item.found"
+            class="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">✓ Valid</span>
+      <span *ngIf="item.valid && !item.found"
+            class="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">⚠ No Match</span>
+      <span *ngIf="!item.valid"
+            class="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200">✗ Error</span>
+
+      <!-- Nama -->
+      <div class="flex items-center gap-3 mb-3 pr-16">
+        <div class="h-9 w-9 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 flex items-center justify-center font-bold text-sm shrink-0">
+          {{ (item.data.nama ?? '?').charAt(0) }}
+        </div>
+        <div>
+          <p class="font-bold text-gray-800 text-sm">{{ item.data.nama ?? '-' }}</p>
+          <p class="font-mono text-[10px] text-gray-400">{{ item.nip ?? item.pin ?? '-' }}</p>
+        </div>
+      </div>
+
+      <!-- Grid Info -->
+      <div class="grid grid-cols-4 gap-2 text-center text-xs border-t border-gray-50 pt-3">
+        <div>
+          <span class="block text-[10px] text-gray-400 uppercase">Hadir</span>
+          <span class="font-bold text-gray-700">{{ item.data.kehadiran_jml }}</span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-gray-400 uppercase">Lambat</span>
+          <span class="font-bold text-orange-500">{{ item.data.terlambat_jml }}</span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-gray-400 uppercase">Lembur</span>
+          <span class="font-bold text-blue-500">{{ item.data.lembur_jam }}j</span>
+        </div>
+        <div>
+          <span class="block text-[10px] text-gray-400 uppercase">Absen</span>
+          <span class="font-bold text-red-500">{{ item.data.tanpa_izin }}</span>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <p *ngIf="!item.valid" class="text-xs text-red-500 mt-2 border-t border-red-100 pt-2">
+        {{ item.errors.join(' | ') }}
+      </p>
+    </div>
+  </div>
+
+  <!-- ── EMPTY STATE ── -->
   <div *ngIf="!previewDone && !isLoadingPreview"
-       class="text-sm text-gray-400 py-6">
-    Tips: pastikan kolom <strong>NIP</strong> di tabel employees sama dengan NIP pada file HTML.
+       class="bg-white rounded-xl shadow-sm border border-dashed border-gray-200 p-12 text-center">
+    <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-orange-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+      </svg>
+    </div>
+    <h3 class="text-base font-bold text-gray-700 mb-1">Belum ada preview</h3>
+    <p class="text-sm text-gray-400">Pilih file HTML dan klik <span class="font-semibold text-orange-500">Preview Data</span> untuk melihat isi file sebelum disimpan.</p>
   </div>
 
 </div>

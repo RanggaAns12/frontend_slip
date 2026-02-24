@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { AttendanceSummariesComponent } from './attendance-summaries.component';
 import { AttendanceSummaryListComponent } from './attendance-summary-list/attendance-summary-list.component';
 import { AttendanceSummaryImportComponent } from './attendance-summary-import/attendance-summary-import.component';
+import { AttendanceSummaryShowComponent } from './attendance-summary-show/attendance-summary-show.component';
 
 const routes: Routes = [
   {
@@ -13,6 +14,7 @@ const routes: Routes = [
       { path: '',       redirectTo: 'list', pathMatch: 'full' },
       { path: 'list',   component: AttendanceSummaryListComponent },
       { path: 'import', component: AttendanceSummaryImportComponent },
+      { path: 'show/:id',   component: AttendanceSummaryShowComponent   },
     ],
   },
 ];

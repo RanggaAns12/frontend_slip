@@ -1,0 +1,480 @@
+<div class="p-4 md:p-6 bg-gray-50 min-h-screen font-sans animate-fade-in-up pb-20">
+
+  <!-- ── TOAST ── -->
+  <div *ngIf="toastMessage"
+       [ngClass]="{
+         'bg-green-50 text-green-700 border-green-200': toastType === 'success',
+         'bg-red-50 text-red-700 border-red-200'      : toastType === 'error'
+       }"
+       class="fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 animate-slide-in-right transition-all duration-300">
+    <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+    <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <span class="font-medium text-sm">{{ toastMessage }}</span>
+    <button (click)="toastMessage = ''" class="ml-2 opacity-50 hover:opacity-100">
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+
+  <!-- ── LOADING ── -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24">
+    <svg class="animate-spin h-10 w-10 text-[#F4A47B] mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <p class="text-gray-400 font-medium animate-pulse">Memuat data...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading && detail">
+
+    <!-- ── HEADER ── -->
+    <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
+      <div class="flex items-center gap-3">
+        <button (click)="goBack()"
+                class="p-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 shadow-sm transition">
+          <svg class="w-5 h-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
+            Detail Absensi
+          </h1>
+          <p class="text-xs md:text-sm text-gray-500 mt-0.5">
+            {{ detail.nama }} &mdash; {{ getMonthName(detail.month) }} {{ detail.year }}
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2 w-full xl:w-auto">
+        <!-- Tombol Edit / Save / Cancel -->
+        <ng-container *ngIf="!isEditMode">
+          <button (click)="startEdit()"
+                  class="flex-1 xl:flex-none px-5 py-2.5 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-lg shadow-md flex items-center justify-center gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            Edit Data
+          </button>
+        </ng-container>
+
+        <ng-container *ngIf="isEditMode">
+          <button (click)="cancelEdit()"
+                  class="flex-1 xl:flex-none px-5 py-2.5 bg-white border border-gray-200 text-gray-600 text-sm font-bold rounded-lg shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-all">
+            Batal
+          </button>
+          <button (click)="saveEdit()" [disabled]="isSaving"
+                  class="flex-1 xl:flex-none px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-lg shadow-md flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg transition-all disabled:opacity-50">
+            <span *ngIf="isSaving" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+            <svg *ngIf="!isSaving" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+            {{ isSaving ? 'Menyimpan...' : 'Simpan' }}
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- ── CARD IDENTITAS + QUICK STATS ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-5">
+      <!-- Top Gradient Bar -->
+      <div class="h-1.5 bg-gradient-to-r from-[#F4A47B] to-[#E08E60]"></div>
+      <div class="p-5">
+        <div class="flex flex-col md:flex-row gap-5">
+
+          <!-- Avatar + Nama -->
+          <div class="flex items-center gap-4">
+            <div class="h-16 w-16 rounded-2xl bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 flex items-center justify-center font-extrabold text-2xl shrink-0 shadow-sm">
+              {{ detail.nama.charAt(0) }}
+            </div>
+            <div>
+              <h2 class="text-lg font-extrabold text-gray-800">{{ detail.nama }}</h2>
+              <p class="text-xs text-gray-400 font-mono">{{ detail.nik_karyawan }}</p>
+              <div class="flex flex-wrap gap-1.5 mt-1.5">
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
+                  {{ detail.jabatan ?? '-' }}
+                </span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-50 text-orange-600 border border-orange-100">
+                  {{ detail.departemen ?? '-' }}
+                </span>
+                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100">
+                  {{ getMonthName(detail.month) }} {{ detail.year }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="hidden md:block w-px bg-gray-100 mx-2"></div>
+
+          <!-- Quick Stats -->
+          <div class="grid grid-cols-4 gap-3 flex-1">
+            <div class="flex flex-col items-center justify-center bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+              <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-wide mb-1">Hadir</span>
+              <span class="text-2xl font-extrabold text-emerald-700">{{ detail.kehadiran_jml }}</span>
+              <span class="text-[10px] text-emerald-400">hari</span>
+            </div>
+            <div class="flex flex-col items-center justify-center bg-orange-50 rounded-xl p-3 border border-orange-100">
+              <span class="text-[10px] font-bold text-orange-500 uppercase tracking-wide mb-1">Lambat</span>
+              <span class="text-2xl font-extrabold text-orange-600">{{ detail.terlambat_jml }}</span>
+              <span class="text-[10px] text-orange-400">kali</span>
+            </div>
+            <div class="flex flex-col items-center justify-center bg-blue-50 rounded-xl p-3 border border-blue-100">
+              <span class="text-[10px] font-bold text-blue-500 uppercase tracking-wide mb-1">Lembur</span>
+              <span class="text-2xl font-extrabold text-blue-600">{{ detail.lembur_jam }}</span>
+              <span class="text-[10px] text-blue-400">jam</span>
+            </div>
+            <div class="flex flex-col items-center justify-center bg-red-50 rounded-xl p-3 border border-red-100">
+              <span class="text-[10px] font-bold text-red-500 uppercase tracking-wide mb-1">Absen</span>
+              <span class="text-2xl font-extrabold text-red-600">{{ detail.tanpa_izin }}</span>
+              <span class="text-[10px] text-red-400">hari</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EDIT MODE NOTICE ── -->
+    <div *ngIf="isEditMode"
+         class="mb-5 p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center gap-3 text-sm text-amber-700">
+      <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      </svg>
+      <span>Mode edit aktif. Ubah data yang diperlukan lalu klik <strong>Simpan</strong>.</span>
+    </div>
+
+    <!-- Helper: input style reuse via utility -->
+    <!-- View value: <span class="val">{{ detail.x }}</span> -->
+    <!-- Edit value: <input [(ngModel)]="form!.x" class="inp"> -->
+
+    <!-- ── SECTION: KEHADIRAN ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Kehadiran</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Jumlah Hadir</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.kehadiran_jml }} hari</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.kehadiran_jml"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Durasi Hadir</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.kehadiran_jam_menit }}</span>
+          <input *ngIf="isEditMode" type="text" [(ngModel)]="form!.kehadiran_jam_menit" placeholder="HH:MM"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Izin Libur</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_libur }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_libur"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Scan Masuk</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.scan_kerja_masuk }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.scan_kerja_masuk"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Scan Keluar</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.scan_kerja_keluar }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.scan_kerja_keluar"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SECTION: KETERLAMBATAN & PULANG AWAL ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-orange-400"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Keterlambatan & Pulang Awal</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Jml Terlambat</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-orange-600">{{ detail.terlambat_jml }} kali</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.terlambat_jml"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Durasi Terlambat</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.terlambat_jam_menit }}</span>
+          <input *ngIf="isEditMode" type="text" [(ngModel)]="form!.terlambat_jam_menit" placeholder="HH:MM"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Jml Pulang Awal</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-orange-600">{{ detail.pulang_awal_jml }} kali</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.pulang_awal_jml"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Durasi Pulang Awal</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.pulang_awal_jam_menit }}</span>
+          <input *ngIf="isEditMode" type="text" [(ngModel)]="form!.pulang_awal_jam_menit" placeholder="HH:MM"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SECTION: LEMBUR & ISTIRAHAT ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Lembur & Istirahat</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Lembur Jam</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-blue-600">{{ detail.lembur_jam }} jam</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.lembur_jam"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Lembur Menit</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-blue-600">{{ detail.lembur_menit }} menit</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.lembur_menit"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Lembur Scan 1x</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.lembur_scan_1x }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.lembur_scan_1x"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Istirahat Lebih</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.istirahat_lebih_jml }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.istirahat_lebih_jml"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Durasi Ist. Lebih</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.istirahat_lebih_jam_menit }}</span>
+          <input *ngIf="isEditMode" type="text" [(ngModel)]="form!.istirahat_lebih_jam_menit" placeholder="HH:MM"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SECTION: IZIN ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Izin & Perizinan</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tidak Masuk Pribadi</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_tidak_masuk_pribadi }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_tidak_masuk_pribadi"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Pulang Awal Pribadi</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_pulang_awal_pribadi }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_pulang_awal_pribadi"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Lambat Pribadi</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_datang_terlambat_pribadi }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_datang_terlambat_pribadi"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tinggalkan Kerja</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_meninggalkan_tempat_kerja }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_meninggalkan_tempat_kerja"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Izin Dinas</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_dinas }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_dinas"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Lambat Kantor</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_datang_terlambat_kantor }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_datang_terlambat_kantor"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Pulang Awal Kantor</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_pulang_awal_kantor }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_pulang_awal_kantor"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Izin Lain-lain</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.izin_lain_lain }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.izin_lain_lain"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SECTION: SAKIT & CUTI ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Sakit & Cuti</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Sakit + Dokter</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.sakit_dengan_surat_dokter }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.sakit_dengan_surat_dokter"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Sakit Tanpa Dokter</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.sakit_tanpa_surat_dokter }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.sakit_tanpa_surat_dokter"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Cuti Normatif</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.cuti_normatif }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.cuti_normatif"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Cuti Pribadi</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.cuti_pribadi }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.cuti_pribadi"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SECTION: TIDAK SCAN ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-red-500"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Tidak Scan</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tdk Scan Masuk</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-red-500">{{ detail.tidak_scan_masuk }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tidak_scan_masuk"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tdk Scan Pulang</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-red-500">{{ detail.tidak_scan_pulang }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tidak_scan_pulang"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tdk Scan Ist. Mulai</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.tidak_scan_mulai_istirahat }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tidak_scan_mulai_istirahat"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tdk Scan Ist. Selesai</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.tidak_scan_selesai_istirahat }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tidak_scan_selesai_istirahat"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tdk Scan Lembur Mulai</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.tidak_scan_mulai_lembur }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tidak_scan_mulai_lembur"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tdk Scan Lembur Selesai</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.tidak_scan_selesai_lembur }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tidak_scan_selesai_lembur"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SECTION: LAINNYA ── -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <div class="px-5 py-3.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+        <div class="w-2 h-2 rounded-full bg-gray-400"></div>
+        <h3 class="text-sm font-extrabold text-gray-700 uppercase tracking-wide">Lainnya</h3>
+      </div>
+      <div class="p-5 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Tanpa Izin</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-red-500">{{ detail.tanpa_izin }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.tanpa_izin"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1">Rutin Umum</label>
+          <span *ngIf="!isEditMode" class="text-sm font-bold text-gray-800">{{ detail.rutin_umum }}</span>
+          <input *ngIf="isEditMode" type="number" [(ngModel)]="form!.rutin_umum"
+                 class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── SAVE BUTTON BOTTOM (Edit Mode) ── -->
+    <div *ngIf="isEditMode" class="fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-lg px-6 py-3 flex gap-3 justify-end">
+      <button (click)="cancelEdit()"
+              class="px-6 py-2.5 bg-gray-100 text-gray-700 text-sm font-bold rounded-xl hover:bg-gray-200 transition">
+        Batal
+      </button>
+      <button (click)="saveEdit()" [disabled]="isSaving"
+              class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition disabled:opacity-50 flex items-center gap-2">
+        <span *ngIf="isSaving" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
+        {{ isSaving ? 'Menyimpan...' : '💾 Simpan Perubahan' }}
+      </button>
+    </div>
+
+  </ng-container>
+
+</div>

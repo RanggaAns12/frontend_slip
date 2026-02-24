@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
 import {
   AttendanceSummaryApiService,
   AttendanceSummary,
@@ -11,31 +12,79 @@ import {
 })
 export class AttendanceSummaryListComponent implements OnInit {
 
+  // ── Data ─────────────────────────────────────────────────
   items       : AttendanceSummary[] = [];
   isLoading   = false;
   currentPage = 1;
   lastPage    = 1;
   total       = 0;
+  Math        = Math; // Agar bisa dipakai di HTML
 
-  filterMonth  : number | '' = new Date().getMonth() + 1;
+  // ── Filter ─────────────────────────────────────────────────
+  // Auto set ke bulan sekarang saat inisialisasi
+  filterMonth  : number | '' = new Date().getMonth() + 1; 
   filterYear   : number      = new Date().getFullYear();
   filterSearch = '';
+  filterDept   = '';
+  filterPosisi = '';
 
-  constructor(private api: AttendanceSummaryApiService) {}
+  private searchTimeout: any;
+
+  // ── Modal Delete State ─────────────────────────────────────
+  showDeleteModal = false;
+  itemToDelete: AttendanceSummary | null = null;
+  isDeleting = false;
+
+  // ── Options Mapping ───────────────────────────────────────
+  months = [
+    { value: 1,  label: 'Januari' }, { value: 2,  label: 'Februari' },
+    { value: 3,  label: 'Maret'   }, { value: 4,  label: 'April'    },
+    { value: 5,  label: 'Mei'     }, { value: 6,  label: 'Juni'     },
+    { value: 7,  label: 'Juli'    }, { value: 8,  label: 'Agustus'  },
+    { value: 9,  label: 'September'},{ value: 10, label: 'Oktober'  },
+    { value: 11, label: 'November' }, { value: 12, label: 'Desember' },
+  ];
+
+  departments = [
+    'Umum', 'HRD', 'Keuangan', 'Operasional', 
+    'IT', 'Produksi', 'Lapangan', 'Logistik', 'Pemasaran'
+  ];
+
+  positions = [
+    'Manager', 'Supervisor', 'Staff', 'Admin', 
+    'Operator', 'Mandor', 'Buruh Harian', 'Security', 'Driver'
+  ];
+
+  // ── Toast ─────────────────────────────────────────────────
+  toastMessage = '';
+  toastType    : 'success' | 'error' = 'success';
+  private toastTimer: any;
+
+  constructor(
+    private api    : AttendanceSummaryApiService,
+    private router : Router,
+    private route  : ActivatedRoute
+  ) {}
 
   ngOnInit(): void {
     this.load();
   }
 
+  // ── Data Loading ──────────────────────────────────────────
+
   load(): void {
     this.isLoading = true;
 
     const params: any = {
-      page  : this.currentPage,
-      year  : this.filterYear,
+      page : this.currentPage,
+      year : this.filterYear,
     };
-    if (this.filterMonth !== '') params['month']  = this.filterMonth;
-    if (this.filterSearch !== '') params['search'] = this.filterSearch;
+    
+    // Kirim month hanya jika tidak kosong
+    if (this.filterMonth !== '') params['month']      = this.filterMonth;
+    if (this.filterSearch)       params['search']     = this.filterSearch;
+    if (this.filterDept)         params['departemen'] = this.filterDept;
+    if (this.filterPosisi)       params['jabatan']    = this.filterPosisi;
 
     this.api.getList(params).subscribe({
       next: (res) => {
@@ -45,12 +94,38 @@ export class AttendanceSummaryListComponent implements OnInit {
         this.lastPage    = res.data.last_page;
         this.isLoading   = false;
       },
-      error: () => { this.isLoading = false; },
+      error: () => { 
+        this.isLoading = false; 
+        this.showToast('Gagal memuat data rekap absensi.', 'error');
+      },
     });
+  }
+
+  // ── Event Handlers: Search & Filter ───────────────────────
+
+  onSearchDebounce(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    this.searchTimeout = setTimeout(() => {
+      this.currentPage = 1;
+      this.load();
+    }, 500);
   }
 
   onSearch(): void {
     this.currentPage = 1;
+    this.load();
+  }
+
+  resetFilter(): void {
+    this.filterSearch = '';
+    // Kembalikan ke bulan saat ini, bukan "Semua Bulan" agar UX lebih baik
+    this.filterMonth  = new Date().getMonth() + 1; 
+    this.filterYear   = new Date().getFullYear();
+    this.filterDept   = '';
+    this.filterPosisi = '';
+    this.currentPage  = 1;
     this.load();
   }
 
@@ -60,7 +135,63 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.load();
   }
 
+  goToDetail(id: number): void {
+    this.router.navigate(['../show', id], { relativeTo: this.route });
+  }
+
+  // ── Feature: Delete with Modal ────────────────────────────
+
+  confirmDelete(item: AttendanceSummary): void {
+    this.itemToDelete = item;
+    this.showDeleteModal = true;
+  }
+
+  cancelDelete(): void {
+    this.showDeleteModal = false;
+    this.itemToDelete = null;
+  }
+
+  deleteData(): void {
+    if (!this.itemToDelete) return;
+
+    this.isDeleting = true;
+    this.api.delete(this.itemToDelete.id).subscribe({
+      next: () => {
+        this.isDeleting = false;
+        this.showDeleteModal = false;
+        this.showToast('Data berhasil dihapus', 'success');
+        this.load(); // Reload data tabel
+      },
+      error: (err) => {
+        this.isDeleting = false;
+        this.showDeleteModal = false;
+        console.error(err);
+        this.showToast('Gagal menghapus data', 'error');
+      }
+    });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
+
+  get pageNumbers(): number[] {
+    const pages = [];
+    const start = Math.max(1, this.currentPage - 2);
+    const end   = Math.min(this.lastPage, start + 4);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
   getMonthName(m: number): string {
+    if (!m) return '-';
     return new Date(2000, m - 1).toLocaleString('id-ID', { month: 'long' });
+  }
+
+  private showToast(msg: string, type: 'success' | 'error'): void {
+    this.toastMessage = msg;
+    this.toastType    = type;
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => { this.toastMessage = ''; }, 4000);
   }
 }
