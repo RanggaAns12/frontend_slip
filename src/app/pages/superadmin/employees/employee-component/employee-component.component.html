@@ -1,0 +1,167 @@
+<div class="min-h-screen bg-[#F8FAFC] font-sans pb-20 relative animate-fade-in">
+  
+  <!-- TOAST NOTIFICATION -->
+  <div *ngIf="toastMessage" 
+       [ngClass]="{'bg-orange-500 text-white shadow-orange-200': toastType === 'success', 'bg-red-500 text-white shadow-red-200': toastType === 'error'}"
+       class="fixed top-6 right-6 z-50 px-6 py-3 rounded-xl shadow-lg font-medium flex items-center gap-3 animate-[fadeIn_0.3s_ease-out] transition-all">
+    <span>{{ toastMessage }}</span>
+    <button type="button" (click)="closeToast()" class="opacity-70 hover:opacity-100">&times;</button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 min-h-screen">
+    <div class="w-12 h-12 border-4 border-orange-100 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+    <p class="text-gray-400 font-medium animate-pulse">Memuat data penugasan komponen...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!isLoading && employeeData" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+    
+    <!-- Header Card -->
+    <div class="bg-white p-6 rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 flex flex-col md:flex-row items-center justify-between mb-8 gap-4 transition-all relative overflow-hidden">
+      
+      <!-- Dekorasi -->
+      <div class="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-bl-full -z-10 opacity-50"></div>
+
+      <div class="flex items-center gap-5 w-full">
+        <!-- Avatar Inisial -->
+        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100 text-orange-600 flex items-center justify-center font-extrabold text-xl shadow-inner border border-orange-200 shrink-0 relative">
+            {{ employeeData.nama_lengkap?.charAt(0) || '?' }}
+            <!-- Badge PTKP/Status Pajak Melayang -->
+            <span *ngIf="employeeData.status_pajak_2026" class="absolute -bottom-2 -right-2 bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md border-2 border-white shadow-sm">
+              {{ employeeData.status_pajak_2026 }}
+            </span>
+        </div>
+        <div>
+            <h1 class="text-xl font-bold text-gray-800 tracking-tight">Atur Komponen Gaji</h1>
+            <p class="text-sm text-gray-500 mt-0.5 flex items-center gap-2">
+              <span class="font-semibold text-gray-700">{{ employeeData.nama_lengkap }}</span> 
+              <span class="w-1 h-1 rounded-full bg-gray-300"></span> 
+              <span>NIK: {{ employeeData.nik_karyawan }}</span>
+            </p>
+        </div>
+      </div>
+      <button type="button" (click)="goBack()" class="px-5 py-2.5 bg-white border border-gray-200 hover:bg-gray-50 hover:text-orange-600 text-gray-600 text-sm font-semibold rounded-xl transition-all w-full md:w-auto flex items-center justify-center gap-2 shadow-sm">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+        Kembali
+      </button>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white p-6 md:p-8 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100">
+      
+      <div class="mb-6 pb-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+              Daftar Tunjangan & Potongan
+          </h2>
+          <p class="text-sm text-gray-400 mt-1 ml-7">Aktifkan komponen. Isi "Nominal Khusus" hanya jika ingin menimpa hitungan otomatis sistem.</p>
+        </div>
+        
+        <!-- Info Gaji Pokok (Sebagai Referensi HRD saat menghitung) -->
+        <div class="bg-gray-50 px-4 py-2 rounded-xl border border-gray-100 text-right">
+          <p class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Gaji Pokok</p>
+          <p class="text-sm font-bold text-gray-700 font-mono">{{ (employeeData.gaji_pokok || 0) | currency:'IDR':'symbol':'1.0-0' }}</p>
+        </div>
+      </div>
+
+      <!-- List of Checkboxes -->
+      <div class="space-y-4">
+        <div *ngFor="let comp of selectedComponents; let i = index" 
+             class="flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-2xl border transition-all duration-300 relative overflow-hidden group"
+             [ngClass]="comp.is_selected ? 'border-orange-500 bg-orange-50/30 shadow-sm' : 'border-gray-100 bg-white hover:border-gray-300 hover:bg-gray-50/50'">
+          
+          <!-- Indikator Warna Tipe -->
+          <div class="absolute left-0 top-0 bottom-0 w-1.5 transition-colors"
+               [ngClass]="{
+                 'bg-emerald-400': comp.type === 'pendapatan' && comp.is_selected,
+                 'bg-rose-400': comp.type === 'potongan' && comp.is_selected,
+                 'bg-transparent': !comp.is_selected
+               }"></div>
+
+          <!-- Kiri: Checkbox & Info -->
+          <div class="flex items-start gap-4 w-full md:w-1/2 cursor-pointer pl-2" (click)="toggleComponentSelection(i)">
+            <div class="mt-1 relative flex items-center justify-center shrink-0">
+                <input type="checkbox" 
+                       [checked]="comp.is_selected" 
+                       class="w-6 h-6 text-orange-500 rounded-lg border-gray-300 focus:ring-orange-500 cursor-pointer transition-all bg-white checked:border-orange-500">
+            </div>
+            <div>
+              <p class="font-bold text-gray-800 text-base flex items-center gap-2" [ngClass]="{'text-orange-700': comp.is_selected}">
+                {{ comp.name }}
+                <!-- Ikon Spesial Jika Ini PPh21 -->
+                <svg *ngIf="isPph21Component(comp.name)" class="w-4 h-4 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </p>
+              
+              <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+                <!-- Badge Pendapatan / Potongan -->
+                <span class="text-[10px] px-2.5 py-1 rounded-lg font-bold uppercase tracking-wide border"
+                      [ngClass]="comp.type === 'pendapatan' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-600 border-rose-100'">
+                  {{ comp.type === 'pendapatan' ? '+ Pendapatan' : '- Potongan' }}
+                </span>
+
+                <!-- Info Auto Sistem (Biasa) -->
+                <span *ngIf="!isPph21Component(comp.name)" class="text-xs text-gray-400 flex items-center gap-1 font-medium">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  Standar: {{ comp.default_amount | currency:'IDR':'symbol':'1.0-0' }}
+                </span>
+
+                <!-- Info Auto Sistem (KHUSUS PPh21 TER) -->
+                <span *ngIf="isPph21Component(comp.name)" class="text-[11px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 flex items-center gap-1">
+                  <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  Auto TER ({{ employeeData.status_pajak_2026 || 'TK/0' }}): {{ getEstimatedPph21() | currency:'IDR':'symbol':'1.0-0' }}
+                </span>
+
+              </div>
+            </div>
+          </div>
+
+          <!-- Kanan: Input Custom Amount -->
+          <div class="w-full md:w-5/12 mt-4 md:mt-0 transition-all duration-300" 
+               [ngClass]="comp.is_selected ? 'opacity-100 translate-y-0' : 'opacity-40 pointer-events-none translate-y-1'">
+            <label class="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-wider flex justify-between">
+              <span>Timpa Nominal (Opsional)</span>
+              <span *ngIf="isPph21Component(comp.name) && comp.custom_amount" class="text-rose-500">Abaikan Auto</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">Rp</span>
+              
+              <!-- Input Type Text untuk Rupiah Masking -->
+              <input type="text" 
+                     [value]="formatRupiah(comp.custom_amount)"
+                     (input)="onRupiahInput($event, i)"
+                     (click)="$event.stopPropagation()"
+                     [placeholder]="isPph21Component(comp.name) ? 'Auto: ' + getEstimatedPph21() : comp.default_amount"
+                     class="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-800 focus:ring-2 focus:ring-orange-100 focus:border-orange-500 transition-all shadow-sm placeholder:text-gray-300 placeholder:font-normal outline-none"
+                     [ngClass]="{'border-orange-300 bg-orange-50/50': comp.custom_amount}">
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Info Tambahan PPh21 di Bawah Form -->
+      <div class="mt-6 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-start gap-3">
+        <svg class="w-5 h-5 text-indigo-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div class="text-xs text-indigo-700 leading-relaxed">
+          <strong class="block mb-1">Info Sistem PPh21 Hibrida:</strong>
+          Jika Anda <strong>mengosongkan</strong> input "Timpa Nominal" pada komponen PPh21, sistem akan menghitung potongan secara otomatis bulan ini berdasarkan Gaji Kotor dan Status PTKP ({{ employeeData.status_pajak_2026 || 'TK/0' }}). Isi manual hanya jika ada penyesuaian khusus.
+        </div>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="mt-8 pt-6 border-t border-gray-100 flex flex-col-reverse md:flex-row justify-end gap-3">
+        <button type="button" (click)="goBack()" class="px-6 py-3 bg-white border border-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm w-full md:w-auto text-center">
+            Batal
+        </button>
+        <button type="button" (click)="onSave()" [disabled]="isSaving" class="px-8 py-3 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-bold rounded-xl shadow-md shadow-orange-500/20 transition-all flex items-center justify-center gap-2 disabled:opacity-70 transform active:scale-95 w-full md:w-auto">
+          <svg *ngIf="isSaving" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <svg *ngIf="!isSaving" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+          {{ isSaving ? 'Menyimpan...' : 'Simpan Perubahan' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

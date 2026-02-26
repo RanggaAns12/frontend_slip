@@ -30,13 +30,14 @@ import { UserFormComponent } from './users/user-form/user-form.component';
 // PENGATURAN (SETTINGS)
 // =========================
 import { SalaryComponentComponent } from './salary-component/salary-component.component';
-// import { ProfileComponent } from './profile/profile.component'; // Nanti di-uncomment kalau komponen Profile sudah dibuat
+import { ProfileComponent } from './profile/profile.component'; // Nanti di-uncomment kalau komponen Profile sudah dibuat
 
 // =========================
 // PENGGAJIAN (PAYROLL)
 // =========================
-// import { GeneratePayrollComponent } from './payroll/generate-payroll/generate-payroll.component'; // Nanti di-uncomment
-// import { SlipListComponent } from './payroll/slip-list/slip-list.component'; // Nanti di-uncomment
+import { GeneratePayrollComponent } from './payroll/generate-payroll/generate-payroll.component'; // Nanti di-uncomment
+import { SlipListComponent } from './payroll/slip-list/slip-list.component'; // Nanti di-uncomment
+import { EmployeeComponentComponent } from './employees/employee-component/employee-component.component';
 
 const routes: Routes = [
   {
@@ -65,6 +66,8 @@ const routes: Routes = [
       { path: 'employees/database', component: EmployeeDatabaseComponent },
       { path: 'employees/create', component: EmployeeFormComponent },
       { path: 'employees/salary', component: EmployeeSalaryComponent },
+      { path: 'employees/salary', component: EmployeeSalaryComponent },
+      { path: 'employees/:id/components', component: EmployeeComponentComponent }, // :id menangkap ID karyawan
 
       // Route dinamis (Harus di bawah route statis)
       { path: 'employees/edit/:id', component: EmployeeFormComponent },
@@ -92,8 +95,8 @@ const routes: Routes = [
       // 5. PENGGAJIAN (PAYROLL)
       // Nanti akan kita buka komentarnya setelah komponen dibuat
       // ----------------------------------------
-      // { path: 'payroll/generate', component: GeneratePayrollComponent },
-      // { path: 'payroll/slips', component: SlipListComponent },
+      { path: 'payroll/generate', component: GeneratePayrollComponent },
+      { path: 'payroll/slips', component: SlipListComponent },
 
       // ----------------------------------------
       // 6. PENGATURAN (SETTINGS)
@@ -101,7 +104,7 @@ const routes: Routes = [
       { path: 'settings/salary-components', component: SalaryComponentComponent },
       
       // Nanti akan kita buka komentarnya setelah komponen Profile dibuat
-      // { path: 'settings/profile', component: ProfileComponent },
+      { path: 'settings/profile', component: ProfileComponent },
 
       // ----------------------------------------
       // FALLBACK ROUTE (Jika URL tidak ditemukan)

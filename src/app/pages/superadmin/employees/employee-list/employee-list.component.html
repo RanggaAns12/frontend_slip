@@ -9,7 +9,7 @@
     <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
     <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
     <span class="font-medium text-sm">{{ toastMessage }}</span>
-    <button (click)="closeToast()" class="ml-2 opacity-50 hover:opacity-100"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+    <button type="button" (click)="closeToast()" class="ml-2 opacity-50 hover:opacity-100"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
   </div>
 
   <!-- ========================================== -->
@@ -25,25 +25,25 @@
     <div class="flex flex-nowrap overflow-x-auto pb-2 w-full xl:w-auto gap-2 md:gap-3 hide-scrollbar">
       
       <!-- Excel -->
-      <button (click)="exportData()" class="shrink-0 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200 transition-all">
+      <button type="button" (click)="exportData()" class="shrink-0 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200 transition-all">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
         <span class="hidden sm:inline">Excel</span>
       </button>
 
       <!-- Import -->
-      <button (click)="openImportModal()" class="shrink-0 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 hover:bg-gray-50 hover:text-orange-500 hover:border-orange-200 transition-all">
+      <button type="button" (click)="openImportModal()" class="shrink-0 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 hover:bg-gray-50 hover:text-orange-500 hover:border-orange-200 transition-all">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
         <span class="hidden sm:inline">Import</span>
       </button>
 
       <!-- Lihat DB Lengkap -->
-      <button (click)="goToFullDatabase()" class="shrink-0 px-3 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-indigo-100 transition">
+      <button type="button" (click)="goToFullDatabase()" class="shrink-0 px-3 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-indigo-100 transition">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
         <span class="whitespace-nowrap">Database Lengkap</span>
       </button>
 
       <!-- Tambah Baru -->
-      <button (click)="createEmployee()" class="shrink-0 ml-auto px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+      <button type="button" (click)="createEmployee()" class="shrink-0 ml-auto px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
         <span class="hidden sm:inline">Tambah</span>
         <span class="sm:hidden">Baru</span>
@@ -69,8 +69,8 @@
              class="w-full py-2 pl-10 pr-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition-all" 
              placeholder="Cari Nama / NIK (Ketik langsung)...">
       
-      <!-- Tombol Clear Search (Muncul kalau ada ketikan) -->
-      <button *ngIf="searchKeyword" (click)="resetFilter()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors">
+      <!-- Tombol Clear Search -->
+      <button type="button" *ngIf="searchKeyword" (click)="resetFilter()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
@@ -88,7 +88,7 @@
       </select>
 
       <!-- Tombol Reset Full -->
-      <button (click)="resetFilter()" title="Reset Semua Filter" class="px-3 py-2 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 hover:text-gray-700 transition">
+      <button type="button" (click)="resetFilter()" title="Reset Semua Filter" class="px-3 py-2 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 hover:text-gray-700 transition">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
       </button>
     </div>
@@ -142,7 +142,7 @@
             <td class="px-6 py-3">
               <div class="flex items-center gap-3">
                 <div class="h-9 w-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold border border-white shadow-sm">
-                  {{ emp.nama_lengkap.charAt(0) }}
+                  {{ emp.nama_lengkap?.charAt(0) || '?' }}
                 </div>
                 <div>
                   <p class="font-bold text-gray-800 text-sm group-hover:text-orange-600 transition-colors">{{ emp.nama_lengkap }}</p>
@@ -151,16 +151,22 @@
               </div>
             </td>
             
-            <!-- Kolom Detail Info -->
+            <!-- Kolom Detail Info (Dengan Status Pajak) -->
             <td class="px-6 py-3">
                <div class="flex flex-col gap-1">
                   <span class="text-xs text-gray-500 flex items-center gap-1">
                     <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>
                     {{ emp.nik_ktp || '-' }}
                   </span>
-                  <span class="inline-flex w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
-                    {{ emp.status_karyawan || 'PKWTT' }}
-                  </span>
+                  <div class="flex gap-1.5 flex-wrap">
+                    <span class="inline-flex w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
+                      {{ emp.status_karyawan || 'PKWTT' }}
+                    </span>
+                    <!-- INI PERBAIKANNYA: Panggil emp.status_pajak -->
+                    <span *ngIf="emp.status_pajak" class="inline-flex w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100" title="Status PTKP">
+                      {{ emp.status_pajak }}
+                    </span>
+                  </div>
                </div>
             </td>
 
@@ -177,19 +183,19 @@
               <span class="text-xs font-mono font-bold text-gray-700">Rp {{ (emp.gaji_pokok || 0) | number:'1.0-0' }}</span>
             </td>
 
-            <!-- Kolom Aksi (PERBAIKAN DI SINI: BUTTON + TOOLTIP) -->
+            <!-- Kolom Aksi -->
             <td class="px-6 py-3 text-center">
               <div class="flex justify-center gap-2">
                 
                 <!-- 1. Tombol Edit Gaji (Hijau & Menonjol) -->
-                <button (click)="editGaji(emp.id)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-100 transition-all shadow-sm" title="Edit Gaji">
+                <button type="button" (click)="editGaji(emp.id)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-100 transition-all shadow-sm" title="Edit Gaji">
                   <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </button>
 
                 <!-- 2. Tombol Detail (Biru) -->
-                <button (click)="viewDetail(emp.id)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-100 transition-all shadow-sm" title="Lihat Detail">
+                <button type="button" (click)="viewDetail(emp.id)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-100 transition-all shadow-sm" title="Lihat Detail">
                   <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" />
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
@@ -197,7 +203,7 @@
                 </button>
 
                 <!-- 3. Tombol Hapus (Merah) -->
-                <button (click)="confirmDelete(emp)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-100 transition-all shadow-sm" title="Hapus Data">
+                <button type="button" (click)="confirmDelete(emp)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-100 transition-all shadow-sm" title="Hapus Data">
                   <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
@@ -226,17 +232,23 @@
     </div>
 
     <div *ngFor="let emp of paginatedEmployees" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
-      <!-- Status Badge (Top Right) -->
-      <span class="absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
-        {{ emp.status_karyawan || 'PKWTT' }}
-      </span>
+      <!-- Status Badges (Top Right) -->
+      <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
+          {{ emp.status_karyawan || 'PKWTT' }}
+        </span>
+        <!-- INI PERBAIKANNYA: Panggil emp.status_pajak -->
+        <span *ngIf="emp.status_pajak" class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-100">
+          {{ emp.status_pajak }}
+        </span>
+      </div>
 
       <!-- Profile -->
       <div class="flex items-center gap-3 mb-3">
         <div class="h-10 w-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 flex items-center justify-center font-bold text-sm">
-          {{ emp.nama_lengkap.charAt(0) }}
+          {{ emp.nama_lengkap?.charAt(0) || '?' }}
         </div>
-        <div>
+        <div class="pr-16">
           <h3 class="text-sm font-bold text-gray-800">{{ emp.nama_lengkap }}</h3>
           <p class="text-xs text-gray-400 font-mono">{{ emp.nik_karyawan }}</p>
         </div>
@@ -256,14 +268,14 @@
 
       <!-- Actions (Full Width Buttons) -->
       <div class="flex gap-2">
-        <button (click)="editGaji(emp.id)" class="flex-1 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg text-center hover:bg-emerald-100 transition flex items-center justify-center gap-1">
+        <button type="button" (click)="editGaji(emp.id)" class="flex-1 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg text-center hover:bg-emerald-100 transition flex items-center justify-center gap-1">
           <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           Gaji
         </button>
-        <button (click)="viewDetail(emp.id)" class="flex-1 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition">
+        <button type="button" (click)="viewDetail(emp.id)" class="flex-1 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition">
           Detail
         </button>
-        <button (click)="confirmDelete(emp)" class="w-8 flex items-center justify-center text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition">
+        <button type="button" (click)="confirmDelete(emp)" class="w-8 flex items-center justify-center text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
         </button>
       </div>
@@ -279,11 +291,11 @@
       <span class="hidden sm:inline">(Total {{ filteredEmployees.length }} data)</span>
     </span>
     <div class="flex gap-2 order-1 sm:order-2 w-full sm:w-auto justify-center">
-      <button (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 shadow-sm flex-1 sm:flex-none transition-colors">Prev</button>
+      <button type="button" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 shadow-sm flex-1 sm:flex-none transition-colors">Prev</button>
       
       <!-- Numbered Pagination (Desktop Only) -->
       <div class="hidden sm:flex gap-1">
-         <button *ngFor="let p of getPageNumbers()" (click)="changePage(p)"
+         <button type="button" *ngFor="let p of getPageNumbers()" (click)="changePage(p)"
                  [class.bg-[#F4A47B]]="p === currentPage" [class.text-white]="p === currentPage" [class.border-transparent]="p === currentPage"
                  [class.bg-white]="p !== currentPage"
                  class="w-8 h-8 flex items-center justify-center font-bold rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors">
@@ -291,7 +303,7 @@
          </button>
       </div>
 
-      <button (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 shadow-sm flex-1 sm:flex-none transition-colors">Next</button>
+      <button type="button" (click)="changePage(currentPage + 1)" [disabled]="currentPage === totalPages" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 shadow-sm flex-1 sm:flex-none transition-colors">Next</button>
     </div>
   </div>
 
@@ -299,7 +311,7 @@
   <!-- 6. MODALS                                  -->
   <!-- ========================================== -->
 
-  <!-- MODAL DELETE KONFIRMASI (Kode Mas tetap di sini) -->
+  <!-- MODAL DELETE KONFIRMASI -->
   <div *ngIf="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-scale-up text-center">
       <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -310,8 +322,8 @@
         Apakah Anda yakin ingin menghapus <span class="font-bold text-gray-700">"{{ selectedEmployee?.nama_lengkap }}"</span>? Data yang dihapus tidak dapat dikembalikan.
       </p>
       <div class="flex gap-3 mt-6">
-        <button (click)="closeDeleteModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">Batal</button>
-        <button (click)="deleteEmployee()" class="flex-1 py-2.5 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 shadow-md shadow-red-200 transition-all">
+        <button type="button" (click)="closeDeleteModal()" class="flex-1 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors">Batal</button>
+        <button type="button" (click)="deleteEmployee()" class="flex-1 py-2.5 bg-red-500 text-white font-semibold rounded-xl hover:bg-red-600 shadow-md shadow-red-200 transition-all">
           Ya, Hapus
         </button>
       </div>
@@ -319,110 +331,105 @@
   </div>
 
   <!-- MODAL IMPORT -->
-<div *ngIf="showImportModal" class="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" (click)="closeImportModal()"></div>
-  <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="bg-white rounded-2xl shadow-2xl transform transition-all max-w-lg w-full p-6 animate-scale-up z-10">
-      
-      <!-- Header Modal -->
-      <div class="flex justify-between items-center mb-2">
-        <h3 class="text-xl font-bold text-gray-800">Import Data Excel</h3>
-        <button (click)="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition">
-          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-        </button>
-      </div>
-      <p class="text-sm text-gray-500 mb-6">Upload file .xlsx untuk memperbarui data massal. Pastikan format sesuai template.</p>
+  <div *ngIf="showImportModal" class="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" (click)="closeImportModal()"></div>
+    <div class="flex items-center justify-center min-h-screen p-4">
+      <div class="bg-white rounded-2xl shadow-2xl transform transition-all max-w-lg w-full p-6 animate-scale-up z-10">
+        
+        <!-- Header Modal -->
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-xl font-bold text-gray-800">Import Data Excel</h3>
+          <button type="button" (click)="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+          </button>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">Upload file .xlsx untuk memperbarui data massal. Pastikan format sesuai template.</p>
 
-      <!-- ── STEP 1: Area Upload File ── -->
-      <div class="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors relative mb-4"
-           [class.border-orange-300]="selectedFile"
-           [class.bg-orange-50]="selectedFile"
-           [class.border-gray-200]="!selectedFile"
-           [class.hover:bg-orange-50]="!selectedFile"
-           [class.hover:border-orange-200]="!selectedFile">
-        <input type="file" (change)="onFileSelected($event)" accept=".xlsx,.xls" class="absolute inset-0 opacity-0 cursor-pointer">
-        <svg class="h-10 w-10 mb-2" [class.text-orange-400]="selectedFile" [class.text-orange-300]="!selectedFile" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        <p class="text-sm font-medium text-gray-500" *ngIf="!selectedFile">Klik untuk browse file .xlsx</p>
-        <p class="text-sm font-bold text-orange-600" *ngIf="selectedFile">
-          <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-          {{ selectedFile.name }}
-        </p>
-      </div>
-
-      <!-- ── STEP 2: Loading Baca Sheet ── -->
-      <div *ngIf="isLoadingSheets" class="flex items-center justify-center gap-2 my-4 text-orange-500">
-        <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="text-sm font-medium">Membaca daftar sheet...</span>
-      </div>
-
-      <!-- ── STEP 2: Dropdown Pilih Sheet (Muncul setelah file dipilih) ── -->
-      <div *ngIf="sheetNames.length > 0 && !isLoadingSheets" class="mb-6">
-        <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
-          <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
-          Pilih Sheet Data Karyawan
-        </label>
-        <div class="flex gap-2 flex-wrap">
-          <!-- Tampilkan sebagai tombol tab jika sheet sedikit (<=5), dropdown jika banyak -->
-          <ng-container *ngIf="sheetNames.length <= 5; else dropdownSheet">
-            <button *ngFor="let sheet of sheetNames"
-                    (click)="selectedSheet = sheet"
-                    [class.bg-gradient-to-r]="selectedSheet === sheet"
-                    [class.from-orange-400]="selectedSheet === sheet"
-                    [class.to-orange-500]="selectedSheet === sheet"
-                    [class.text-white]="selectedSheet === sheet"
-                    [class.border-transparent]="selectedSheet === sheet"
-                    [class.bg-gray-50]="selectedSheet !== sheet"
-                    [class.text-gray-600]="selectedSheet !== sheet"
-                    class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 hover:border-orange-300 transition-all shadow-sm">
-              {{ sheet }}
-            </button>
-          </ng-container>
-
-          <ng-template #dropdownSheet>
-            <select [(ngModel)]="selectedSheet"
-                    class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400 cursor-pointer transition-all">
-              <option value="" disabled>-- Pilih Sheet --</option>
-              <option *ngFor="let sheet of sheetNames" [value]="sheet">{{ sheet }}</option>
-            </select>
-          </ng-template>
+        <!-- STEP 1: Area Upload File -->
+        <div class="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors relative mb-4"
+             [class.border-orange-300]="selectedFile"
+             [class.bg-orange-50]="selectedFile"
+             [class.border-gray-200]="!selectedFile"
+             [class.hover:bg-orange-50]="!selectedFile"
+             [class.hover:border-orange-200]="!selectedFile">
+          <input type="file" (change)="onFileSelected($event)" accept=".xlsx,.xls" class="absolute inset-0 opacity-0 cursor-pointer">
+          <svg class="h-10 w-10 mb-2" [class.text-orange-400]="selectedFile" [class.text-orange-300]="!selectedFile" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          <p class="text-sm font-medium text-gray-500" *ngIf="!selectedFile">Klik untuk browse file .xlsx</p>
+          <p class="text-sm font-bold text-orange-600" *ngIf="selectedFile">
+            <svg class="w-4 h-4 inline mr-1 -mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            {{ selectedFile.name }}
+          </p>
         </div>
 
-        <!-- Info sheet yang dipilih -->
-        <p *ngIf="selectedSheet" class="text-xs text-orange-500 font-medium mt-2">
-          ✓ Sheet "<span class="font-bold">{{ selectedSheet }}</span>" akan diimport.
-        </p>
-      </div>
-
-      <!-- ── Footer Buttons ── -->
-      <div class="flex gap-3 justify-end">
-        <button (click)="closeImportModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Batal</button>
-        
-        <!-- Disabled jika: belum pilih file, sedang baca sheet, belum pilih sheet, atau sedang proses -->
-        <button (click)="uploadFile()" 
-                [disabled]="!selectedFile || isProcessing || isLoadingSheets || !selectedSheet"
-                class="px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] hover:shadow-md text-white rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold flex items-center gap-2">
-          <svg *ngIf="isProcessing" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+        <!-- STEP 2: Loading Baca Sheet -->
+        <div *ngIf="isLoadingSheets" class="flex items-center justify-center gap-2 my-4 text-orange-500">
+          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          {{ isProcessing ? 'Mengupload...' : 'Import Sekarang' }}
-        </button>
-      </div>
+          <span class="text-sm font-medium">Membaca daftar sheet...</span>
+        </div>
 
+        <!-- STEP 2: Dropdown Pilih Sheet -->
+        <div *ngIf="sheetNames.length > 0 && !isLoadingSheets" class="mb-6">
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
+            <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+            Pilih Sheet Data Karyawan
+          </label>
+          <div class="flex gap-2 flex-wrap">
+            <ng-container *ngIf="sheetNames.length <= 5; else dropdownSheet">
+              <button type="button" *ngFor="let sheet of sheetNames"
+                      (click)="selectedSheet = sheet"
+                      [class.bg-gradient-to-r]="selectedSheet === sheet"
+                      [class.from-orange-400]="selectedSheet === sheet"
+                      [class.to-orange-500]="selectedSheet === sheet"
+                      [class.text-white]="selectedSheet === sheet"
+                      [class.border-transparent]="selectedSheet === sheet"
+                      [class.bg-gray-50]="selectedSheet !== sheet"
+                      [class.text-gray-600]="selectedSheet !== sheet"
+                      class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-gray-200 hover:border-orange-300 transition-all shadow-sm">
+                {{ sheet }}
+              </button>
+            </ng-container>
+
+            <ng-template #dropdownSheet>
+              <select [(ngModel)]="selectedSheet"
+                      class="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-orange-200 focus:border-orange-400 cursor-pointer transition-all">
+                <option value="" disabled>-- Pilih Sheet --</option>
+                <option *ngFor="let sheet of sheetNames" [value]="sheet">{{ sheet }}</option>
+              </select>
+            </ng-template>
+          </div>
+          <p *ngIf="selectedSheet" class="text-xs text-orange-500 font-medium mt-2">
+            ✓ Sheet "<span class="font-bold">{{ selectedSheet }}</span>" akan diimport.
+          </p>
+        </div>
+
+        <!-- Footer Buttons -->
+        <div class="flex gap-3 justify-end">
+          <button type="button" (click)="closeImportModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Batal</button>
+          
+          <button type="button" (click)="uploadFile()" 
+                  [disabled]="!selectedFile || isProcessing || isLoadingSheets || !selectedSheet"
+                  class="px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] hover:shadow-md text-white rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed font-bold flex items-center gap-2">
+            <svg *ngIf="isProcessing" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            {{ isProcessing ? 'Mengupload...' : 'Import Sekarang' }}
+          </button>
+        </div>
+
+      </div>
     </div>
   </div>
-</div>
 
-  <!-- === TAMBAHAN BARU: MODAL EDIT GAJI POPUP === -->
+  <!-- MODAL EDIT GAJI POPUP -->
   <div *ngIf="showSalaryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col animate-scale-in overflow-hidden relative">
       
-      <!-- Decoration Line -->
       <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
 
       <div class="p-8 pb-4">
@@ -445,8 +452,8 @@
       </div>
 
       <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-        <button (click)="closeSalaryModal()" class="flex-1 py-3 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition">Batal</button>
-        <button (click)="updateSalary()" [disabled]="isSalaryProcessing" class="flex-1 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-200 transition disabled:opacity-70 flex justify-center items-center gap-2">
+        <button type="button" (click)="closeSalaryModal()" class="flex-1 py-3 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition">Batal</button>
+        <button type="button" (click)="updateSalary()" [disabled]="isSalaryProcessing" class="flex-1 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-200 transition disabled:opacity-70 flex justify-center items-center gap-2">
            <span *ngIf="isSalaryProcessing" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
            {{ isSalaryProcessing ? 'Menyimpan...' : 'Simpan Gaji' }}
         </button>

@@ -311,8 +311,12 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             nik_ktp: row[2] || '',       // Kolom C
             status_karyawan: row[3] || 'PKWTT', // Kolom D
             nama_lengkap: row[4] || '',  // Kolom E
+            
+            // ===== PERBAIKAN: Index kolom Status Pajak (K1, TK) =====
+            status_pajak: row[5] || 'TK/0',      // Kolom F (Sebelumnya salah baca di row[7])
+            
             no_rekening: row[6] || '',   // Kolom G
-            status_pajak: row[7] || 'TK/0', // Kolom H
+            status_pajak_2026: row[7] || '', // Kolom H
             posisi: row[8] || '',        // Kolom I
             dept: row[9] || '',          // Kolom J
             tanggal_diterima: row[10] || null, // Kolom K

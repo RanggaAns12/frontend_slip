@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // <--- WAJIB IMPORT INI
+import { FormsModule, ReactiveFormsModule } from '@angular/forms'; // <--- WAJIB IMPORT INI
 
 import { SuperadminRoutingModule } from './superadmin.routing';
 import { DashboardComponent } from './dashboard/dashboard.component';
@@ -13,6 +13,14 @@ import { EmployeeDetailComponent } from './employees/employee-detail/employee-de
 import { EmployeeDatabaseComponent } from './employees/employee-database/employee-database.component';
 import { EmployeeSalaryComponent } from './employees/employee-salary/employee-salary.component';
 
+// --- TAMBAHAN IMPORT UNTUK KOMPONEN YANG ERROR SEBELUMNYA ---
+import { UserListComponent } from './users/user-list/user-list.component';
+import { SalaryComponentComponent } from './salary-component/salary-component.component';
+import { GeneratePayrollComponent } from './payroll/generate-payroll/generate-payroll.component';
+import { SlipListComponent } from './payroll/slip-list/slip-list.component';
+import { SlipDetailComponent } from './payroll/slip-detail/slip-detail.component';
+import { EmployeeComponentComponent } from './employees/employee-component/employee-component.component';
+// -------------------------------------------------------------
 
 @NgModule({
   declarations: [
@@ -22,12 +30,22 @@ import { EmployeeSalaryComponent } from './employees/employee-salary/employee-sa
     EmployeeFormComponent,
     EmployeeDetailComponent,
     EmployeeDatabaseComponent,
-    EmployeeSalaryComponent
+    EmployeeSalaryComponent,
+    GeneratePayrollComponent,
+    SlipListComponent,
+    SlipDetailComponent,
+    
+    // --- WAJIB DIDEKLARASIKAN AGAR ngClass & ngModel DIKENALI ---
+    UserListComponent,
+    SalaryComponentComponent,
+    EmployeeComponentComponent
+    // -------------------------------------------------------------
   ],
   imports: [
     CommonModule,
     SuperadminRoutingModule,
-    FormsModule,
+    FormsModule,         // Mengaktifkan [(ngModel)]
+    ReactiveFormsModule, // Mengaktifkan FormBuilder (Jika dibutuhkan di masa depan)
     SharedModule
   ]
 })

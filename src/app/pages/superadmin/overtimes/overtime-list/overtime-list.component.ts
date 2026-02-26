@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { OvertimeApiService, OvertimeSummary } from '../services/overtime-api.service';
+import { OvertimeApiService } from '../services/overtime-api.service';
 
 @Component({
   selector: 'app-overtime-list',
@@ -8,16 +8,15 @@ import { OvertimeApiService, OvertimeSummary } from '../services/overtime-api.se
   styleUrls: ['./overtime-list.component.scss']
 })
 export class OvertimeListComponent implements OnInit {
-  items: any[] = []; // Diubah sementara ke any agar tidak error jika interface belum di-update dengan field baru
+  items: any[] = [];
   isLoading = false;
-  
+
   // Pagination & Filter
   currentPage = 1;
   lastPage = 1;
   total = 0;
   itemsPerPage = 15;
   filterSearch = '';
-  Math = Math;
   private searchTimeout: any;
 
   // Import Upload State
@@ -35,45 +34,58 @@ export class OvertimeListComponent implements OnInit {
     this.loadData();
   }
 
-  // --- PERBAIKAN: Penambahan Rekap Poin dan Parsing Float ---
-  get totalPoinKeseluruhan(): number {
-    return this.items.reduce((acc, curr) => {
-      // Ambil dari total_poin (atau fallback ke total_jam kalau field blm diupdate)
-      const poin = parseFloat(curr.total_poin || curr.total_jam || 0);
-      return acc + poin;
-    }, 0);
+  // ===== Helpers (aman untuk data string/number/null) =====
+  toNumber(value: any): number {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
   }
 
-  get totalJamKeseluruhan(): number {
+  getInitial(name: any): string {
+    const s = (name ?? '').toString().trim();
+    return s.length > 0 ? s.charAt(0).toUpperCase() : '?';
+  }
+
+  formatRupiah(value: any): string {
+    const numValue = this.toNumber(value);
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(numValue);
+  }
+
+  // ===== Rekap =====
+  get totalPoinKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const jam = parseFloat(curr.total_jam || 0);
-      return acc + jam;
+      const poin = this.toNumber(curr?.total_poin ?? curr?.total_jam);
+      return acc + poin;
     }, 0);
   }
 
   get totalUpahKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const bayar = parseFloat(curr.total_bayar || 0);
+      const bayar = this.toNumber(curr?.total_bayar);
       return acc + bayar;
     }, 0);
   }
-  // ----------------------------------------------------------
 
+  // ===== Load Data =====
   loadData(): void {
     this.isLoading = true;
-    const params: any = { 
-      page: this.currentPage, 
-      per_page: this.itemsPerPage 
+
+    const params: any = {
+      page: this.currentPage,
+      per_page: this.itemsPerPage
     };
-    if (this.filterSearch) params['search'] = this.filterSearch;
+    if (this.filterSearch) params.search = this.filterSearch;
 
     this.overtimeApi.getList(params).subscribe({
       next: (res) => {
-        const paginatedData = res.data || res;
-        this.items = paginatedData.data || [];
-        this.total = paginatedData.total || this.items.length;
-        this.currentPage = paginatedData.current_page || 1;
-        this.lastPage = paginatedData.last_page || 1;
+        const paginatedData = res?.data || res;
+        this.items = paginatedData?.data || [];
+        this.total = paginatedData?.total ?? this.items.length;
+        this.currentPage = paginatedData?.current_page ?? 1;
+        this.lastPage = paginatedData?.last_page ?? 1;
         this.isLoading = false;
       },
       error: (err) => {
@@ -100,7 +112,7 @@ export class OvertimeListComponent implements OnInit {
   }
 
   get pageNumbers(): number[] {
-    const pages = [];
+    const pages: number[] = [];
     const start = Math.max(1, this.currentPage - 2);
     const end = Math.min(this.lastPage, start + 4);
     for (let i = start; i <= end; i++) pages.push(i);
@@ -111,27 +123,9 @@ export class OvertimeListComponent implements OnInit {
     this.router.navigate(['/superadmin/overtimes/show', nama]);
   }
 
-  getJamBadgeClass(jam: any): string {
-    const j = parseFloat(jam || 0);
-    if (j > 120) return 'badge-red';
-    if (j >= 60 && j <= 120) return 'badge-yellow';
-    return 'badge-green';
-  }
-
-  formatRupiah(value: any): string {
-    const numValue = parseFloat(value || 0);
-    return new Intl.NumberFormat('id-ID', { 
-      style: 'currency', 
-      currency: 'IDR', 
-      minimumFractionDigits: 0 
-    }).format(numValue);
-  }
-
-  // ----------------------------------------------------
-  // LOGIKA IMPORT EXCEL
-  // ----------------------------------------------------
+  // ===== Import Excel =====
   onFileSelected(event: any): void {
-    const file: File = event.target.files[0];
+    const file: File = event?.target?.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
@@ -142,8 +136,8 @@ export class OvertimeListComponent implements OnInit {
       next: () => {
         this.isImporting = false;
         this.showToast('File Excel berhasil diimpor & disimpan!', 'success');
-        this.currentPage = 1; // Kembali ke halaman 1
-        this.loadData(); // Refresh isi tabel
+        this.currentPage = 1;
+        this.loadData();
       },
       error: (err) => {
         this.isImporting = false;
@@ -152,7 +146,7 @@ export class OvertimeListComponent implements OnInit {
       }
     });
 
-    // Reset input agar bisa upload file yang sama jika dibutuhkan lagi
+    // Reset input agar bisa upload file yang sama lagi
     event.target.value = '';
   }
 
@@ -160,6 +154,6 @@ export class OvertimeListComponent implements OnInit {
     this.toastMessage = msg;
     this.toastType = type;
     if (this.toastTimer) clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => this.toastMessage = '', 4000);
+    this.toastTimer = setTimeout(() => (this.toastMessage = ''), 4000);
   }
 }

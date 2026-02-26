@@ -180,9 +180,8 @@ export class OvertimeShowComponent implements OnInit {
     });
   }
 
-  // --- FUNGSI EDIT POTONGAN (LOCAL STORAGE) ---
+  // --- FUNGSI EDIT POTONGAN ---
   loadSavedPotongan() {
-    // Cari format lama "potongan_NamaKaryawan" atau jika sebelumnya tersimpan sebagai "komponen_"
     const saved = localStorage.getItem(`potongan_${this.namaKaryawan}`);
     if (saved) {
       this.potongan = JSON.parse(saved);
@@ -209,16 +208,48 @@ export class OvertimeShowComponent implements OnInit {
     this.potonganFormStr[field] = inputElement.value.replace(/[^0-9]/g, '');
   }
 
-  savePotongan() {
+    savePotongan() {
+    // 1. Ambil nilai inputan
     this.potongan = { 
       pph21: Number(this.potonganFormStr.pph21) || 0,
       bpjs_kes: Number(this.potonganFormStr.bpjs_kes) || 0,
       bpjs_tk: Number(this.potonganFormStr.bpjs_tk) || 0
     };
     
-    localStorage.setItem(`potongan_${this.namaKaryawan}`, JSON.stringify(this.potongan));
-    this.showPotonganModal = false;
-    this.showToast('Potongan gaji berhasil diperbarui!', 'success');
+    // 2. Total seluruh potongan
+    const sumPotongan = this.potongan.pph21 + this.potongan.bpjs_kes + this.potongan.bpjs_tk;
+
+    // 3. Ambil query params 'month' dan 'year' dari URL (jika user sedang memfilter bulan tertentu)
+    const month = this.route.snapshot.queryParamMap.get('month') || undefined;
+    const year = this.route.snapshot.queryParamMap.get('year') || undefined;
+
+    // 4. Buat Payload untuk API
+    const payload: any = {
+      potongan_pph_bpjs: sumPotongan
+    };
+
+    // 5. Tambahkan ke payload jika ada (kirim sebagai query param atau body tergantung API)
+    // Supaya Laravel tahu potongan ini untuk bulan apa
+    if (month) payload.month = month;
+    if (year) payload.year = year;
+
+    // 6. Panggil API ke Backend
+    this.overtimeApi.updatePotongan(this.namaKaryawan, payload).subscribe({
+      next: (res) => {
+        // Jika sukses, simpan juga di local storage untuk load awal yang cepat
+        localStorage.setItem(`potongan_${this.namaKaryawan}`, JSON.stringify(this.potongan));
+        
+        this.showPotonganModal = false;
+        this.showToast('Potongan lembur berhasil disimpan ke database!', 'success');
+        
+        // Reload detail agar angka terbaru terhitung
+        this.loadDetail();
+      },
+      error: (err) => {
+        console.error(err);
+        this.showToast(err.error?.message || 'Gagal menyimpan potongan ke database', 'error');
+      }
+    });
   }
 
   // --- HELPERS ---
