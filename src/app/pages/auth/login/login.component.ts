@@ -4,6 +4,7 @@ import { AuthApiService } from './services/auth-api.service'; // Pastikan path i
 
 @Component({
   selector: 'app-login',
+  standalone: false, // Jika Mas pakai arsitektur NgModule, pastikan ada ini atau tidak masalah dihapus jika tidak error
   templateUrl: './login.component.html',
 })
 export class LoginComponent {
@@ -60,8 +61,8 @@ export class LoginComponent {
         localStorage.setItem('auth_token', token);
         
         // C. Ambil Data User (PERBAIKAN: Harus ambil dari response.data.user)
-        const user = response.data?.user; 
-        const role = user?.role; // Sekarang ini berbentuk object {id, name, slug}
+        const user = response.data?.user || response.user; 
+        const role = user?.role; // Sekarang ini berbentuk object {id, name, slug} atau string
 
         // D. Simpan User Data jika ada
         if (user) {
@@ -73,23 +74,35 @@ export class LoginComponent {
           localStorage.setItem('user', JSON.stringify(user));
           // ==========================================
 
-          // PERBAIKAN: Simpan slug role-nya saja sebagai string
+          // PERBAIKAN: Simpan slug role-nya saja sebagai string (Lebih kuat pengecekannya)
           if (role && role.slug) {
             localStorage.setItem('user_role', role.slug);
+          } else if (role && role.name) {
+            localStorage.setItem('user_role', role.name.toLowerCase().replace(' ', ''));
+          } else if (user.role_id === 1) {
+            localStorage.setItem('user_role', 'superadmin');
+          } else if (user.role_id === 2) {
+            localStorage.setItem('user_role', 'admin-hrd');
           }
         } else {
           console.warn('⚠️ Data User kosong di response login');
         }
 
-        // E. Redirect Logic (Berdasarkan Role Slug)
-        // PERBAIKAN: Gunakan role?.slug karena role sekarang adalah object
-        const roleSlug = role?.slug;
+        // E. Redirect Logic (Berdasarkan Role Slug atau Role ID)
+        // PERBAIKAN: Gunakan role?.slug, role?.name, atau fallback ke role_id
+        let roleSlug = role?.slug || (role?.name ? role.name.toLowerCase().replace(' ', '') : '');
+        
+        // Jika dari object role tidak ketemu, fallback gunakan role_id
+        if (!roleSlug && user?.role_id) {
+            roleSlug = user.role_id === 1 ? 'superadmin' : (user.role_id === 2 ? 'admin-hrd' : '');
+        }
+
         console.log('🔀 Redirecting user with role:', roleSlug);
 
         // PERBAIKAN: Tambahkan trick "Sapu Jagat" reload() agar sidebar dinamis langsung ter-update
-        if (roleSlug === 'superadmin') {
+        if (roleSlug === 'superadmin' || roleSlug === 'superadmin') { // antisipasi string "superadmin" tanpa spasi
           this.router.navigate(['/superadmin/dashboard']).then(() => window.location.reload());
-        } else if (roleSlug === 'admin-hrd') {
+        } else if (roleSlug === 'admin-hrd' || roleSlug === 'adminhrd') {
           this.router.navigate(['/hrd/dashboard']).then(() => window.location.reload());
         } else {
           // Fallback Default (Jika role tidak dikenali atau null)

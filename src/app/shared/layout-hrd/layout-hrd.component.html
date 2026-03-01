@@ -1,0 +1,30 @@
+<div class="flex h-screen bg-gray-50 overflow-hidden font-sans relative">
+
+  <!-- OVERLAY GELAP UNTUK MOBILE -->
+  <div 
+    *ngIf="layoutService.isMobileSidebarOpen()" 
+    class="fixed inset-0 bg-gray-900/50 z-30 lg:hidden transition-opacity backdrop-blur-sm"
+    (click)="closeMobileSidebar()"
+    aria-hidden="true"
+  ></div>
+
+  <!-- MEMANGGIL SIDEBAR KHUSUS HRD -->
+  <app-sidebar-hrd></app-sidebar-hrd>
+
+  <!-- KONTEN UTAMA (KANAN) -->
+  <div class="flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out">
+    
+    <!-- Navbar Atas (Tetap pakai navbar yang sama, tidak perlu dibedakan) -->
+    <app-navbar></app-navbar>
+
+    <!-- Area Konten (Tempat komponen HRD seperti Dashboard, Karyawan akan dimuat) -->
+    <main class="flex-1 overflow-y-auto bg-slate-50/50 relative">
+      <!-- Container dengan batas maksimal lebar -->
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 pb-24">
+        <!-- Router Outlet tempat komponen dirender -->
+        <router-outlet></router-outlet>
+      </div>
+    </main>
+
+  </div>
+</div>

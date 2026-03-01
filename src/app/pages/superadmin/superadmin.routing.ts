@@ -109,7 +109,7 @@ const routes: Routes = [
       // ----------------------------------------
       // FALLBACK ROUTE (Jika URL tidak ditemukan)
       // ----------------------------------------
-      // { path: '**', redirectTo: 'dashboard' },
+      { path: '**', redirectTo: 'dashboard' },
     ],
   },
 ];

@@ -1,75 +1,82 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { LayoutService } from '../../services/layout.service'; // Pastikan path benar
+import { Router } from '@angular/router';
+import { LayoutService } from '../../services/layout.service';
+import { ProfileApiService } from '../../pages/superadmin/profile/services/profile-api.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
+  standalone: false,
   templateUrl: './navbar.component.html',
-  // styleUrls: ['./navbar.component.scss'] // Uncomment jika ada file scss
+  styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent implements OnInit, OnDestroy {
-  
-  // Variable yang dibutuhkan HTML
-  greeting: string = 'Selamat Datang';
-  userName: string = 'Admin';
-  userInitials: string = 'AD';
+  userName: string = '';
+  userInitials: string = '';
+  greeting: string = '';
   currentTime: Date = new Date();
   
-  private timerId: any;
+  private timer: any;
+  private profileSub!: Subscription;
 
-  // Inject LayoutService agar bisa dipanggil di HTML (layoutService.toggle...)
-  constructor(public layoutService: LayoutService) {}
+  constructor(
+    public layoutService: LayoutService,
+    private router: Router,
+    private profileApi: ProfileApiService // Inject Profile Service
+  ) {}
 
   ngOnInit(): void {
-    this.loadUserData();
-    this.updateClockAndGreeting();
-    
-    // Update jam setiap 30 detik
-    this.timerId = setInterval(() => this.updateClockAndGreeting(), 30000);
+    this.updateTimeAndGreeting();
+    this.timer = setInterval(() => {
+      this.updateTimeAndGreeting();
+    }, 60000); // Update waktu setiap 1 menit
+
+    this.loadUser();
+
+    // DENGARKAN PERUBAHAN PROFIL
+    this.profileSub = this.profileApi.profileUpdated.subscribe((updatedUser: any) => {
+      this.userName = updatedUser.name;
+      this.userInitials = this.getInitials(updatedUser.name);
+    });
+  }
+
+  updateTimeAndGreeting(): void {
+    this.currentTime = new Date();
+    const hour = this.currentTime.getHours();
+
+    if (hour >= 5 && hour < 11) {
+      this.greeting = 'Selamat Pagi';
+    } else if (hour >= 11 && hour < 15) {
+      this.greeting = 'Selamat Siang';
+    } else if (hour >= 15 && hour < 18) {
+      this.greeting = 'Selamat Sore';
+    } else {
+      this.greeting = 'Selamat Malam';
+    }
+  }
+
+  loadUser(): void {
+    const localUserStr = localStorage.getItem('user');
+    if (localUserStr) {
+      const user = JSON.parse(localUserStr);
+      this.userName = user.name || 'Admin';
+      this.userInitials = this.getInitials(this.userName);
+    }
+  }
+
+  getInitials(name: string): string {
+    if (!name) return 'A';
+    const parts = name.trim().split(' ');
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
   ngOnDestroy(): void {
-    if (this.timerId) clearInterval(this.timerId);
-  }
-
-  // Logic Jam & Salam
-  private updateClockAndGreeting(): void {
-    this.currentTime = new Date();
-    const h = this.currentTime.getHours();
-    
-    if (h >= 4 && h < 11) this.greeting = 'Selamat Pagi';
-    else if (h >= 11 && h < 15) this.greeting = 'Selamat Siang';
-    else if (h >= 15 && h < 18) this.greeting = 'Selamat Sore';
-    else this.greeting = 'Selamat Malam';
-  }
-
-  // Logic Ambil Nama User dari LocalStorage
-  private loadUserData(): void {
-    const userJson = localStorage.getItem('user_data');
-    
-    if (userJson) {
-      try {
-        const userObj = JSON.parse(userJson);
-        this.userName = userObj.name || userObj.nama_lengkap || userObj.username || 'Admin';
-      } catch (e) {
-        console.warn('Gagal parse user data', e);
-      }
-    } else {
-      // Fallback jika json kosong
-      this.userName = localStorage.getItem('username') || 'Admin';
+    if (this.timer) {
+      clearInterval(this.timer);
     }
-
-    this.generateInitials(this.userName);
-  }
-
-  // Generate Inisial (Contoh: "Budi Santoso" -> "BS")
-  private generateInitials(name: string): void {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      this.userInitials = (parts[0][0] + parts[1][0]).toUpperCase();
-    } else if (parts.length === 1) {
-      this.userInitials = parts[0].substring(0, 2).toUpperCase();
-    } else {
-      this.userInitials = 'AD';
+    if (this.profileSub) {
+      this.profileSub.unsubscribe();
     }
   }
 }

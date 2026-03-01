@@ -150,12 +150,18 @@ export class EmployeeSalaryComponent implements OnInit {
     // Fetch data tunjangan karyawan ini dari backend
     this.employeeApi.getById(employee.id).subscribe({
       next: (res: any) => {
+        // 🔥 PERBAIKAN: Membaca data Pivot dari relasi belongsToMany Laravel
         if (res.data && res.data.salary_components) {
-          this.employeeComponents = res.data.salary_components.map((item: any) => ({
-            salary_component_id: item.salary_component_id,
-            custom_amount: item.custom_amount ? Math.round(Number(item.custom_amount)) : 0,
-            component: item.component
-          }));
+          this.employeeComponents = res.data.salary_components.map((item: any) => {
+            // Karena pakai belongsToMany, data custom_amount ada di objek "pivot"
+            // Dan ID komponen adalah item.id
+            const pivotAmount = item.pivot && item.pivot.custom_amount ? item.pivot.custom_amount : 0;
+            return {
+              salary_component_id: item.id, // Ambil dari item.id
+              custom_amount: Math.round(Number(pivotAmount)),
+              component: item
+            };
+          });
         }
       },
       error: () => this.showToast('Gagal mengambil data komponen gaji karyawan', 'error')
@@ -181,13 +187,25 @@ export class EmployeeSalaryComponent implements OnInit {
 
   onComponentSelect(index: number, event: any): void {
     const id = Number(event.target.value);
+    
+    // 🔥 PERBAIKAN: Pastikan tidak memilih komponen yang sudah ada di baris lain
+    const isAlreadySelected = this.employeeComponents.some((comp, i) => i !== index && Number(comp.salary_component_id) === id);
+    
+    if (isAlreadySelected) {
+      this.showToast('Komponen ini sudah ditambahkan sebelumnya!', 'error');
+      // Reset dropdown ke default
+      this.employeeComponents[index].salary_component_id = 0;
+      event.target.value = 0;
+      return;
+    }
+
     const selectedComp: any = this.masterComponents.find(c => c.id === id);
     
     if (selectedComp) {
+      this.employeeComponents[index].salary_component_id = id;
       this.employeeComponents[index].component = selectedComp;
       
       // Mengisi nominal secara otomatis dari data master (jika master punya kolom 'nominal').
-      // Nilainya dibulatkan agar tidak ada desimal (.00).
       this.employeeComponents[index].custom_amount = selectedComp.nominal 
         ? Math.round(Number(selectedComp.nominal)) 
         : 0;
@@ -228,4 +246,9 @@ export class EmployeeSalaryComponent implements OnInit {
   }
   
   closeToast() { this.toastMessage = ''; }
+  
+  // TrackBy function untuk ngFor
+  trackByIndex(index: number, obj: any): any {
+    return index;
+  }
 }

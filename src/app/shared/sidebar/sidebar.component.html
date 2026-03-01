@@ -64,8 +64,8 @@
         MASTER DATA
       </p>
       
-            <!-- DATA KARYAWAN -->
-      <a routerLink="/superadmin/employees" 
+      <!-- DATA KARYAWAN -->
+      <a routerLink="/superadmin/employees/database" 
          routerLinkActive="bg-orange-50 text-orange-600" 
          [routerLinkActiveOptions]="{exact: true}" 
          class="flex items-center p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 group transition-all duration-200 relative cursor-pointer"
@@ -78,12 +78,11 @@
         </span>
       </a>
 
-      <!-- MENU BARU: PENYESUAIAN GAJI -->
+      <!-- 🔴 MENU PENYESUAIAN GAJI -->
       <a routerLink="/superadmin/employees/salary" routerLinkActive="bg-orange-50 text-orange-600" 
          class="flex items-center p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 group transition-all duration-200 relative cursor-pointer"
          title="Penyesuaian Gaji & Tunjangan">
         <svg class="flex-shrink-0 w-6 h-6 transition-colors duration-200 group-hover:text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <!-- Ikon Uang / Gaji -->
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <span class="ml-3 font-medium whitespace-nowrap transition-all duration-300" [class.hidden]="layoutService.isSidebarCollapsed()">
@@ -135,7 +134,7 @@
       </a>
     </div>
 
-    <!-- GROUP: PENGGAJIAN (Modul Baru) -->
+    <!-- 🔴 GROUP: PENGGAJIAN -->
     <div class="mb-6 space-y-1">
       <p class="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2 mt-4 transition-opacity duration-300" [class.opacity-0]="layoutService.isSidebarCollapsed()">
         PENGGAJIAN
@@ -172,7 +171,7 @@
         PENGATURAN
       </p>
 
-      <!-- KOMPONEN GAJI -->
+      <!-- 🔴 KOMPONEN GAJI -->
       <a routerLink="/superadmin/settings/salary-components" routerLinkActive="bg-orange-50 text-orange-600" 
          class="flex items-center p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 group transition-all duration-200 relative cursor-pointer"
          title="Master Komponen Gaji">
@@ -184,7 +183,7 @@
         </span>
       </a>
 
-       <!-- SETTING USER / AKUN SAYA (Baru Diganti) -->
+       <!-- SETTING USER / AKUN SAYA -->
        <a routerLink="/superadmin/settings/profile" routerLinkActive="bg-orange-50 text-orange-600" 
          class="flex items-center p-3 rounded-xl text-gray-600 hover:bg-gray-50 hover:text-gray-900 group transition-all duration-200 relative cursor-pointer"
          title="Pengaturan Akun">

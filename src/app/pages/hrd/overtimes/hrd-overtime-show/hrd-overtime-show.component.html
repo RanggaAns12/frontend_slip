@@ -1,0 +1,178 @@
+<div class="p-4 md:p-6 bg-gray-50 min-h-screen font-sans animate-fade-in-up pb-20 relative">
+
+  <!-- ========================================== -->
+  <!-- 0. TOAST ALERT (NOTIFIKASI MELAYANG)       -->
+  <!-- ========================================== -->
+  <div *ngIf="toastMessage" 
+       [ngClass]="{'bg-green-50 text-green-700 border-green-200': toastType === 'success', 'bg-red-50 text-red-700 border-red-200': toastType === 'error'}"
+       class="fixed top-5 right-5 z-[60] px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 animate-slide-in-right transition-all duration-300">
+    <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+    <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+    <span class="font-medium text-sm">{{ toastMessage }}</span>
+    <button (click)="toastMessage = ''" class="ml-2 opacity-50 hover:opacity-100"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 1. BREADCRUMB & HEADER                     -->
+  <!-- ========================================== -->
+  <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div class="flex items-center gap-3">
+      <button (click)="goBack()" class="flex items-center justify-center w-10 h-10 bg-white rounded-xl border border-gray-200 shadow-sm text-gray-500 hover:text-orange-600 hover:border-orange-200 hover:bg-orange-50 transition-all">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <div>
+        <h1 class="text-xl md:text-2xl font-extrabold text-gray-800 tracking-tight">Rincian Lembur</h1>
+        <p class="text-xs text-gray-500 mt-1">Overtime <span class="mx-1">/</span> <span class="font-bold text-orange-600">{{ namaKaryawan }}</span></p>
+      </div>
+    </div>
+    
+    <button (click)="openCreateModal()" class="px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+      Tambah Lembur
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="animate-pulse space-y-6">
+    <div class="h-32 bg-white rounded-2xl border border-gray-100 w-full"></div>
+    <div class="h-64 bg-white rounded-2xl border border-gray-100 w-full"></div>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <!-- ========================================== -->
+    <!-- 2. PROFILE & SUMMARY CARDS                 -->
+    <!-- ========================================== -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 mb-6 overflow-hidden">
+      <div class="h-1.5 w-full bg-gradient-to-r from-[#F4A47B] to-[#E08E60]"></div>
+      
+      <div class="p-5 md:p-6">
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-50">
+          <div class="w-16 h-16 bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 rounded-full flex items-center justify-center text-2xl font-black shadow-inner border-2 border-white">
+            {{ namaKaryawan.charAt(0) }}
+          </div>
+          <div>
+            <h2 class="text-2xl font-black text-gray-800">{{ namaKaryawan }}</h2>
+            <p class="text-xs text-gray-400 font-medium mt-1">Status: Karyawan Aktif</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
+          <!-- Card: Poin -->
+          <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100 flex items-center gap-4">
+            <div class="w-10 h-10 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <div>
+              <p class="text-xl font-black text-blue-800">{{ totalPoin | number:'1.0-2' }} <span class="text-[10px] font-bold text-blue-600 uppercase">Poin</span></p>
+              <p class="text-[10px] text-blue-600 uppercase font-bold tracking-wider mt-0.5">Total Konversi Poin</p>
+            </div>
+          </div>
+          
+          <!-- Card: Total Hari -->
+          <div class="bg-orange-50 rounded-xl p-4 border border-orange-100 flex items-center gap-4">
+            <div class="w-10 h-10 bg-orange-100 text-orange-600 rounded-lg flex items-center justify-center shadow-sm">
+               <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+              <p class="text-xl font-black text-orange-700">{{ totalHari }} <span class="text-[10px] font-bold text-orange-600 uppercase">Hari</span></p>
+              <p class="text-[10px] text-orange-600 uppercase font-bold tracking-wider mt-0.5">Total Hari Lembur</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3. DETAIL TABLE                            -->
+    <!-- ========================================== -->
+    <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse min-w-[600px]">
+          <thead>
+            <tr class="bg-gray-50/80 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+              <th class="px-6 py-4 font-bold w-12 text-center">No</th>
+              <th class="px-6 py-4 font-bold">Tanggal Lembur</th>
+              <th class="px-6 py-4 font-bold w-1/2">Poin Konversi</th>
+              <th class="px-6 py-4 font-bold text-center w-28">Aksi</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-100 text-sm">
+            <tr *ngFor="let item of details; let i = index" class="hover:bg-orange-50/20 transition-colors">
+              <td class="px-6 py-3 text-center text-gray-400 font-medium">{{ i + 1 }}</td>
+              <td class="px-6 py-3 font-bold text-gray-700">{{ formatTanggal(item.tanggal_lembur) }}</td>
+              <td class="px-6 py-3">
+                <div class="flex items-center gap-3">
+                  <span class="w-16 font-bold text-gray-700">{{ item.konversi_lembur | number:'1.0-2' }} Poin</span>
+                  <div class="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden max-w-[200px]">
+                    <div class="h-2 rounded-full" [ngClass]="{'bg-red-500': +item.konversi_lembur >= 10, 'bg-amber-400': +item.konversi_lembur >= 5 && +item.konversi_lembur < 10, 'bg-emerald-500': +item.konversi_lembur < 5}" [style.width]="getProgressWidth(item.konversi_lembur)"></div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-3 text-center flex justify-center gap-2">
+                <button (click)="openEditModal(item)" class="p-1.5 bg-blue-50 text-blue-600 rounded hover:bg-blue-600 hover:text-white transition-colors border border-blue-100" title="Edit Baris">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                </button>
+                <button (click)="openDeleteModal(item.id)" class="p-1.5 bg-red-50 text-red-600 rounded hover:bg-red-600 hover:text-white transition-colors border border-red-100" title="Hapus Baris">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="details.length === 0">
+              <td colspan="4" class="text-center py-12 text-gray-400 text-sm font-medium">Tidak ada rincian tanggal lembur.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<!-- ========================================== -->
+<!-- 4. MODAL FORM LEMBUR (CREATE & EDIT)       -->
+<!-- ========================================== -->
+<div *ngIf="showFormModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden relative">
+    <div class="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+      <h3 class="text-lg font-bold text-gray-800">{{ isEditMode ? 'Edit Data Lembur' : 'Tambah Lembur Manual' }}</h3>
+      <button (click)="closeFormModal()" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+    </div>
+    <div class="p-6 space-y-4">
+      
+      <div>
+        <label class="block text-xs font-bold text-gray-500 mb-1">Tanggal Lembur *</label>
+        <input type="date" [(ngModel)]="lemburForm.tanggal_lembur" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none">
+      </div>
+      
+      <div>
+        <label class="block text-xs font-bold text-gray-500 mb-1">Poin Konversi *</label>
+        <input type="number" step="0.5" [(ngModel)]="lemburForm.konversi_lembur" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none">
+      </div>
+      
+    </div>
+    <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+      <button (click)="closeFormModal()" class="px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-200 rounded-lg">Batal</button>
+      <button (click)="saveLembur()" [disabled]="isSaving || !lemburForm.tanggal_lembur || !lemburForm.konversi_lembur" class="px-4 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm disabled:opacity-50">
+        {{ isSaving ? 'Menyimpan...' : 'Simpan Data' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 5. MODAL KONFIRMASI HAPUS LEMBUR           -->
+<!-- ========================================== -->
+<div *ngIf="showDeleteModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden text-center p-6">
+    <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    <h3 class="text-xl font-bold text-gray-800 mb-2">Hapus Data Lembur?</h3>
+    <p class="text-sm text-gray-500 mb-6">Data ini akan dihapus secara permanen dan tidak dapat dikembalikan.</p>
+    <div class="flex gap-3 justify-center">
+      <button (click)="showDeleteModal = false" class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition">Batal</button>
+      <button (click)="confirmDeleteLembur()" [disabled]="isDeleting" class="px-5 py-2.5 text-sm font-bold text-white bg-red-500 hover:bg-red-600 rounded-xl shadow-sm shadow-red-200 transition disabled:opacity-50 flex items-center gap-2">
+        <svg *ngIf="isDeleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        {{ isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}
+      </button>
+    </div>
+  </div>
+</div>

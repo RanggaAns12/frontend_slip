@@ -20,6 +20,7 @@ import { GeneratePayrollComponent } from './payroll/generate-payroll/generate-pa
 import { SlipListComponent } from './payroll/slip-list/slip-list.component';
 import { SlipDetailComponent } from './payroll/slip-detail/slip-detail.component';
 import { EmployeeComponentComponent } from './employees/employee-component/employee-component.component';
+import { ProfileComponent } from './profile/profile.component'; // Nanti di-uncomment kalau komponen Profile sudah dibuat
 // -------------------------------------------------------------
 
 @NgModule({
@@ -38,7 +39,8 @@ import { EmployeeComponentComponent } from './employees/employee-component/emplo
     // --- WAJIB DIDEKLARASIKAN AGAR ngClass & ngModel DIKENALI ---
     UserListComponent,
     SalaryComponentComponent,
-    EmployeeComponentComponent
+    EmployeeComponentComponent,
+    ProfileComponent
     // -------------------------------------------------------------
   ],
   imports: [

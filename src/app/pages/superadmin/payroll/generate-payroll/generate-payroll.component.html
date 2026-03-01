@@ -8,18 +8,29 @@
     </div>
 
     <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-      <select [(ngModel)]="selectedMonth" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 min-w-[140px]">
+      <select [(ngModel)]="selectedMonth" class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 min-w-[140px]">
         <option *ngFor="let m of months" [value]="m.value">{{ m.name }}</option>
       </select>
 
-      <select [(ngModel)]="selectedYear" class="px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 min-w-[100px]">
+      <select [(ngModel)]="selectedYear" class="px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 min-w-[100px]">
         <option *ngFor="let y of years" [value]="y">{{ y }}</option>
       </select>
 
-      <button (click)="onPreview()" [disabled]="isLoading" class="px-5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-all shadow-sm flex items-center gap-2 disabled:opacity-50">
+      <button (click)="onPreview()" [disabled]="isLoading" class="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white text-sm font-medium rounded-xl transition-all shadow-sm flex items-center gap-2 disabled:opacity-50">
         <svg *ngIf="isLoading" class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         <svg *ngIf="!isLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         Preview
+      </button>
+
+      <!-- TOMBOL UNLOCK DIPINDAH KE SINI -->
+      <button *ngIf="isAlreadyGenerated" 
+              (click)="onUnlockPayroll()" 
+              [disabled]="isLoading"
+              class="px-5 py-2.5 bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 hover:border-rose-300 text-sm font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 disabled:opacity-50">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
+        </svg>
+        Buka Kunci Data
       </button>
     </div>
   </div>
@@ -52,16 +63,15 @@
           <tr>
             <th class="px-6 py-4 whitespace-nowrap">Karyawan</th>
             <th class="px-6 py-4 whitespace-nowrap min-w-[200px]">Rincian Penghasilan</th>
-            <!-- Kolom Background Orange Khusus Inputan HRD -->
             <th class="px-6 py-4 whitespace-nowrap bg-orange-50/50 border-l border-r border-slate-200 text-center">
               Potongan Khusus (Opsional)
             </th>
             <th class="px-6 py-4 whitespace-nowrap text-right">Take Home Pay</th>
+            <th class="px-6 py-4 whitespace-nowrap text-center">Aksi</th> <!-- KOLOM BARU AKSI -->
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-100">
           
-          <!-- trackByFn krusial agar input form tidak lag/melompat -->
           <tr *ngFor="let item of draftData; trackBy: trackByFn" class="hover:bg-slate-50/50 transition-colors">
             
             <!-- Kolom Profil -->
@@ -69,7 +79,6 @@
               <div class="font-semibold text-slate-800">{{ item.name }}</div>
               <div class="text-slate-500 text-xs mt-0.5">{{ item.nik }} • {{ item.department }}</div>
               
-              <!-- Badge PTKP & Kehadiran -->
               <div class="flex flex-wrap gap-2 mt-2">
                 <span class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold rounded-md border border-blue-100" title="Status PTKP">
                   PTKP: {{ item.status_pajak || 'TK' }}
@@ -80,7 +89,7 @@
               </div>
             </td>
 
-            <!-- Kolom Penghasilan (Ditambah Tunjangan) -->
+            <!-- Kolom Penghasilan -->
             <td class="px-6 py-4">
               <div class="text-slate-700 flex justify-between gap-4">
                 <span>Gaji Pokok:</span>
@@ -90,23 +99,19 @@
                 <span>Lembur ({{ item.overtime_hours }} Pts):</span>
                 <span>{{ item.overtime_pay | currency:'IDR':'symbol':'1.0-0' }}</span>
               </div>
-              <!-- Tampilkan Tunjangan jika ada -->
               <div *ngIf="item.bonus > 0" class="text-indigo-600 text-xs mt-1 flex justify-between gap-4 font-medium">
                 <span>Tunjangan Khusus:</span>
                 <span>{{ item.bonus | currency:'IDR':'symbol':'1.0-0' }}</span>
               </div>
-
               <div class="font-bold text-slate-800 mt-2 pt-2 border-t border-slate-200 flex justify-between gap-4">
                 <span>Total:</span>
                 <span>{{ item.total_income | currency:'IDR':'symbol':'1.0-0' }}</span>
               </div>
             </td>
 
-            <!-- Kolom Input Potongan 2-Way Binding -->
+            <!-- Kolom Input Potongan -->
             <td class="px-6 py-4 bg-orange-50/30 border-l border-r border-slate-100 min-w-[260px] align-top">
               <div class="space-y-2">
-                
-                <!-- Input PPh21 (TER Otomatis bisa ditimpa) -->
                 <div class="flex items-center justify-between gap-3">
                   <label class="text-xs text-slate-600 font-bold w-16">PPh21<span *ngIf="!isAlreadyGenerated" class="text-[9px] font-normal block text-orange-600">Auto TER</span></label>
                   <div class="relative w-full group">
@@ -120,7 +125,6 @@
                   </div>
                 </div>
 
-                <!-- Input BPJS Kes -->
                 <div class="flex items-center justify-between gap-3">
                   <label class="text-xs text-slate-600 font-medium w-16">BPJS Kes</label>
                   <div class="relative w-full">
@@ -134,7 +138,6 @@
                   </div>
                 </div>
 
-                <!-- Input BPJS TK -->
                 <div class="flex items-center justify-between gap-3">
                   <label class="text-xs text-slate-600 font-medium w-16">BPJS TK</label>
                   <div class="relative w-full">
@@ -148,15 +151,13 @@
                   </div>
                 </div>
 
-                <!-- Info Alpa (Auto Hitung dari Backend) -->
                 <div *ngIf="item.absence_deduction > 0" class="text-[10px] text-rose-500 text-right font-medium px-1 pt-1">
                   + Pot. Alpa: {{ item.absence_deduction | currency:'IDR':'symbol':'1.0-0' }}
                 </div>
-
               </div>
             </td>
 
-            <!-- Kolom Bersih (Take Home Pay) -->
+            <!-- Kolom Take Home Pay -->
             <td class="px-6 py-4 text-right">
               <div class="text-rose-500 text-xs mb-1 font-medium">
                 Potongan: -{{ item.total_deduction | currency:'IDR':'symbol':'1.0-0' }}
@@ -166,35 +167,33 @@
               </div>
             </td>
 
+            <!-- Kolom Baru: AKSI CEK ABSEN -->
+            <td class="px-6 py-4 text-center">
+              <button (click)="showDetailAbsensi(item)" 
+                      class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all shadow-sm w-full whitespace-nowrap"
+                      title="Lihat Detail Absen">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Cek Absen
+              </button>
+            </td>
+
           </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Footer Action (Berisi Tombol Kunci ATAU Buka Kunci) -->
-    <div class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
-      
-      <!-- Tombol Generate: Muncul jika BELUM digenerate -->
-      <button *ngIf="!isAlreadyGenerated" 
-              (click)="onGenerate()" 
+    <!-- Footer Action (HANYA MUNCUL JIKA BELUM DIGENERATE) -->
+    <div *ngIf="!isAlreadyGenerated" class="p-5 border-t border-slate-200 bg-slate-50 flex justify-end gap-3">
+      <button (click)="onGenerate()" 
               [disabled]="isGenerating" 
               class="px-6 py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
         <svg *ngIf="isGenerating" class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         <svg *ngIf="!isGenerating" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         {{ isGenerating ? 'Menyimpan & Mengunci Data...' : 'Generate & Kunci Data' }}
       </button>
-
-      <!-- Tombol Unlock/Reset: Muncul HANYA JIKA SUDAH digenerate/dikunci -->
-      <button *ngIf="isAlreadyGenerated" 
-              (click)="onUnlockPayroll()" 
-              [disabled]="isLoading"
-              class="px-6 py-2.5 bg-white text-rose-600 border border-rose-200 hover:bg-rose-50 hover:border-rose-300 font-bold rounded-xl shadow-sm transition-all flex items-center gap-2 disabled:opacity-50">
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z" />
-        </svg>
-        Buka Kunci Gaji (Reset)
-      </button>
-
     </div>
 
   </div>
