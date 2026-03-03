@@ -19,6 +19,7 @@ import { EmployeeDatabaseComponent } from './employees/employee-database/employe
 import { EmployeeFormComponent } from './employees/employee-form/employee-form.component';
 import { EmployeeDetailComponent } from './employees/employee-detail/employee-detail.component';
 import { EmployeeSalaryComponent } from './employees/employee-salary/employee-salary.component';
+import { EmployeeComponentComponent } from './employees/employee-component/employee-component.component';
 
 // =========================
 // USERS
@@ -30,14 +31,13 @@ import { UserFormComponent } from './users/user-form/user-form.component';
 // PENGATURAN (SETTINGS)
 // =========================
 import { SalaryComponentComponent } from './salary-component/salary-component.component';
-import { ProfileComponent } from './profile/profile.component'; // Nanti di-uncomment kalau komponen Profile sudah dibuat
+import { ProfileComponent } from './profile/profile.component'; 
 
 // =========================
 // PENGGAJIAN (PAYROLL)
 // =========================
-import { GeneratePayrollComponent } from './payroll/generate-payroll/generate-payroll.component'; // Nanti di-uncomment
-import { SlipListComponent } from './payroll/slip-list/slip-list.component'; // Nanti di-uncomment
-import { EmployeeComponentComponent } from './employees/employee-component/employee-component.component';
+import { GeneratePayrollComponent } from './payroll/generate-payroll/generate-payroll.component'; 
+import { SlipListComponent } from './payroll/slip-list/slip-list.component'; 
 
 const routes: Routes = [
   {
@@ -60,16 +60,19 @@ const routes: Routes = [
       // ----------------------------------------
       // 3. EMPLOYEES (DATA KARYAWAN)
       // ----------------------------------------
-      { path: 'employees', component: EmployeeListComponent },
+      // 👇 Sesuai dengan link Sidebar baru: /superadmin/employee-list
+      { path: 'employee-list', component: EmployeeListComponent },
       
+      // Fallback: Jika mengakses /employees, lempar ke /employee-list
+      { path: 'employees', redirectTo: 'employee-list', pathMatch: 'full' },
+
       // Route statis (Harus di atas route dinamis)
       { path: 'employees/database', component: EmployeeDatabaseComponent },
       { path: 'employees/create', component: EmployeeFormComponent },
-      { path: 'employees/salary', component: EmployeeSalaryComponent },
-      { path: 'employees/salary', component: EmployeeSalaryComponent },
-      { path: 'employees/:id/components', component: EmployeeComponentComponent }, // :id menangkap ID karyawan
+      { path: 'employees/salary', component: EmployeeSalaryComponent }, // Duplikat sudah dihapus
 
       // Route dinamis (Harus di bawah route statis)
+      { path: 'employees/:id/components', component: EmployeeComponentComponent }, // :id menangkap ID karyawan
       { path: 'employees/edit/:id', component: EmployeeFormComponent },
       { path: 'employees/:id', component: EmployeeDetailComponent },
 
@@ -93,7 +96,6 @@ const routes: Routes = [
 
       // ----------------------------------------
       // 5. PENGGAJIAN (PAYROLL)
-      // Nanti akan kita buka komentarnya setelah komponen dibuat
       // ----------------------------------------
       { path: 'payroll/generate', component: GeneratePayrollComponent },
       { path: 'payroll/slips', component: SlipListComponent },
@@ -102,8 +104,6 @@ const routes: Routes = [
       // 6. PENGATURAN (SETTINGS)
       // ----------------------------------------
       { path: 'settings/salary-components', component: SalaryComponentComponent },
-      
-      // Nanti akan kita buka komentarnya setelah komponen Profile dibuat
       { path: 'settings/profile', component: ProfileComponent },
 
       // ----------------------------------------
