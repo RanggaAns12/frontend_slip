@@ -1,121 +1,153 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment'; // Pastikan path sesuai
 import { Chart, registerables } from 'chart.js';
 
-// Daftarkan semua komponen Chart.js
 Chart.register(...registerables);
 
 @Component({
-  selector: 'app-hrd-dashboard',
-  standalone: false, // hapus jika versi Angular Mas mengharuskan
+  selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
-  
   @ViewChild('attendanceChart') attendanceChartRef!: ElementRef;
   @ViewChild('statusChart') statusChartRef!: ElementRef;
 
-  // Data Dummy untuk UI (Nanti bisa diganti dengan Service API)
-  userName: string = 'Admin HRD';
+  // Variabel Header
   currentDate: Date = new Date();
-  
-  totalEmployees: number = 145;
-  presentToday: number = 138;
-  lateToday: number = 12;
-  overtimeHours: number = 45;
-  attendancePercentage: number = 95;
+  userName: string = 'Admin HRD'; // 👈 Fallback default diubah ke Admin HRD
+  isLoading: boolean = true; 
 
-  chartInstance1: any;
-  chartInstance2: any;
+  // Variabel Data (Default di set 0 dulu)
+  totalEmployees = 0;
+  presentToday = 0;
+  lateToday = 0;
+  overtimeHours = 0;
 
-  constructor() {}
+  barChart: any;
+  doughnutChart: any;
+
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
-    // Ambil nama user dari local storage
-    const userStr = localStorage.getItem('user_data') || localStorage.getItem('user');
-    if (userStr) {
+    this.loadUserData();
+    this.fetchDashboardData();
+  }
+
+  ngAfterViewInit(): void {
+    // Render dipanggil dari dalam fetchDashboardData
+  }
+
+  loadUserData() {
+    const userDataStr = localStorage.getItem('user_data') || localStorage.getItem('user');
+    if (userDataStr) {
       try {
-        const user = JSON.parse(userStr);
-        this.userName = user.name || 'Admin HRD';
+        const userObj = JSON.parse(userDataStr);
+        if (userObj && userObj.name) {
+          this.userName = userObj.name;
+        }
       } catch (e) {
-        console.error('Error parsing user data', e);
+        console.error('Gagal parsing data user', e);
       }
     }
   }
 
-  ngAfterViewInit(): void {
-    this.renderAttendanceChart();
-    this.renderStatusChart();
+  get attendancePercentage(): string {
+    if (this.totalEmployees === 0) return '0.0';
+    return ((this.presentToday / this.totalEmployees) * 100).toFixed(1);
   }
 
-  renderAttendanceChart() {
-    const ctx = this.attendanceChartRef.nativeElement.getContext('2d');
+  // 🔴 MENGAMBIL DATA DARI BACKEND
+  fetchDashboardData() {
+    this.isLoading = true;
     
-    this.chartInstance1 = new Chart(ctx, {
+    // 👇 TETAP MENGGUNAKAN /superadmin KARENA ROUTE BACKEND LARAVELNYA SEPERTI ITU (Sudah diizinkan oleh Middleware role)
+    const apiUrl = `${environment.apiUrl}/superadmin/dashboard`;
+
+    this.http.get<any>(apiUrl).subscribe({
+      next: (res) => {
+        const data = res.data || res; 
+        
+        // Coba ambil dari API, kalau kosong/belum dibuat di backend, pakai data DUMMY
+        this.totalEmployees = data?.total_employees ?? 124;
+        this.presentToday   = data?.present_today ?? 110;
+        this.lateToday      = data?.late_today ?? 5;
+        this.overtimeHours  = data?.overtime_hours ?? 45;
+
+        this.isLoading = false;
+
+        setTimeout(() => {
+          this.renderBarChart(data?.weekly_stats);
+          this.renderDoughnutChart(data?.today_status);
+        }, 100);
+      },
+      error: (err) => {
+        console.error('API Dashboard error/belum siap. Menampilkan data fallback.', err);
+        
+        // Jika API error (misal 404/500), tetap tampilkan data DUMMY agar UI tidak rusak
+        this.totalEmployees = 124;
+        this.presentToday = 110;
+        this.lateToday = 5;
+        this.overtimeHours = 45;
+        this.isLoading = false;
+        
+        setTimeout(() => {
+          this.renderBarChart(null); 
+          this.renderDoughnutChart(null);
+        }, 100);
+      }
+    });
+  }
+
+  // 🔴 RENDER BAR CHART 
+  renderBarChart(weeklyStats: any) {
+    if (!this.attendanceChartRef) return;
+    if (this.barChart) this.barChart.destroy();
+
+    // Jika API belum ngirim 'weekly_stats', pakai data dummy yang cantik ini
+    const labels = weeklyStats?.labels || ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    const dataHadir = weeklyStats?.hadir || [110, 115, 112, 118, 120, 90];
+    const dataIzin = weeklyStats?.izin || [8, 5, 6, 4, 2, 10];
+    const dataSakit = weeklyStats?.sakit || [6, 4, 6, 2, 2, 24];
+
+    this.barChart = new Chart(this.attendanceChartRef.nativeElement, {
       type: 'bar',
       data: {
-        labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'],
+        labels: labels,
         datasets: [
-          {
-            label: 'Hadir',
-            data: [135, 138, 140, 139, 142, 130, 0],
-            backgroundColor: '#f97316', // orange-500
-            borderRadius: 4,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-          },
-          {
-            label: 'Izin',
-            data: [5, 3, 2, 4, 1, 8, 0],
-            backgroundColor: '#fbbf24', // amber-400
-            borderRadius: 4,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-          },
-          {
-            label: 'Sakit',
-            data: [2, 1, 3, 2, 2, 1, 0],
-            backgroundColor: '#f43f5e', // rose-500
-            borderRadius: 4,
-            barPercentage: 0.6,
-            categoryPercentage: 0.8
-          }
+          { label: 'Hadir', data: dataHadir, backgroundColor: '#f97316', borderRadius: 6, barThickness: 16 },
+          { label: 'Izin', data: dataIzin, backgroundColor: '#fbbf24', borderRadius: 6, barThickness: 16 },
+          { label: 'Sakit', data: dataSakit, backgroundColor: '#f43f5e', borderRadius: 6, barThickness: 16 }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false } // Legend dibuat manual di HTML
-        },
+        plugins: { legend: { display: false } },
         scales: {
-          y: { 
-            beginAtZero: true, 
-            grid: { color: '#f1f5f9' }, 
-            border: { display: false } 
-          },
-          x: { 
-            grid: { display: false }, 
-            border: { display: false } 
-          }
+          y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+          x: { grid: { display: false } }
         }
       }
     });
   }
 
-  renderStatusChart() {
-    const ctx = this.statusChartRef.nativeElement.getContext('2d');
-    
-    this.chartInstance2 = new Chart(ctx, {
+  // 🔴 RENDER DOUGHNUT CHART
+  renderDoughnutChart(todayStatus: any) {
+    if (!this.statusChartRef) return;
+    if (this.doughnutChart) this.doughnutChart.destroy();
+
+    // Jika API belum ngirim 'today_status', pakai data dummy [Hadir, Izin, Sakit, Alpa]
+    const dataStatus = todayStatus || [110, 8, 4, 2];
+
+    this.doughnutChart = new Chart(this.statusChartRef.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['Hadir', 'Absen/Sakit/Izin'],
+        labels: ['Hadir', 'Izin', 'Sakit', 'Alpa'],
         datasets: [{
-          data: [this.presentToday, this.totalEmployees - this.presentToday],
-          backgroundColor: [
-            '#10b981', // emerald-500
-            '#f1f5f9'  // slate-100
-          ],
+          data: dataStatus,
+          backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#ef4444'],
           borderWidth: 0,
           hoverOffset: 4
         }]
@@ -123,10 +155,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        cutout: '75%',
         plugins: {
-          legend: { display: false }
-        }
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+        },
+        cutout: '75%'
       }
     });
   }

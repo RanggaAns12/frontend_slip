@@ -224,6 +224,112 @@ export class SlipListComponent implements OnInit {
       .format(value).replace('Rp', 'Rp ').replace(',00', '');
   }
 
+  // ==========================================
+  // VIEW SLIP (ELEGANT DESIGN)
+  // ==========================================
+  viewSlip(slipId: number) {
+    const item = this.filteredDataSlip.find(s => s.id === slipId);
+    if (!item) return;
+
+    const hariKerja = item.total_present !== undefined ? item.total_present : 25;
+    const alpaLainnya = (item.total_absent || 0) + (item.total_late || 0);
+    const formatPts = this.formatPoin(item.overtime_hours);
+    const formatJam = this.convertPoinToJam(item.overtime_hours);
+
+    // Hitung ulang rincian
+    let pph21Value = Number(item.pph21_deduction) || 0;
+    let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
+    let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
+    let alpaValue = Number(item.absence_deduction) || 0;
+    let otherValue = Math.max(0, Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue));
+
+    Swal.fire({
+      showConfirmButton: false,
+      showCloseButton: true,
+      customClass: { popup: 'rounded-3xl p-0 overflow-hidden max-w-lg w-full' },
+      html: `
+        <div class="bg-white text-left font-sans">
+          
+          <!-- HEADER KOP -->
+          <div class="bg-gray-50/80 p-6 border-b border-gray-200">
+            <div class="flex items-center gap-4">
+              <img src="assets/images/logo.png" alt="Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none'">
+              <div>
+                <h2 class="text-base font-extrabold text-gray-900 tracking-tight leading-none mb-1">PT. AGRO DELI SERDANG</h2>
+                <p class="text-xs text-gray-500 font-medium">Slip Gaji • ${this.periodLabel}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <!-- INFO KARYAWAN -->
+            <div class="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Nama Karyawan</p>
+                <p class="font-bold text-gray-800">${item.name}</p>
+                <p class="text-xs text-gray-500 mt-0.5">${item.nik}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Jabatan & Departemen</p>
+                <p class="font-bold text-gray-800">${item.position}</p>
+                <p class="text-xs text-gray-500 mt-0.5">${item.department}</p>
+              </div>
+            </div>
+
+            <!-- KEHADIRAN -->
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between text-xs">
+              <div class="text-center">
+                <span class="block text-gray-500 font-medium mb-1">Hadir</span>
+                <span class="font-bold text-gray-900">${hariKerja} <span class="font-normal text-gray-500">Hari</span></span>
+              </div>
+              <div class="text-center">
+                <span class="block text-gray-500 font-medium mb-1">Alpa/Telat</span>
+                <span class="font-bold text-red-600">${alpaLainnya} <span class="font-normal text-gray-500">Hari</span></span>
+              </div>
+              <div class="text-center">
+                <span class="block text-gray-500 font-medium mb-1">Lembur</span>
+                <span class="font-bold text-indigo-600">${formatPts} <span class="font-normal text-gray-500">Pts</span></span>
+              </div>
+            </div>
+
+            <!-- RINCIAN KEUANGAN -->
+            <div>
+              <p class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-3 border-b border-gray-100 pb-2">Pendapatan</p>
+              <div class="space-y-2.5 text-sm">
+                <div class="flex justify-between"><span class="text-gray-600">Gaji Pokok</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.base_salary)}</span></div>
+                ${item.overtime_pay > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Upah Lembur</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.overtime_pay)}</span></div>` : ''}
+                ${item.bonus && item.bonus > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Tunjangan & Bonus</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.bonus)}</span></div>` : ''}
+              </div>
+            </div>
+
+            <div>
+              <p class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-3 border-b border-gray-100 pb-2">Potongan</p>
+              <div class="space-y-2.5 text-sm">
+                ${pph21Value > 0 ? `<div class="flex justify-between"><span class="text-gray-600">PPh21</span><span class="font-semibold text-red-500">- ${this.formatRupiah(pph21Value)}</span></div>` : ''}
+                ${bpjsKesValue > 0 ? `<div class="flex justify-between"><span class="text-gray-600">BPJS Kesehatan</span><span class="font-semibold text-red-500">- ${this.formatRupiah(bpjsKesValue)}</span></div>` : ''}
+                ${bpjsTkValue > 0 ? `<div class="flex justify-between"><span class="text-gray-600">BPJS Ketenagakerjaan</span><span class="font-semibold text-red-500">- ${this.formatRupiah(bpjsTkValue)}</span></div>` : ''}
+                ${alpaValue > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Potongan Alpa</span><span class="font-semibold text-red-500">- ${this.formatRupiah(alpaValue)}</span></div>` : ''}
+                ${otherValue > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Potongan Lainnya</span><span class="font-semibold text-red-500">- ${this.formatRupiah(otherValue)}</span></div>` : ''}
+                ${item.total_deduction === 0 ? `<div class="text-gray-400 italic">Tidak ada potongan</div>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <!-- FOOTER / THP -->
+          <div class="bg-gray-900 text-white p-6">
+            <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Take Home Pay</p>
+            <p class="text-3xl font-black tracking-tight mb-2">${this.formatRupiah(item.net_salary)}</p>
+            <p class="text-[10px] text-gray-400 italic">Terbilang: ${this.terbilang(item.net_salary)}</p>
+          </div>
+
+        </div>
+      `
+    });
+  }
+
+  // ==========================================
+  // DOWNLOAD PDF LOGIC
+  // ==========================================
   downloadSlip(slipId: number) {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
     if (!item) return;
@@ -313,7 +419,6 @@ export class SlipListComponent implements OnInit {
             ]);
           }
 
-          // PERBAIKAN TS ERROR DI SINI
           const colorBlack: [number, number, number] = [0, 0, 0];
 
           bodyData.push([
@@ -375,40 +480,6 @@ export class SlipListComponent implements OnInit {
     });
   }
 
-  viewSlip(slipId: number) {
-    const item = this.filteredDataSlip.find(s => s.id === slipId);
-    if (!item) return;
-
-    const hariKerja = item.total_present !== undefined ? item.total_present : 25;
-    const formatPts = this.formatPoin(item.overtime_hours);
-    const formatJam = this.convertPoinToJam(item.overtime_hours);
-
-    const tunjanganHtml = (item.bonus && item.bonus > 0) 
-        ? `<p><strong>Tunjangan & Bonus:</strong> ${this.formatRupiah(item.bonus)}</p>` 
-        : '';
-
-    Swal.fire({
-      title: `Slip Gaji - ${item.name}`,
-      html: `
-        <div class="text-left space-y-2 text-sm">
-          <p><strong>NIK:</strong> ${item.nik}</p>
-          <p><strong>Departemen:</strong> ${item.department}</p>
-          <p><strong>Posisi:</strong> ${item.position}</p>
-          <hr class="my-2 border-slate-200">
-          <p><strong>Hari Kerja Efektif:</strong> ${hariKerja} Hari</p>
-          <p><strong>Gaji Pokok:</strong> ${this.formatRupiah(item.base_salary)}</p>
-          <p><strong>Lembur:</strong> ${this.formatRupiah(item.overtime_pay)} (${formatPts} Pts / ~${formatJam} Jam)</p>
-          ${tunjanganHtml}
-          <p><strong>Potongan:</strong> ${this.formatRupiah(item.total_deduction)}</p>
-          <hr class="my-3 border-slate-300">
-          <p class="text-base"><strong>Take Home Pay:</strong> <span class="text-orange-600 font-bold">${this.formatRupiah(item.net_salary)}</span></p>
-        </div>
-      `,
-      confirmButtonColor: '#ea580c',
-      confirmButtonText: 'Tutup'
-    });
-  }
-
   downloadAllSlips() {
     if (this.filteredDataSlip.length === 0) {
       Swal.fire('Peringatan', 'Tidak ada data slip yang bisa diunduh.', 'warning');
@@ -417,11 +488,11 @@ export class SlipListComponent implements OnInit {
 
     Swal.fire({
       title: 'Download Semua Slip?',
-      html: `<p class="text-sm text-slate-600">Akan menghasilkan <b class="text-orange-600">${this.filteredDataSlip.length} slip gaji</b> dalam satu file PDF gabungan.</p>`,
+      html: `<p class="text-sm text-gray-600">Akan menghasilkan <b class="text-gray-900">${this.filteredDataSlip.length} slip gaji</b> dalam satu file PDF gabungan.</p>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#ea580c',
-      cancelButtonColor: '#64748b',
+      confirmButtonColor: '#1e293b',
+      cancelButtonColor: '#94a3b8',
       confirmButtonText: 'Ya, Download PDF!',
       cancelButtonText: 'Batal'
     }).then((result) => {
@@ -503,7 +574,6 @@ export class SlipListComponent implements OnInit {
         ]);
       }
 
-      // PERBAIKAN TS ERROR DI SINI
       const colorBlack: [number, number, number] = [0, 0, 0];
 
       bodyData.push([
