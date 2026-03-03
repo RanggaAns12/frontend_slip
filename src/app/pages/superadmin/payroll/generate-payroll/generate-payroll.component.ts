@@ -31,6 +31,11 @@ export class GeneratePayrollComponent implements OnInit {
   draftData: any[] = [];
   isAlreadyGenerated: boolean = false;
 
+  // Fitur Filter & Search
+  searchQuery: string = '';
+  selectedDepartment: string = '';
+  departments: string[] = [];
+
   constructor(
     private payrollApi: PayrollApiService,
     private router: Router
@@ -47,6 +52,55 @@ export class GeneratePayrollComponent implements OnInit {
     return item.user_id; 
   }
 
+  // ===== Helper Output Rupiah =====
+  toNumber(value: any): number {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  formatRupiah(value: any): string {
+    const numValue = this.toNumber(value);
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(numValue);
+  }
+
+  // ===== Helper Input Rupiah (Menghilangkan 0 & Auto Format) =====
+  formatInputRupiah(value: any): string {
+    if (value === 0 || !value) return ''; // Kosongkan jika 0
+    return new Intl.NumberFormat('id-ID').format(Number(value));
+  }
+
+  onInputCurrency(value: string, item: any, field: string) {
+    // Hapus semua karakter selain angka
+    const cleanValue = value.replace(/[^0-9]/g, '');
+    item[field] = cleanValue ? parseInt(cleanValue, 10) : 0;
+    this.recalculateTotal(item);
+  }
+
+  // ===== Getter untuk Tabel (Search & Filter) =====
+  get filteredData() {
+    let data = this.draftData;
+
+    if (this.searchQuery) {
+      const q = this.searchQuery.toLowerCase();
+      data = data.filter(d => 
+        d.name?.toLowerCase().includes(q) || 
+        d.nik?.toLowerCase().includes(q)
+      );
+    }
+
+    if (this.selectedDepartment) {
+      data = data.filter(d => d.department === this.selectedDepartment);
+    }
+
+    return data;
+  }
+
+  // ===== Main Logic =====
   onPreview() {
     if (!this.selectedMonth || !this.selectedYear) {
       Swal.fire('Peringatan', 'Pilih bulan dan tahun terlebih dahulu!', 'warning');
@@ -55,6 +109,8 @@ export class GeneratePayrollComponent implements OnInit {
 
     this.isLoading = true;
     this.draftData = [];
+    this.searchQuery = '';
+    this.selectedDepartment = '';
     
     this.payrollApi.previewPayroll(this.selectedMonth, this.selectedYear).subscribe({
       next: (res: any) => {
@@ -62,10 +118,19 @@ export class GeneratePayrollComponent implements OnInit {
         this.periodLabel = res.period.label;
         this.draftData = res.data;
         
+        // Ekstrak departemen unik untuk opsi filter dropdown
+        const depts = this.draftData.map(d => d.department).filter(d => d);
+        this.departments = [...new Set(depts)] as string[];
+
         this.isAlreadyGenerated = res.source === 'database';
 
         if (this.isAlreadyGenerated) {
-          Swal.fire('Info', 'Data gaji untuk periode ini sudah dikunci (Tidak bisa diubah).', 'info');
+          Swal.fire({
+            title: 'Gaji Terkunci',
+            text: 'Data gaji untuk periode ini sudah dikunci dan tidak bisa diubah.',
+            icon: 'info',
+            confirmButtonColor: '#1e293b' // gray-800
+          });
         } else if (this.draftData.length === 0) {
           Swal.fire('Kosong', 'Tidak ada data karyawan aktif untuk periode ini.', 'warning');
         }
@@ -77,77 +142,14 @@ export class GeneratePayrollComponent implements OnInit {
     });
   }
 
-  // --- FUNGSI BARU: POPUP DETAIL ABSENSI ---
-  showDetailAbsensi(item: any) {
-    const empName = item.employee?.name || item.name || 'Karyawan';
-    const empNik = item.employee?.nik_ktp || item.employee?.nik || item.nik || '-';
-    
-    const hadir = item.total_present || 0;
-    const alpha = item.total_absent || 0;
-    const telat = item.total_late || 0;
-    const lemburPoin = item.overtime_hours || 0;
-
-    // Estimasi jam (asumsi rata-rata dibagi 1.5)
-    const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
-
-    Swal.fire({
-      title: `<span class="text-xl font-bold text-slate-800">Detail Kehadiran</span>`,
-      html: `
-        <div class="text-left bg-slate-50 p-5 rounded-xl border border-slate-100 mt-2 shadow-inner">
-          <div class="mb-4 border-b border-slate-200 pb-3">
-            <p class="text-base font-bold text-slate-800">${empName}</p>
-            <p class="text-xs text-slate-500 font-medium">NIK: ${empNik}</p>
-          </div>
-          
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between items-center">
-              <span class="text-slate-600 font-medium">Hari Kerja (Hadir)</span>
-              <span class="font-bold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-md shadow-sm">${hadir} Hari</span>
-            </div>
-            
-            <div class="flex justify-between items-center">
-              <span class="text-slate-600 font-medium">Alpha / Tidak Hadir</span>
-              <span class="font-bold text-red-700 bg-red-100 px-2.5 py-1 rounded-md shadow-sm">${alpha} Hari</span>
-            </div>
-            
-            <div class="flex justify-between items-center">
-              <span class="text-slate-600 font-medium">Terlambat</span>
-              <span class="font-bold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-md shadow-sm">${telat} Hari</span>
-            </div>
-            
-            <div class="flex justify-between items-center pt-2 border-t border-slate-200 border-dashed">
-              <span class="text-slate-600 font-medium">Total Lembur</span>
-              <span class="font-bold text-blue-700 bg-blue-100 px-2.5 py-1 rounded-md shadow-sm">${lemburPoin} Poin <span class="text-xs font-normal text-blue-500">(~${estimasiJamLembur} Jam)</span></span>
-            </div>
-          </div>
-        </div>
-        <p class="text-xs text-slate-400 mt-4 italic text-center">
-          *Data ditarik otomatis dari rekap Excel Absensi.
-        </p>
-      `,
-      showConfirmButton: true,
-      confirmButtonText: 'Tutup',
-      confirmButtonColor: '#4f46e5', // Warna Indigo biar matching dengan tombol
-      customClass: {
-        popup: 'rounded-2xl'
-      }
-    });
-  }
-
-  // Dipanggil setiap kali HRD mengetik di input PPh21 atau BPJS
   recalculateTotal(item: any) {
-    item.bpjs_kesehatan = Number(item.bpjs_kesehatan) || 0;
-    item.bpjs_ketenagakerjaan = Number(item.bpjs_ketenagakerjaan) || 0;
-    item.pph21_deduction = Number(item.pph21_deduction) || 0;
-    item.absence_deduction = Number(item.absence_deduction) || 0;
-    item.other_deduction = Number(item.other_deduction) || 0;
+    const pph = this.toNumber(item.pph21_deduction);
+    const bpjsK = this.toNumber(item.bpjs_kesehatan);
+    const bpjsT = this.toNumber(item.bpjs_ketenagakerjaan);
+    const alpha = this.toNumber(item.absence_deduction);
+    const other = this.toNumber(item.other_deduction);
     
-    item.total_deduction = item.absence_deduction 
-                           + item.bpjs_kesehatan 
-                           + item.bpjs_ketenagakerjaan 
-                           + item.pph21_deduction 
-                           + item.other_deduction;
-                           
+    item.total_deduction = alpha + bpjsK + bpjsT + pph + other;
     item.net_salary = item.total_income - item.total_deduction;
     item.is_pph21_manual = true;
   }
@@ -157,22 +159,17 @@ export class GeneratePayrollComponent implements OnInit {
 
     Swal.fire({
       title: 'Kunci Data Gaji?',
-      text: "Data yang sudah digenerate tidak bisa diubah lagi. Pastikan semua inputan potongan sudah benar!",
-      icon: 'warning',
+      text: "Data yang sudah digenerate tidak bisa diubah lagi. Pastikan semua rincian sudah sesuai.",
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#ea580c',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Ya, Generate & Kunci!',
+      confirmButtonColor: '#1e293b', 
+      cancelButtonColor: '#94a3b8', 
+      confirmButtonText: 'Ya, Simpan & Kunci',
       cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
         this.isGenerating = true;
-
-        const payload = {
-          month: this.selectedMonth,
-          year: this.selectedYear,
-          draft_data: this.draftData 
-        };
+        const payload = { month: this.selectedMonth, year: this.selectedYear, draft_data: this.draftData };
 
         this.payrollApi.generatePayroll(payload).subscribe({
           next: (res: any) => {
@@ -193,22 +190,19 @@ export class GeneratePayrollComponent implements OnInit {
   onUnlockPayroll() {
     Swal.fire({
       title: 'Buka Kunci Gaji?',
-      text: "Data slip gaji bulan ini akan DIBATALKAN dan dihapus dari sistem. Anda harus melakukan Generate ulang setelah mengubah data kehadiran/tunjangan.",
+      text: "Data slip gaji bulan ini akan dibatalkan. Anda harus melakukan generate ulang.",
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#64748b',
-      confirmButtonText: 'Ya, Buka Kunci!',
+      confirmButtonColor: '#ef4444', 
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Buka Kunci',
       cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true; 
-        
         this.payrollApi.resetPayrollPeriod(this.selectedMonth, this.selectedYear).subscribe({
           next: (res: any) => {
             Swal.fire('Berhasil!', res.message, 'success');
-            
-            // Re-load preview dari awal (Draft mode dari absensi/tunjangan mentah)
             this.isAlreadyGenerated = false;
             this.onPreview(); 
           },
@@ -218,6 +212,50 @@ export class GeneratePayrollComponent implements OnInit {
           }
         });
       }
+    });
+  }
+
+  showDetailAbsensi(item: any) {
+    const empName = item.employee?.name || item.name || 'Karyawan';
+    const empNik = item.employee?.nik_ktp || item.employee?.nik || item.nik || '-';
+    const hadir = item.total_present || 0;
+    const alpha = item.total_absent || 0;
+    const telat = item.total_late || 0;
+    const lemburPoin = item.overtime_hours || 0;
+    const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
+
+    Swal.fire({
+      title: `<span class="text-lg font-bold text-gray-800">Detail Kehadiran</span>`,
+      html: `
+        <div class="text-left bg-gray-50/50 p-5 rounded-2xl border border-gray-100 mt-2">
+          <div class="mb-4 border-b border-gray-100 pb-4">
+            <p class="text-sm font-bold text-gray-800">${empName}</p>
+            <p class="text-xs text-gray-500 font-medium">NIK: ${empNik}</p>
+          </div>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500 font-medium">Hari Kerja (Hadir)</span>
+              <span class="font-semibold text-gray-800">${hadir} Hari</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500 font-medium">Alpha / Tidak Hadir</span>
+              <span class="font-semibold text-gray-800">${alpha} Hari</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-500 font-medium">Terlambat</span>
+              <span class="font-semibold text-gray-800">${telat} Hari</span>
+            </div>
+            <div class="flex justify-between items-center pt-3 mt-1 border-t border-gray-100">
+              <span class="text-gray-500 font-medium">Total Lembur</span>
+              <span class="font-semibold text-gray-800">${lemburPoin} Pts <span class="text-xs text-gray-400 font-normal">(~${estimasiJamLembur} Jam)</span></span>
+            </div>
+          </div>
+        </div>
+      `,
+      showConfirmButton: true,
+      confirmButtonText: 'Tutup',
+      confirmButtonColor: '#1e293b',
+      customClass: { popup: 'rounded-3xl' }
     });
   }
 }
