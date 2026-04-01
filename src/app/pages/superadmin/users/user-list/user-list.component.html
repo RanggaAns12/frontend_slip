@@ -1,8 +1,5 @@
 <div class="p-4 md:p-6 bg-gray-50 min-h-screen font-sans animate-fade-in-up pb-20 relative">
 
-  <!-- ========================================== -->
-  <!-- 1. TOAST ALERT                             -->
-  <!-- ========================================== -->
   <div *ngIf="toastMessage"
        [ngClass]="{'bg-green-50 text-green-700 border-green-200': toastType === 'success', 'bg-red-50 text-red-700 border-red-200': toastType === 'error'}"
        class="fixed top-5 right-5 z-[60] px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 transition-all duration-300">
@@ -14,9 +11,6 @@
     </button>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 2. HEADER & ACTIONS                        -->
-  <!-- ========================================== -->
   <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
     <div>
       <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">Admin Users</h1>
@@ -31,11 +25,7 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 3. STATS CARDS                             -->
-  <!-- ========================================== -->
   <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
-    <!-- Total User -->
     <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 hover:border-orange-200 transition-colors">
       <div class="w-11 h-11 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center shrink-0">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
@@ -45,7 +35,6 @@
         <p class="text-2xl font-black text-gray-800">{{ userList.length }}</p>
       </div>
     </div>
-    <!-- User Aktif -->
     <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 hover:border-green-200 transition-colors">
       <div class="w-11 h-11 bg-green-50 text-green-500 rounded-full flex items-center justify-center shrink-0">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -55,7 +44,6 @@
         <p class="text-2xl font-black text-gray-800">{{ userList.filter(getIsActive).length }}</p>
       </div>
     </div>
-    <!-- User Non-Aktif -->
     <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 col-span-2 md:col-span-1 hover:border-red-200 transition-colors">
       <div class="w-11 h-11 bg-red-50 text-red-400 rounded-full flex items-center justify-center shrink-0">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
@@ -67,9 +55,6 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 4. FILTER & SEARCH                         -->
-  <!-- ========================================== -->
   <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3 items-center">
     <div class="relative w-full md:w-1/2">
       <span class="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -85,9 +70,6 @@
     <p class="text-xs text-gray-400 md:ml-auto">Menampilkan <span class="font-bold text-gray-700">{{ filteredList.length }}</span> dari {{ userList.length }} user</p>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 5A. DESKTOP TABLE                          -->
-  <!-- ========================================== -->
   <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <table class="w-full text-left">
       <thead class="bg-gray-50/50 text-gray-500 text-xs uppercase font-bold">
@@ -101,7 +83,6 @@
       </thead>
       <tbody class="divide-y divide-gray-100 text-sm">
 
-        <!-- Loading -->
         <tr *ngIf="isLoading">
           <td colspan="5" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center gap-3">
@@ -111,7 +92,6 @@
           </td>
         </tr>
 
-        <!-- Empty -->
         <tr *ngIf="!isLoading && filteredList.length === 0">
           <td colspan="5" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center">
@@ -124,7 +104,6 @@
           </td>
         </tr>
 
-        <!-- Data Rows -->
         <ng-container *ngIf="!isLoading && filteredList.length > 0">
           <tr *ngFor="let user of filteredList; let i = index" class="hover:bg-orange-50/30 transition-colors group">
             <td class="px-6 py-4 text-center text-gray-400 font-medium">{{ i + 1 }}</td>
@@ -160,16 +139,13 @@
 
             <td class="px-6 py-4 text-center">
               <div class="flex justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                <!-- Tombol Edit (Tersedia untuk semua, namun form dibatasi jika Superadmin) -->
                 <button (click)="openEditModal(user)" class="p-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-600 hover:text-white border border-blue-100 transition-colors" title="Edit User">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                 </button>
                 
-                <!-- Tombol Hapus (Dihilangkan untuk Superadmin) -->
                 <button *ngIf="!isSuperAdmin(user)" (click)="openDeleteModal(user.id)" class="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white border border-red-100 transition-colors" title="Hapus User">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                 </button>
-                <!-- Indikator Kunci untuk Superadmin -->
                 <div *ngIf="isSuperAdmin(user)" class="p-1.5 text-gray-300" title="Akun Superadmin Utama (Terlindungi)">
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
@@ -181,9 +157,6 @@
     </table>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 5B. MOBILE CARD LIST                       -->
-  <!-- ========================================== -->
   <div class="block md:hidden space-y-3">
     <div *ngIf="isLoading" class="p-8 text-center bg-white rounded-xl border border-gray-100 shadow-sm">
       <svg class="animate-spin h-8 w-8 text-orange-400 mx-auto mb-2" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -231,9 +204,6 @@
 
 </div>
 
-<!-- ========================================== -->
-<!-- 6. MODAL FORM (CREATE & EDIT)              -->
-<!-- ========================================== -->
 <div *ngIf="showFormModal" class="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
   <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col overflow-hidden relative">
     <div class="h-2 w-full bg-gradient-to-r from-[#F4A47B] to-[#E08E60]"></div>
@@ -251,14 +221,12 @@
     </div>
 
     <div class="p-6 space-y-4 overflow-y-auto max-h-[60vh]">
-      <!-- Nama Lengkap (Boleh Diedit) -->
       <div>
         <label class="block text-xs font-bold text-gray-500 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
         <input type="text" [(ngModel)]="userForm.name" placeholder="Nama lengkap pengguna" 
                class="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-semibold focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition-all placeholder-gray-300 text-gray-700">
       </div>
 
-      <!-- Username (DISABLE Jika Superadmin) -->
       <div>
         <label class="block text-xs font-bold text-gray-500 mb-1 flex justify-between">
           <span>Username <span class="text-red-500">*</span></span>
@@ -274,7 +242,6 @@
         </div>
       </div>
 
-      <!-- Password (DISABLE Jika Superadmin -> Sesuai permintaan: Sandi diubah dari menu Pengaturan Akun Saya) -->
       <div>
         <label class="block text-xs font-bold text-gray-500 mb-1 flex justify-between">
           <span>Password <span *ngIf="!isEditMode" class="text-red-500">*</span> <span *ngIf="isEditMode && !isEditingSuperAdmin" class="font-normal text-gray-400">(Opsional)</span></span>
@@ -294,7 +261,6 @@
         </div>
       </div>
 
-      <!-- Role (DISABLE Jika Superadmin -> Mencegah penurunan pangkat tanpa sengaja) -->
       <div>
         <label class="block text-xs font-bold text-gray-500 mb-1 flex justify-between">
           <span>Role / Hak Akses <span class="text-red-500">*</span></span>
@@ -308,7 +274,6 @@
         </select>
       </div>
 
-      <!-- Status Aktif (DISABLE Jika Superadmin -> Mencegah superadmin dinonaktifkan) -->
       <div class="flex items-center justify-between p-3 rounded-lg border mt-2"
            [ngClass]="isEditingSuperAdmin ? 'bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed' : 'bg-gray-50 border-gray-200'">
         <div class="mr-4">
@@ -341,5 +306,38 @@
         {{ isSaving ? 'Menyimpan...' : 'Simpan Data' }}
       </button>
     </div>
+  </div>
+</div>
+
+<div *ngIf="showDeleteModal" class="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden relative animate-fade-in-up">
+    
+    <div class="h-2 w-full bg-gradient-to-r from-red-500 to-red-400"></div>
+
+    <div class="p-6 text-center">
+      <div class="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      </div>
+      
+      <h3 class="text-lg font-bold text-gray-800 mb-2">Konfirmasi Hapus</h3>
+      <p class="text-sm text-gray-500">
+        Apakah Anda yakin ingin menghapus user ini? Data yang dihapus tidak dapat dikembalikan.
+      </p>
+    </div>
+
+    <div class="p-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-center">
+      <button (click)="showDeleteModal = false" [disabled]="isDeleting"
+              class="px-5 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50">
+        Batal
+      </button>
+      <button (click)="confirmDelete()" [disabled]="isDeleting"
+              class="px-5 py-2 text-sm font-bold text-white bg-red-600 rounded-lg shadow-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2">
+        <svg *ngIf="isDeleting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        {{ isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}
+      </button>
+    </div>
+
   </div>
 </div>

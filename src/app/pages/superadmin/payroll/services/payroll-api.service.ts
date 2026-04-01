@@ -1,14 +1,20 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+// 1. Tambahkan import environment ini (Sesuaikan path-nya jika folder environment kamu berbeda)
+import { environment } from '../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PayrollApiService {
   
-  // URL dasar endpoint payroll di Laravel
-  private baseUrl = 'http://localhost:8000/api/superadmin/payrolls';
+  /**
+   * Menggunakan environment.apiUrl agar dinamis.
+   * - Saat di lokal (ng serve), akan pakai URL localhost.
+   * - Saat di-build (ng build), akan pakai URL hosting.
+   */
+  private baseUrl = `${environment.apiUrl}/superadmin/payrolls`;
 
   constructor(private http: HttpClient) {}
 
@@ -62,6 +68,9 @@ export class PayrollApiService {
     return this.http.put(`${this.baseUrl}/details/${detailId}`, data);
   }
 
+  /**
+   * 6. Membuka kunci periode gaji
+   */
   resetPayrollPeriod(month: number, year: number) {
     // Karena kita memakai DELETE request, kita kirimkan data melalui 'body'
     return this.http.request('delete', `${this.baseUrl}/reset-period`, {
