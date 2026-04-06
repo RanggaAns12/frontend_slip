@@ -9,16 +9,22 @@ const routes: Routes = [
     loadChildren: () => import('./pages/auth/auth.module').then(m => m.AuthModule)
   },
   
-  // RUTE SUPERADMIN (Cukup loadChildren saja, HAPUS component: LayoutComponent)
+  // RUTE SUPERADMIN
   {
     path: 'superadmin',
     loadChildren: () => import('./pages/superadmin/superadmin.module').then(m => m.SuperadminModule)
   },
 
-  // RUTE HRD (Cukup loadChildren saja, HAPUS component: LayoutHrdComponent)
+  // RUTE HRD 
   {
     path: 'hrd',
     loadChildren: () => import('./pages/hrd/hrd.module').then(m => m.HrdModule)
+  },
+
+  // 👇 TAMBAHAN: RUTE MANAGER
+  {
+    path: 'manager',
+    loadChildren: () => import('./pages/manager/manager.module').then(m => m.ManagerModule)
   },
 
   { path: '**', redirectTo: 'auth/login' }

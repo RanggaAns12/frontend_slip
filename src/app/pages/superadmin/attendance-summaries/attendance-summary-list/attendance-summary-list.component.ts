@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import {
   AttendanceSummaryApiService,
   AttendanceSummary,
@@ -18,17 +20,18 @@ export class AttendanceSummaryListComponent implements OnInit {
   currentPage = 1;
   lastPage    = 1;
   total       = 0;
-  Math        = Math; // Agar bisa dipakai di HTML
+  Math        = Math;
 
   // ── Filter ─────────────────────────────────────────────────
-  // Auto set ke bulan sekarang saat inisialisasi
   filterMonth  : number | '' = new Date().getMonth() + 1; 
   filterYear   : number      = new Date().getFullYear();
   filterSearch = '';
   filterDept   = '';
   filterPosisi = '';
-
   private searchTimeout: any;
+
+  // ── Import State ───────────────────────────────────────────
+  isImporting = false;
 
   // ── Modal Delete State ─────────────────────────────────────
   showDeleteModal = false;
@@ -55,7 +58,6 @@ export class AttendanceSummaryListComponent implements OnInit {
     'Operator', 'Mandor', 'Buruh Harian', 'Security', 'Driver'
   ];
 
-  // ── Toast ─────────────────────────────────────────────────
   toastMessage = '';
   toastType    : 'success' | 'error' = 'success';
   private toastTimer: any;
@@ -63,7 +65,8 @@ export class AttendanceSummaryListComponent implements OnInit {
   constructor(
     private api    : AttendanceSummaryApiService,
     private router : Router,
-    private route  : ActivatedRoute
+    private route  : ActivatedRoute,
+    private http   : HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -71,7 +74,6 @@ export class AttendanceSummaryListComponent implements OnInit {
   }
 
   // ── Data Loading ──────────────────────────────────────────
-
   load(): void {
     this.isLoading = true;
 
@@ -80,7 +82,6 @@ export class AttendanceSummaryListComponent implements OnInit {
       year : this.filterYear,
     };
     
-    // Kirim month hanya jika tidak kosong
     if (this.filterMonth !== '') params['month']      = this.filterMonth;
     if (this.filterSearch)       params['search']     = this.filterSearch;
     if (this.filterDept)         params['departemen'] = this.filterDept;
@@ -102,7 +103,6 @@ export class AttendanceSummaryListComponent implements OnInit {
   }
 
   // ── Event Handlers: Search & Filter ───────────────────────
-
   onSearchDebounce(): void {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
@@ -120,7 +120,6 @@ export class AttendanceSummaryListComponent implements OnInit {
 
   resetFilter(): void {
     this.filterSearch = '';
-    // Kembalikan ke bulan saat ini, bukan "Semua Bulan" agar UX lebih baik
     this.filterMonth  = new Date().getMonth() + 1; 
     this.filterYear   = new Date().getFullYear();
     this.filterDept   = '';
@@ -140,7 +139,6 @@ export class AttendanceSummaryListComponent implements OnInit {
   }
 
   // ── Feature: Delete with Modal ────────────────────────────
-
   confirmDelete(item: AttendanceSummary): void {
     this.itemToDelete = item;
     this.showDeleteModal = true;
@@ -160,7 +158,7 @@ export class AttendanceSummaryListComponent implements OnInit {
         this.isDeleting = false;
         this.showDeleteModal = false;
         this.showToast('Data berhasil dihapus', 'success');
-        this.load(); // Reload data tabel
+        this.load(); 
       },
       error: (err) => {
         this.isDeleting = false;
@@ -171,8 +169,45 @@ export class AttendanceSummaryListComponent implements OnInit {
     });
   }
 
-  // ── Helpers ──────────────────────────────────────────────
+  // ── Import Feature ─────────────────────────────────────────
+  onFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.uploadFile(file);
+    }
+    // Reset nilai input agar bisa memilih file yang sama lagi jika terjadi error
+    event.target.value = '';
+  }
 
+  uploadFile(file: File): void {
+    this.isImporting = true;
+    
+    // Pastikan endpoint ini sesuai dengan yang ada di routes/api.php
+    const url = `${environment.apiUrl}/superadmin/attendance-summaries/import`;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    this.http.post(url, formData).subscribe({
+      next: (res: any) => {
+        this.isImporting = false;
+        this.showToast(res.message || 'File Excel berhasil diimpor.', 'success');
+        this.currentPage = 1;
+        this.load(); 
+      },
+      error: (err: any) => {
+        this.isImporting = false;
+        console.error(err);
+        let errorMsg = 'Gagal mengimpor file Excel.';
+        if (err.error && err.error.message) {
+            errorMsg = err.error.message;
+        }
+        this.showToast(errorMsg, 'error');
+      }
+    });
+  }
+
+  // ── Helpers ──────────────────────────────────────────────
   get pageNumbers(): number[] {
     const pages = [];
     const start = Math.max(1, this.currentPage - 2);

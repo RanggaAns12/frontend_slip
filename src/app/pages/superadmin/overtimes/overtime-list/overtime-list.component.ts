@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { OvertimeApiService } from '../services/overtime-api.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-overtime-list',
@@ -17,6 +18,20 @@ export class OvertimeListComponent implements OnInit {
   total = 0;
   itemsPerPage = 15;
   filterSearch = '';
+  
+  selectedMonth: number | string = ''; 
+  selectedYear: number | string = '';
+  
+  months = [
+    { value: 1, name: 'Januari' }, { value: 2, name: 'Februari' },
+    { value: 3, name: 'Maret' }, { value: 4, name: 'April' },
+    { value: 5, name: 'Mei' }, { value: 6, name: 'Juni' },
+    { value: 7, name: 'Juli' }, { value: 8, name: 'Agustus' },
+    { value: 9, name: 'September' }, { value: 10, name: 'Oktober' },
+    { value: 11, name: 'November' }, { value: 12, name: 'Desember' }
+  ];
+  years: number[] = [];
+
   private searchTimeout: any;
 
   // Import Upload State
@@ -31,12 +46,49 @@ export class OvertimeListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    const currentYear = new Date().getFullYear();
+    for (let i = currentYear - 3; i <= currentYear + 1; i++) {
+      this.years.push(i);
+    }
+    
+    // MENCEGAH RESET SAAT KEMBALI (BACK)
+    const savedMonth = sessionStorage.getItem('ovt_month');
+    const savedYear = sessionStorage.getItem('ovt_year');
+    const savedSearch = sessionStorage.getItem('ovt_search');
+    const savedPage = sessionStorage.getItem('ovt_page');
+
+    if (savedMonth) this.selectedMonth = Number(savedMonth);
+    if (savedYear) this.selectedYear = Number(savedYear);
+    if (savedSearch) this.filterSearch = savedSearch;
+    if (savedPage) this.currentPage = Number(savedPage);
+    
     this.loadData();
   }
 
-  // ===== Helpers (aman untuk data string/number/null) =====
+  private saveFilters(): void {
+    sessionStorage.setItem('ovt_month', this.selectedMonth.toString());
+    sessionStorage.setItem('ovt_year', this.selectedYear.toString());
+    sessionStorage.setItem('ovt_search', this.filterSearch);
+    sessionStorage.setItem('ovt_page', this.currentPage.toString());
+  }
+
   toNumber(value: any): number {
-    const n = Number(value);
+    if (value === null || value === undefined) return 0;
+    if (typeof value === 'number') return value;
+
+    let strValue = String(value).trim();
+    
+    if (strValue.includes('.') && strValue.includes(',')) {
+        if (strValue.indexOf('.') < strValue.indexOf(',')) {
+            strValue = strValue.replace(/\./g, '').replace(',', '.');
+        } else {
+            strValue = strValue.replace(/,/g, '');
+        }
+    } else if (strValue.includes(',')) {
+        strValue = strValue.replace(/,/g, '.');
+    }
+
+    const n = Number(strValue);
     return Number.isFinite(n) ? n : 0;
   }
 
@@ -54,35 +106,72 @@ export class OvertimeListComponent implements OnInit {
     }).format(numValue);
   }
 
-  // ===== Rekap =====
   get totalPoinKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const poin = this.toNumber(curr?.total_poin ?? curr?.total_jam);
-      return acc + poin;
+      return acc + this.toNumber(curr?.konversi_lembur ?? curr?.total_poin ?? 0);
     }, 0);
   }
 
   get totalUpahKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const bayar = this.toNumber(curr?.total_bayar);
-      return acc + bayar;
+      return acc + this.toNumber(curr?.hitungan_lembur ?? curr?.total_bayar ?? 0);
     }, 0);
   }
 
-  // ===== Load Data =====
+  // ===== Load Data & KALKULASI DINAMIS =====
   loadData(): void {
+    if (!this.selectedMonth || !this.selectedYear) {
+      this.items = [];
+      this.total = 0;
+      this.isLoading = false;
+      return;
+    }
+
     this.isLoading = true;
+    this.saveFilters(); 
 
     const params: any = {
       page: this.currentPage,
-      per_page: this.itemsPerPage
+      per_page: this.itemsPerPage,
+      month: this.selectedMonth,
+      year: this.selectedYear
     };
     if (this.filterSearch) params.search = this.filterSearch;
 
     this.overtimeApi.getList(params).subscribe({
       next: (res) => {
         const paginatedData = res?.data || res;
-        this.items = paginatedData?.data || [];
+        const rawItems = paginatedData?.data || [];
+        
+        // MAPPING SUPER KETAT
+       this.items = rawItems.map((item: any) => {
+          
+          // 1. Tangkap Poin Konversi dan Hari (Ini tetap dipertahankan dari Excel/DB)
+          let poin = this.toNumber(item?.total_poin) || this.toNumber(item?.konversi_lembur) || 0;
+          let hari = this.toNumber(item?.jumlah_hari) || this.toNumber(item?.total_hari) || 0;
+          
+          // 👇 PERBAIKAN: "Butakan" dari bawaan Excel. MURNI ambil dari Master Karyawan (Penyesuaian Gaji)
+          const gp = this.toNumber(item?.employee?.gaji_pokok ?? 0);
+          
+          // Kalkulasi Tarif & Total HANYA terjadi jika GP di Master Data sudah diisi
+          const tarifPerJam = gp > 0 ? Math.round(gp / 173) : 0;
+          const totalUpah = gp > 0 ? Math.round(tarifPerJam * poin) : 0;
+
+          // Kembalikan objek utuh agar terbaca oleh HTML
+          return {
+            ...item,
+            konversi_lembur: poin,
+            total_poin: poin,
+            jumlah_hari: hari,    
+            total_hari: hari,     
+            gaji_pokok: gp,               // Sekarang murni ikut Penyesuaian Gaji
+            per_jam: tarifPerJam,         // Otomatis 0 jika belum disesuaikan
+            tarif_per_jam: tarifPerJam,
+            hitungan_lembur: totalUpah,   // Otomatis 0 jika belum disesuaikan
+            total_bayar: totalUpah
+          };
+        });
+
         this.total = paginatedData?.total ?? this.items.length;
         this.currentPage = paginatedData?.current_page ?? 1;
         this.lastPage = paginatedData?.last_page ?? 1;
@@ -104,6 +193,11 @@ export class OvertimeListComponent implements OnInit {
     }, 500);
   }
 
+  onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadData();
+  }
+
   goPage(page: number): void {
     if (page >= 1 && page <= this.lastPage) {
       this.currentPage = page;
@@ -120,16 +214,28 @@ export class OvertimeListComponent implements OnInit {
   }
 
   goToDetail(nama: string): void {
-    this.router.navigate(['/superadmin/overtimes/show', nama]);
+    this.router.navigate(['/superadmin/overtimes/show', nama], {
+      queryParams: {
+        month: this.selectedMonth,
+        year: this.selectedYear
+      }
+    });
   }
 
-  // ===== Import Excel =====
   onFileSelected(event: any): void {
     const file: File = event?.target?.files?.[0];
     if (!file) return;
 
+    if (!this.selectedMonth || !this.selectedYear) {
+      Swal.fire('Perhatian', 'Pilih Bulan dan Tahun terlebih dahulu sebelum melakukan Import.', 'warning');
+      event.target.value = '';
+      return;
+    }
+
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('month', this.selectedMonth.toString());
+    formData.append('year', this.selectedYear.toString());
 
     this.isImporting = true;
     this.overtimeApi.importExcel(formData).subscribe({
@@ -146,7 +252,6 @@ export class OvertimeListComponent implements OnInit {
       }
     });
 
-    // Reset input agar bisa upload file yang sama lagi
     event.target.value = '';
   }
 

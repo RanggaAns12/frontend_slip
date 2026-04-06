@@ -1,6 +1,5 @@
 <div class="min-h-screen bg-[#F8FAFC] font-sans pb-20">
 
-  <!-- ── TOAST NOTIFICATION ── -->
   <div *ngIf="toastMessage"
        [ngClass]="{
          'bg-emerald-50 text-emerald-700 border-emerald-200': toastType === 'success',
@@ -8,7 +7,6 @@
        }"
        class="fixed top-6 right-6 z-[60] px-5 py-4 rounded-2xl shadow-xl border flex items-center gap-4 animate-slide-in-right backdrop-blur-md bg-opacity-95 max-w-sm w-full transition-all duration-300">
     <div class="p-2 rounded-full" [ngClass]="toastType === 'success' ? 'bg-emerald-100' : 'bg-rose-100'">
-      <!-- Icon Success/Error -->
       <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
       <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
     </div>
@@ -21,10 +19,8 @@
     </button>
   </div>
 
-  <!-- ── MAIN CONTENT ── -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- Header Section (Cleaner & Aesthetic) -->
     <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-6 animate-fade-in-up">
       <div>
         <span class="inline-block py-1 px-3 rounded-full bg-orange-100 text-orange-600 text-[10px] font-bold tracking-wider uppercase mb-2">
@@ -38,34 +34,33 @@
         </p>
       </div>
 
-      <!-- Tombol Import/Export dihilangkan agar bersih, 
-           jika butuh tombol 'Import' baru, bisa taruh di sini -->
+      <div class="flex w-full md:w-auto items-center gap-3">
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept=".xlsx, .xls, .csv" class="hidden">
+        <!-- <button (click)="fileInput.click()" [disabled]="isImporting" class="flex-1 md:flex-none w-full md:w-auto flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+          <svg *ngIf="!isImporting" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+          <svg *ngIf="isImporting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+          <span>{{ isImporting ? 'Mengimpor...' : 'Import Excel' }}</span>
+        </button> -->
+      </div>
     </div>
 
-    <!-- Filter Section -->
     <div class="bg-white p-1 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-slate-100 mb-8 animate-fade-in-up delay-100">
       <div class="p-4 md:p-5 flex flex-col xl:flex-row gap-4 items-center">
         
-        <!-- Search Input -->
         <div class="relative w-full xl:w-96 group">
           <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
             <svg class="h-5 w-5 text-slate-400 group-focus-within:text-orange-500 transition-colors" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <input type="text" 
-                 [(ngModel)]="filterSearch" 
-                 (ngModelChange)="onSearchDebounce()"
+          <input type="text" [(ngModel)]="filterSearch" (ngModelChange)="onSearchDebounce()"
                  class="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 border-0 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:bg-white text-slate-700 placeholder-slate-400 transition-all shadow-sm"
                  placeholder="Cari Nama, NIP, atau Jabatan...">
         </div>
 
         <div class="h-8 w-px bg-slate-200 hidden xl:block mx-2"></div>
 
-        <!-- Filters -->
         <div class="flex flex-wrap gap-3 w-full xl:w-auto items-center flex-1">
-          
-          <!-- Dept -->
           <div class="relative flex-1 min-w-[140px]">
             <select [(ngModel)]="filterDept" (change)="onSearch()"
                     class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
@@ -77,10 +72,9 @@
             </div>
           </div>
 
-          <!-- Posisi -->
           <div class="relative flex-1 min-w-[140px]">
              <select [(ngModel)]="filterPosisi" (change)="onSearch()"
-                    class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
+                     class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
               <option value="">Semua Posisi</option>
               <option *ngFor="let p of positions" [value]="p">{{ p }}</option>
             </select>
@@ -89,7 +83,6 @@
             </div>
           </div>
 
-          <!-- Bulan (Auto selected to current month in TS) -->
           <div class="relative w-36 sm:w-40">
             <select [(ngModel)]="filterMonth" (change)="onSearch()"
                     class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-bold text-orange-600 bg-orange-50/50 border border-orange-100 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-orange-50">
@@ -100,13 +93,11 @@
             </div>
           </div>
 
-          <!-- Tahun -->
           <div class="relative w-28">
             <input type="number" [(ngModel)]="filterYear" (ngModelChange)="onSearchDebounce()"
                    class="w-full pl-4 pr-2 py-2.5 text-sm font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all text-center placeholder-slate-400" placeholder="YYYY">
           </div>
 
-          <!-- Reset -->
           <button (click)="resetFilter()" title="Reset Filter"
                   class="p-2.5 bg-slate-100 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-colors shadow-sm">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
@@ -115,7 +106,6 @@
       </div>
     </div>
 
-    <!-- Data Table (Desktop) -->
     <div class="hidden md:block bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden animate-fade-in-up delay-150">
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
@@ -124,16 +114,15 @@
               <th class="px-6 py-5 w-[25%]">Karyawan</th>
               <th class="px-6 py-5">Jabatan</th>
               <th class="px-6 py-5 text-center">Periode</th>
-              <th class="px-6 py-5 text-center">Hadir</th>
               <th class="px-6 py-5 text-center">Telat</th>
-              <th class="px-6 py-5 text-center">Lembur</th>
+              <th class="px-6 py-5 text-center">Izin</th>
+              <th class="px-6 py-5 text-center">Sakit</th>
               <th class="px-6 py-5 text-center">Absen</th>
               <th class="px-6 py-5 text-center w-[140px]">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-50">
             
-            <!-- Loading -->
             <tr *ngIf="isLoading">
               <td colspan="8" class="px-6 py-20 text-center">
                 <div class="flex flex-col items-center justify-center gap-4">
@@ -146,7 +135,6 @@
               </td>
             </tr>
 
-            <!-- Empty -->
             <tr *ngIf="!isLoading && items.length === 0">
               <td colspan="8" class="px-6 py-20 text-center">
                 <div class="max-w-xs mx-auto flex flex-col items-center">
@@ -159,10 +147,8 @@
               </td>
             </tr>
 
-            <!-- Content -->
             <ng-container *ngIf="!isLoading && items.length > 0">
               <tr *ngFor="let item of items" class="group hover:bg-orange-50/30 transition-colors duration-200">
-                <!-- 1. Karyawan -->
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-4">
                     <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex items-center justify-center text-sm font-black border border-white shadow-sm ring-2 ring-transparent group-hover:ring-orange-200 transition-all">
@@ -175,69 +161,64 @@
                   </div>
                 </td>
 
-                <!-- 2. Jabatan -->
                 <td class="px-6 py-4">
                   <p class="text-sm font-semibold text-slate-700">{{ item.jabatan || '-' }}</p>
                   <p class="text-xs text-slate-400 mt-0.5">{{ item.departemen || '-' }}</p>
                 </td>
 
-                <!-- 3. Periode -->
                 <td class="px-6 py-4 text-center">
                   <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
                     {{ getMonthName(item.month) }} {{ item.year }}
                   </span>
                 </td>
 
-                <!-- 4. Hadir -->
-                <td class="px-6 py-4 text-center font-bold text-slate-700">{{ item.kehadiran_jml }}</td>
-
-                <!-- 5. Telat -->
                 <td class="px-6 py-4 text-center">
                   <span [class.text-amber-500]="item.terlambat_jml > 0"
                         [class.bg-amber-50]="item.terlambat_jml > 0"
-                        [class.text-slate-300]="item.terlambat_jml === 0"
+                        [class.text-slate-300]="!item.terlambat_jml || item.terlambat_jml === 0"
                         class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ item.terlambat_jml }}
+                    {{ item.terlambat_jml || 0 }}
                   </span>
                 </td>
 
-                <!-- 6. Lembur -->
                 <td class="px-6 py-4 text-center">
-                   <div *ngIf="item.lembur_jam > 0 || item.lembur_menit > 0; else noLembur" class="text-emerald-600 font-bold text-xs flex flex-col items-center leading-tight">
-                     <span>{{ item.lembur_jam }} Jam</span>
-                     <span class="text-[10px] opacity-75 font-normal">{{ item.lembur_menit }} Menit</span>
-                   </div>
-                   <ng-template #noLembur>
-                     <span class="text-slate-300">-</span>
-                   </ng-template>
+                  <span [class.text-indigo-500]="($any(item).izin || $any(item).izin_jml) > 0"
+                        [class.bg-indigo-50]="($any(item).izin || $any(item).izin_jml) > 0"
+                        [class.text-slate-300]="!($any(item).izin || $any(item).izin_jml)"
+                        class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
+                    {{ $any(item).izin || $any(item).izin_jml || 0 }}
+                  </span>
                 </td>
 
-                <!-- 7. Absen/Alpha -->
+                <td class="px-6 py-4 text-center">
+                  <span [class.text-teal-500]="($any(item).sakit || $any(item).sakit_jml) > 0"
+                        [class.bg-teal-50]="($any(item).sakit || $any(item).sakit_jml) > 0"
+                        [class.text-slate-300]="!($any(item).sakit || $any(item).sakit_jml)"
+                        class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
+                    {{ $any(item).sakit || $any(item).sakit_jml || 0 }}
+                  </span>
+                </td>
+
                 <td class="px-6 py-4 text-center">
                   <span [class.text-rose-500]="item.tanpa_izin > 0"
                         [class.bg-rose-50]="item.tanpa_izin > 0"
-                        [class.text-slate-300]="item.tanpa_izin === 0"
+                        [class.text-slate-300]="!item.tanpa_izin || item.tanpa_izin === 0"
                          class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ item.tanpa_izin }}
+                    {{ item.tanpa_izin || 0 }}
                   </span>
                 </td>
 
-                <!-- 8. Aksi (Show/Edit & Delete) -->
                 <td class="px-6 py-4 text-center">
                   <div class="flex justify-center items-center gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                    
-                    <!-- Tombol Detail / Show (Mata/Edit) -->
                     <button (click)="goToDetail(item.id)" 
                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white border border-indigo-100 hover:border-transparent transition-all shadow-sm" title="Lihat Detail & Edit">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                     </button>
 
-                    <!-- Tombol Delete (Tong Sampah) -->
                     <button (click)="confirmDelete(item)" 
                             class="w-8 h-8 flex items-center justify-center rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-500 hover:text-white border border-rose-100 hover:border-transparent transition-all shadow-sm" title="Hapus Data">
                       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                     </button>
-                    
                   </div>
                 </td>
               </tr>
@@ -246,73 +227,42 @@
         </table>
       </div>
       
-      <!-- Pagination Footer -->
       <div *ngIf="items.length > 0" class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50">
         <span class="text-xs text-slate-500 font-medium order-2 sm:order-1">
           Halaman <span class="text-slate-900 font-bold">{{ currentPage }}</span> dari <span class="text-slate-900 font-bold">{{ lastPage }}</span>
         </span>
         <div class="flex gap-2 order-1 sm:order-2">
-          <button (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1"
-                  class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-600">
-            Prev
-          </button>
-          <button (click)="goPage(currentPage + 1)" [disabled]="currentPage === lastPage"
-                  class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-600">
-            Next
-          </button>
+          <button (click)="goPage(currentPage - 1)" [disabled]="currentPage === 1" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-600">Prev</button>
+          <button (click)="goPage(currentPage + 1)" [disabled]="currentPage === lastPage" class="px-3 py-1.5 text-xs font-bold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-slate-600">Next</button>
         </div>
       </div>
     </div>
 
-    <!-- Mobile Card View (Responsif) -->
     <div class="block md:hidden space-y-4 animate-fade-in-up delay-200">
       <ng-container *ngIf="!isLoading">
         <div *ngFor="let item of items" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden">
-          <!-- Decorative Top -->
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-amber-400"></div>
 
-          <!-- Header -->
           <div class="flex justify-between items-start mb-4">
             <div class="flex items-center gap-3">
-              <div class="h-10 w-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-black">
-                 {{ item.nama.charAt(0) }}
-              </div>
+              <div class="h-10 w-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-black">{{ item.nama.charAt(0) }}</div>
               <div>
                 <h3 class="font-bold text-slate-800 text-sm">{{ item.nama }}</h3>
                 <p class="text-[10px] text-slate-400 font-mono">{{ item.nik_karyawan }}</p>
               </div>
             </div>
-            <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-50 text-slate-500 border border-slate-100">
-              {{ getMonthName(item.month) }}
-            </span>
+            <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-50 text-slate-500 border border-slate-100">{{ getMonthName(item.month) }}</span>
           </div>
 
-          <!-- Stats Grid Mobile -->
           <div class="grid grid-cols-4 gap-2 text-center py-3 bg-slate-50/50 rounded-xl mb-4">
-             <div>
-               <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Hadir</span>
-               <span class="text-sm font-black text-slate-700">{{ item.kehadiran_jml }}</span>
-             </div>
-             <div>
-               <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Telat</span>
-               <span class="text-sm font-black" [class.text-amber-500]="item.terlambat_jml > 0" [class.text-slate-300]="item.terlambat_jml === 0">{{ item.terlambat_jml }}</span>
-             </div>
-             <div>
-               <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Lembur</span>
-               <span class="text-sm font-black text-emerald-600">{{ item.lembur_jam }}h</span>
-             </div>
-             <div>
-               <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpha</span>
-               <span class="text-sm font-black" [class.text-rose-500]="item.tanpa_izin > 0" [class.text-slate-300]="item.tanpa_izin === 0">{{ item.tanpa_izin }}</span>
-             </div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Telat</span><span class="text-sm font-black" [class.text-amber-500]="item.terlambat_jml > 0" [class.text-slate-300]="!item.terlambat_jml">{{ item.terlambat_jml || 0 }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Izin</span><span class="text-sm font-black text-indigo-500">{{ $any(item).izin || $any(item).izin_jml || 0 }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span><span class="text-sm font-black text-teal-500">{{ $any(item).sakit || $any(item).sakit_jml || 0 }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpha</span><span class="text-sm font-black text-rose-500">{{ item.tanpa_izin || 0 }}</span></div>
           </div>
 
-          <!-- Action Buttons Mobile -->
           <div class="flex gap-2">
-            <button (click)="goToDetail(item.id)" class="flex-1 py-2.5 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">
-              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-              Detail
-            </button>
+            <button (click)="goToDetail(item.id)" class="flex-1 py-2.5 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">Detail</button>
             <button (click)="confirmDelete(item)" class="flex-none w-12 py-2.5 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center hover:bg-rose-100 transition">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
@@ -322,11 +272,9 @@
     </div>
   </div>
 
-  <!-- ── MODAL DELETE (Sama seperti sebelumnya) ── -->
   <div *ngIf="showDeleteModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="cancelDelete()"></div>
     <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md p-6 transform transition-all animate-bounce-in overflow-hidden">
-      <!-- Icon & Text Konfirmasi Hapus -->
       <div class="flex flex-col items-center text-center relative z-10">
         <div class="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mb-4 shadow-sm ring-4 ring-rose-50/50">
           <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -346,4 +294,3 @@
   </div>
 
 </div>
-

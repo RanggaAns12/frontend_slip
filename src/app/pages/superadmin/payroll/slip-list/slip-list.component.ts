@@ -32,6 +32,7 @@ interface SlipGajiItem {
   total_absent?: number;
   total_late?: number;
   employee?: any; 
+  allowances?: any[]; // Menyimpan array tunjangan spesifik jika ada dari backend
 }
 
 @Component({
@@ -111,13 +112,14 @@ export class SlipListComponent implements OnInit {
             department: deptVal,
             position: posVal,
             bonus: item.bonus || 0,
+            allowances: item.allowances || [], // Mapping array tunjangan spesifik
             total_present: item.total_present !== undefined ? Number(item.total_present) : 25,
             total_absent: item.total_absent !== undefined ? Number(item.total_absent) : 0,
             total_late: item.total_late !== undefined ? Number(item.total_late) : 0,
           };
         });
 
-        this.periodLabel = res.period?.label || '';
+        this.periodLabel = res.period?.label || `${this.months.find(m => m.value === this.selectedMonth)?.label} ${this.selectedYear}`;
         
         if (res.filters?.departments) {
           this.departmentList = res.filters.departments;
@@ -225,7 +227,7 @@ export class SlipListComponent implements OnInit {
   }
 
   // ==========================================
-  // VIEW SLIP (ELEGANT DESIGN)
+  // VIEW SLIP (ELEGANT DESIGN) - Modal View
   // ==========================================
   viewSlip(slipId: number) {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
@@ -236,12 +238,21 @@ export class SlipListComponent implements OnInit {
     const formatPts = this.formatPoin(item.overtime_hours);
     const formatJam = this.convertPoinToJam(item.overtime_hours);
 
-    // Hitung ulang rincian
     let pph21Value = Number(item.pph21_deduction) || 0;
     let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
     let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
     let alpaValue = Number(item.absence_deduction) || 0;
     let otherValue = Math.max(0, Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue));
+
+    // Render HTML Tunjangan Dinamis
+    let tunjanganHtml = '';
+    if (item.allowances && item.allowances.length > 0) {
+      item.allowances.forEach(allowance => {
+        tunjanganHtml += `<div class="flex justify-between"><span class="text-gray-600">${allowance.name}</span><span class="font-semibold text-gray-900">${this.formatRupiah(allowance.amount)}</span></div>`;
+      });
+    } else if (item.bonus && item.bonus > 0) {
+      tunjanganHtml = `<div class="flex justify-between"><span class="text-gray-600">Tunjangan & Bonus</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.bonus)}</span></div>`;
+    }
 
     Swal.fire({
       showConfirmButton: false,
@@ -250,7 +261,6 @@ export class SlipListComponent implements OnInit {
       html: `
         <div class="bg-white text-left font-sans">
           
-          <!-- HEADER KOP -->
           <div class="bg-gray-50/80 p-6 border-b border-gray-200">
             <div class="flex items-center gap-4">
               <img src="assets/images/logo.png" alt="Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none'">
@@ -262,7 +272,6 @@ export class SlipListComponent implements OnInit {
           </div>
 
           <div class="p-6 space-y-6">
-            <!-- INFO KARYAWAN -->
             <div class="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Nama Karyawan</p>
@@ -276,7 +285,6 @@ export class SlipListComponent implements OnInit {
               </div>
             </div>
 
-            <!-- KEHADIRAN -->
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between text-xs">
               <div class="text-center">
                 <span class="block text-gray-500 font-medium mb-1">Hadir</span>
@@ -292,13 +300,12 @@ export class SlipListComponent implements OnInit {
               </div>
             </div>
 
-            <!-- RINCIAN KEUANGAN -->
             <div>
               <p class="text-[11px] uppercase tracking-widest text-gray-400 font-bold mb-3 border-b border-gray-100 pb-2">Pendapatan</p>
               <div class="space-y-2.5 text-sm">
                 <div class="flex justify-between"><span class="text-gray-600">Gaji Pokok</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.base_salary)}</span></div>
                 ${item.overtime_pay > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Upah Lembur</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.overtime_pay)}</span></div>` : ''}
-                ${item.bonus && item.bonus > 0 ? `<div class="flex justify-between"><span class="text-gray-600">Tunjangan & Bonus</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.bonus)}</span></div>` : ''}
+                ${tunjanganHtml}
               </div>
             </div>
 
@@ -315,20 +322,126 @@ export class SlipListComponent implements OnInit {
             </div>
           </div>
 
-          <!-- FOOTER / THP -->
           <div class="bg-gray-900 text-white p-6">
             <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Take Home Pay</p>
             <p class="text-3xl font-black tracking-tight mb-2">${this.formatRupiah(item.net_salary)}</p>
             <p class="text-[10px] text-gray-400 italic">Terbilang: ${this.terbilang(item.net_salary)}</p>
           </div>
-
         </div>
       `
     });
   }
 
   // ==========================================
-  // DOWNLOAD PDF LOGIC
+  // LOGIC GAMBAR SLIP KE PDF (REUSABLE)
+  // ==========================================
+  private drawSingleSlip(doc: jsPDF, startY: number, item: any, logoObj: HTMLImageElement | null, bulanLabel: string, tahunLabel: string | number) {
+    if (logoObj) doc.addImage(logoObj, 'PNG', 12, startY - 2, 12, 12);
+
+    doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0); 
+    const textX = logoObj ? 28 : 15;
+    doc.text('PT. AGRO DELI SERDANG', textX, startY + 3);
+    
+    doc.setFontSize(7); doc.setFont('helvetica', 'normal');
+    doc.text('Dusun VII Desa/Kelurahan Dalu Sepuluh-A, 20362.', textX, startY + 6);
+    doc.text('Kecamatan Tanjung Morawa. North Sumatera, Indonesia', textX, startY + 9);
+    
+    doc.setLineWidth(0.5); doc.setDrawColor(0, 0, 0); doc.line(10, startY + 13, 200, startY + 13); 
+    
+    doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
+    doc.text('SLIP GAJI KARYAWAN', 105, startY + 19, { align: 'center' });
+    doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+    doc.text(`PERIODE: ${bulanLabel} ${tahunLabel}`, 105, startY + 23, { align: 'center' });
+
+    doc.setFontSize(7);
+    doc.text('NIK', 12, startY + 30);             doc.text(`: ${item.nik}`, 28, startY + 30);
+    doc.text('Nama', 12, startY + 34);            doc.text(`: ${item.name}`, 28, startY + 34);
+    doc.text('Jabatan', 12, startY + 38);         doc.text(`: ${item.position}`, 28, startY + 38);
+    doc.text('Departemen', 12, startY + 42);      doc.text(`: ${item.department}`, 28, startY + 42);
+
+    const hariKerja = item.total_present !== undefined ? item.total_present : 25;
+    const alphaLainnya = (item.total_absent || 0) + (item.total_late || 0);
+    const formatPts = this.formatPoin(item.overtime_hours);
+    const formatJam = this.convertPoinToJam(item.overtime_hours);
+
+    doc.text('DETAIL KEHADIRAN', 115, startY + 30); doc.line(115, startY + 31, 150, startY + 31);
+    doc.text('Hari Kerja Efektif', 115, startY + 35); doc.text(`: ${hariKerja} Hari`, 150, startY + 35);
+    doc.text('Tidak Hadir (Alpa)', 115, startY + 38); doc.text(`: ${alphaLainnya} Hari`, 150, startY + 38);
+    doc.text('Total Lembur', 115, startY + 41);       
+    doc.text(`: ${formatPts} Poin (~${formatJam} Jam)`, 150, startY + 41);
+
+    // Menyusun Rincian Penghasilan
+    const arrPenghasilan: { desc: string; val: string }[] = [
+      { desc: 'Gaji Pokok', val: this.formatRupiah(item.base_salary) },
+      { desc: `Upah Lembur (${formatPts} Poin)`, val: this.formatRupiah(item.overtime_pay) }
+    ];
+
+    if (item.allowances && item.allowances.length > 0) {
+      item.allowances.forEach((allowance: any) => {
+        arrPenghasilan.push({ desc: allowance.name, val: this.formatRupiah(allowance.amount) });
+      });
+    } else if (item.bonus && item.bonus > 0) {
+      arrPenghasilan.push({ desc: 'Tunjangan & Bonus', val: this.formatRupiah(item.bonus) });
+    }
+
+    // Menyusun Rincian Potongan
+    let pph21Value = Number(item.pph21_deduction) || 0;
+    let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
+    let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
+    let alpaValue = Number(item.absence_deduction) || 0;
+    let otherValue = Math.max(0, Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue));
+
+    const arrPotongan = [
+      { desc: 'Potongan PPh21', val: this.formatRupiah(pph21Value) },
+      { desc: 'Potongan BPJS Kesehatan', val: this.formatRupiah(bpjsKesValue) },
+      { desc: 'Potongan BPJS Ketenagakerjaan', val: this.formatRupiah(bpjsTkValue) },
+      { desc: `Potongan Alpa (${alphaLainnya} hari)`, val: this.formatRupiah(alpaValue) }
+    ];
+    if (otherValue > 0) arrPotongan.push({ desc: 'Potongan Lainnya', val: this.formatRupiah(otherValue) });
+
+    const maxRows = Math.max(arrPenghasilan.length, arrPotongan.length);
+    const bodyData: any[] = [];
+
+    for (let i = 0; i < maxRows; i++) {
+      bodyData.push([
+        arrPenghasilan[i] ? arrPenghasilan[i].desc : '', arrPenghasilan[i] ? arrPenghasilan[i].val : '',
+        arrPotongan[i] ? arrPotongan[i].desc : '', arrPotongan[i] ? arrPotongan[i].val : ''
+      ]);
+    }
+
+    const colorBlack: [number, number, number] = [0, 0, 0];
+    bodyData.push([
+      { content: 'TOTAL PENDAPATAN', styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
+      { content: this.formatRupiah(item.total_income), styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
+      { content: 'TOTAL POTONGAN', styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
+      { content: this.formatRupiah(item.total_deduction), styles: { fontStyle: 'bold' as const, textColor: colorBlack } }
+    ]);
+
+    autoTable(doc, {
+      startY: startY + 46, theme: 'grid',
+      styles: { fontSize: 6.5, cellPadding: 2.5, lineColor: [200, 200, 200], lineWidth: 0.1, textColor: [40, 40, 40] },
+      headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', fontSize: 7 },
+      columnStyles: { 0: { cellWidth: 56 }, 1: { cellWidth: 38, halign: 'right' }, 2: { cellWidth: 56 }, 3: { cellWidth: 38, halign: 'right' } },
+      head: [['PENGHASILAN', '', 'POTONGAN', '']], body: bodyData, margin: { left: 10, right: 10 }, tableWidth: 'auto' 
+    });
+
+    let thpY = (doc as any).lastAutoTable.finalY + 3;
+    doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3); doc.rect(10, thpY, 190, 5); 
+
+    doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
+    const textTHP = `TAKE HOME PAY: ${this.formatRupiah(item.net_salary)}`;
+    doc.text(textTHP, 12, thpY + 3.5);
+
+    doc.setFontSize(6); doc.setFont('helvetica', 'italic');
+    const terbilangText = `# ${this.terbilang(item.net_salary)} #`;
+    const splitTerbilang = doc.splitTextToSize(terbilangText, 180 - doc.getTextWidth(textTHP) - 10);
+    if (splitTerbilang[0]) doc.text(splitTerbilang[0], 198, thpY + 3.5, { align: 'right' });
+    
+    // TANDA TANGAN DIHILANGKAN
+  }
+
+  // ==========================================
+  // DOWNLOAD 1 SLIP (SATU KARYAWAN)
   // ==========================================
   downloadSlip(slipId: number) {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
@@ -339,137 +452,16 @@ export class SlipListComponent implements OnInit {
     }).then(() => {
       const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const bulanLabel = this.months.find(m => m.value === this.selectedMonth)?.label?.toUpperCase() || '';
-      const tahunLabel = this.selectedYear;
       
-      const hariKerja = item.total_present !== undefined ? item.total_present : 25;
-      let alphaLainnya = (item.total_absent || 0) + (item.total_late || 0);
-      
-      let pph21Value = Number(item.pph21_deduction) || 0;
-      let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
-      let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
-      let alpaValue = Number(item.absence_deduction) || 0;
-      
-      let otherValue = Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue);
-      if (otherValue < 0) otherValue = 0;
-
-      const logoUrl = 'assets/images/logo.png'; 
       const img = new Image();
-      img.src = logoUrl;
+      img.src = 'assets/images/logo.png';
 
       const renderPDF = (logoObj: HTMLImageElement | null) => {
-        const drawSlipSection = (startY: number, isArsipPerusahaan: boolean) => {
-          if (logoObj) doc.addImage(logoObj, 'PNG', 12, startY - 2, 12, 12);
-
-          doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0); 
-          const textX = logoObj ? 28 : 15;
-          doc.text('PT. AGRO DELI SERDANG', textX, startY + 3);
-          
-          doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-          doc.text('Dusun VII Desa/Kelurahan Dalu Sepuluh-A, 20362.', textX, startY + 6);
-          doc.text('Kecamatan Tanjung Morawa. North Sumatera, Indonesia', textX, startY + 9);
-
-          doc.setFontSize(7); doc.setFont('helvetica', 'italic'); doc.setTextColor(120, 120, 120); 
-          doc.text(isArsipPerusahaan ? 'ARSIP PERUSAHAAN' : 'ARSIP KARYAWAN', 195, startY + 3, { align: 'right' });
-          
-          doc.setLineWidth(0.5); doc.setDrawColor(0, 0, 0); doc.line(10, startY + 13, 200, startY + 13); 
-          
-          doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-          doc.text('SLIP GAJI KARYAWAN', 105, startY + 19, { align: 'center' });
-          doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-          doc.text(`PERIODE: ${bulanLabel} ${tahunLabel}`, 105, startY + 23, { align: 'center' });
-
-          doc.setFontSize(7);
-          doc.text('NIK', 12, startY + 30);             doc.text(`: ${item.nik}`, 28, startY + 30);
-          doc.text('Nama', 12, startY + 34);            doc.text(`: ${item.name}`, 28, startY + 34);
-          doc.text('Jabatan', 12, startY + 38);         doc.text(`: ${item.position}`, 28, startY + 38);
-          doc.text('Departemen', 12, startY + 42);      doc.text(`: ${item.department}`, 28, startY + 42);
-
-          doc.text('DETAIL KEHADIRAN', 115, startY + 30); doc.line(115, startY + 31, 150, startY + 31);
-          doc.text('Hari Kerja Efektif', 115, startY + 35); doc.text(`: ${hariKerja} Hari`, 150, startY + 35);
-          doc.text('Tidak Hadir (Alpa)', 115, startY + 38); doc.text(`: ${item.total_absent || 0} Hari`, 150, startY + 38);
-          doc.text('Total Lembur', 115, startY + 41);         
-          
-          const formatPts = this.formatPoin(item.overtime_hours);
-          const formatJam = this.convertPoinToJam(item.overtime_hours);
-          doc.text(`: ${formatPts} Poin (~${formatJam} Jam)`, 150, startY + 41);
-
-          const arrPenghasilan: { desc: string; val: string }[] = [
-            { desc: 'Gaji Pokok', val: this.formatRupiah(item.base_salary) },
-            { desc: `Upah Lembur (${formatPts} Poin)`, val: this.formatRupiah(item.overtime_pay) }
-          ];
-
-          if (item.bonus && item.bonus > 0) arrPenghasilan.push({ desc: 'Tunjangan & Bonus', val: this.formatRupiah(item.bonus) });
-
-          const arrPotongan = [
-            { desc: 'Potongan PPh21', val: this.formatRupiah(pph21Value) },
-            { desc: 'Potongan BPJS Kesehatan', val: this.formatRupiah(bpjsKesValue) },
-            { desc: 'Potongan BPJS Ketenagakerjaan', val: this.formatRupiah(bpjsTkValue) },
-            { desc: `Potongan Alpa (${alphaLainnya} hari)`, val: this.formatRupiah(alpaValue) }
-          ];
-          
-          if (otherValue > 0) arrPotongan.push({ desc: 'Potongan Lainnya', val: this.formatRupiah(otherValue) });
-
-          const maxRows = Math.max(arrPenghasilan.length, arrPotongan.length);
-          const bodyData: any[] = [];
-
-          for (let i = 0; i < maxRows; i++) {
-            bodyData.push([
-              arrPenghasilan[i] ? arrPenghasilan[i].desc : '', arrPenghasilan[i] ? arrPenghasilan[i].val : '',
-              arrPotongan[i] ? arrPotongan[i].desc : '', arrPotongan[i] ? arrPotongan[i].val : ''
-            ]);
-          }
-
-          const colorBlack: [number, number, number] = [0, 0, 0];
-
-          bodyData.push([
-            { content: 'TOTAL PENDAPATAN', styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
-            { content: this.formatRupiah(item.total_income), styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
-            { content: 'TOTAL POTONGAN', styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
-            { content: this.formatRupiah(item.total_deduction), styles: { fontStyle: 'bold' as const, textColor: colorBlack } }
-          ]);
-
-          autoTable(doc, {
-            startY: startY + 46, theme: 'grid',
-            styles: { fontSize: 6.5, cellPadding: 2.5, lineColor: [200, 200, 200], lineWidth: 0.1, textColor: [40, 40, 40] },
-            headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', fontSize: 7 },
-            columnStyles: { 0: { cellWidth: 56 }, 1: { cellWidth: 38, halign: 'right' }, 2: { cellWidth: 56 }, 3: { cellWidth: 38, halign: 'right' } },
-            head: [['PENGHASILAN', '', 'POTONGAN', '']], body: bodyData, margin: { left: 10, right: 10 }, tableWidth: 'auto' 
-          });
-
-          let thpY = (doc as any).lastAutoTable.finalY + 3;
-          doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3); doc.rect(10, thpY, 190, 5); 
-
-          doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
-          const textTHP = `TAKE HOME PAY: ${this.formatRupiah(item.net_salary)}`;
-          doc.text(textTHP, 12, thpY + 3.5);
-
-          doc.setFontSize(6); doc.setFont('helvetica', 'italic');
-          const terbilangText = `# ${this.terbilang(item.net_salary)} #`;
-          const splitTerbilang = doc.splitTextToSize(terbilangText, 180 - doc.getTextWidth(textTHP) - 10);
-          if (splitTerbilang[0]) doc.text(splitTerbilang[0], 198, thpY + 3.5, { align: 'right' });
-
-          let sigY = thpY + 12;
-          doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-          const tglCetak = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-          doc.text(`Deli Serdang, ${tglCetak}`, 160, sigY, { align: 'center' });
-          doc.text('Bendahara', 160, sigY + 4, { align: 'center' });
-          doc.text('( ............................... )', 160, sigY + 22, { align: 'center' });
-          doc.text('Penerima', 45, sigY + 4, { align: 'center' });
-          doc.setFont('helvetica', 'bold'); doc.text(`( ${item.name} )`, 45, sigY + 22, { align: 'center' });
-        };
-
-        drawSlipSection(8, true);
-
-        const cutLineY = 148; 
-        doc.setDrawColor(100, 100, 100); doc.setLineWidth(0.2); doc.setLineDashPattern([2, 2], 0); doc.line(20, cutLineY, 190, cutLineY);
-        doc.setFontSize(6); doc.setFont('helvetica', 'normal'); doc.setTextColor(150, 150, 150);
-        doc.text('- - - - - - - - - - Potong di sini - - - - - - - - - -', 105, cutLineY - 1, { align: 'center' });
-        doc.setLineDashPattern([], 0); doc.setTextColor(0, 0, 0);
-
-        drawSlipSection(cutLineY + 6, false);
+        // Menggambar 1 slip di bagian atas
+        this.drawSingleSlip(doc, 8, item, logoObj, bulanLabel, this.selectedYear);
 
         const safeName = item.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const fileName = `Slip_Gaji_${safeName}_${bulanLabel}_${tahunLabel}.pdf`;
+        const fileName = `Slip_Gaji_${safeName}_${bulanLabel}_${this.selectedYear}.pdf`;
         doc.save(fileName);
 
         Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Slip ${item.name} berhasil diunduh!`, showConfirmButton: false, timer: 2500 });
@@ -480,6 +472,9 @@ export class SlipListComponent implements OnInit {
     });
   }
 
+  // ==========================================
+  // DOWNLOAD SEMUA SLIP (2 SLIP PER HALAMAN)
+  // ==========================================
   downloadAllSlips() {
     if (this.filteredDataSlip.length === 0) {
       Swal.fire('Peringatan', 'Tidak ada data slip yang bisa diunduh.', 'warning');
@@ -488,7 +483,7 @@ export class SlipListComponent implements OnInit {
 
     Swal.fire({
       title: 'Download Semua Slip?',
-      html: `<p class="text-sm text-gray-600">Akan menghasilkan <b class="text-gray-900">${this.filteredDataSlip.length} slip gaji</b> dalam satu file PDF gabungan.</p>`,
+      html: `<p class="text-sm text-gray-600">Akan mengunduh PDF berisi <b class="text-gray-900">${this.filteredDataSlip.length} slip gaji</b>. (2 Slip / Halaman)</p>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#1e293b',
@@ -498,7 +493,7 @@ export class SlipListComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         Swal.fire({
-          title: 'Menyiapkan PDF...', html: `Mohon tunggu, sedang menyusun <b>${this.filteredDataSlip.length}</b> slip gaji...`,
+          title: 'Menyiapkan PDF...', html: `Mohon tunggu, sedang menyusun...`,
           timer: 2000, showConfirmButton: false, didOpen: () => { Swal.showLoading(); }
         }).then(() => { this.generateCombinedPDF(); });
       }
@@ -508,128 +503,41 @@ export class SlipListComponent implements OnInit {
   generateCombinedPDF() {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const bulanLabel = this.months.find(m => m.value === this.selectedMonth)?.label?.toUpperCase() || '';
-    const tahunLabel = this.selectedYear;
-    let isFirstPage = true; 
-
-    const drawSlipSection = (startY: number, isArsipPerusahaan: boolean, item: any, logoObj: HTMLImageElement | null) => {
-      if (logoObj) doc.addImage(logoObj, 'PNG', 12, startY - 2, 12, 12);
-      
-      doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0); 
-      const textX = logoObj ? 28 : 15; doc.text('PT. AGRO DELI SERDANG', textX, startY + 3);
-      
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-      doc.text('Dusun VII Desa/Kelurahan Dalu Sepuluh-A, 20362.', textX, startY + 6);
-      doc.text('Kecamatan Tanjung Morawa. North Sumatera, Indonesia', textX, startY + 9);
-
-      doc.setFontSize(7); doc.setFont('helvetica', 'italic'); doc.setTextColor(120, 120, 120); 
-      doc.text(isArsipPerusahaan ? 'ARSIP PERUSAHAAN' : 'ARSIP KARYAWAN', 195, startY + 3, { align: 'right' });
-      
-      doc.setLineWidth(0.5); doc.setDrawColor(0, 0, 0); doc.line(10, startY + 13, 200, startY + 13); 
-      doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
-      doc.text('SLIP GAJI KARYAWAN', 105, startY + 19, { align: 'center' });
-      doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-      doc.text(`PERIODE: ${bulanLabel} ${tahunLabel}`, 105, startY + 23, { align: 'center' });
-
-      doc.setFontSize(7);
-      doc.text('NIK', 12, startY + 30);             doc.text(`: ${item.nik}`, 28, startY + 30);
-      doc.text('Nama', 12, startY + 34);            doc.text(`: ${item.name}`, 28, startY + 34);
-      doc.text('Jabatan', 12, startY + 38);         doc.text(`: ${item.position}`, 28, startY + 38);
-      doc.text('Departemen', 12, startY + 42);      doc.text(`: ${item.department}`, 28, startY + 42);
-
-      const hariKerja = item.total_present !== undefined ? item.total_present : 25;
-      const alphaLainnya = (item.total_absent || 0) + (item.total_late || 0);
-
-      doc.text('DETAIL KEHADIRAN', 115, startY + 30); doc.line(115, startY + 31, 150, startY + 31);
-      doc.text('Hari Kerja Efektif', 115, startY + 35);   doc.text(`: ${hariKerja} Hari`, 150, startY + 35);
-      doc.text('Tidak Hadir (Alpa)', 115, startY + 38);   doc.text(`: ${item.total_absent || 0} Hari`, 150, startY + 38);
-      doc.text('Total Lembur', 115, startY + 41);         
-      doc.text(`: ${this.formatPoin(item.overtime_hours)} Poin (~${this.convertPoinToJam(item.overtime_hours)} Jam)`, 150, startY + 41);
-
-      let pph21Value = Number(item.pph21_deduction) || 0;
-      let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
-      let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
-      let alpaValue = Number(item.absence_deduction) || 0;
-      let otherValue = Math.max(0, Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue));
-
-      const arrPenghasilan = [
-        { desc: 'Gaji Pokok', val: this.formatRupiah(item.base_salary) },
-        { desc: `Upah Lembur (${this.formatPoin(item.overtime_hours)} Poin)`, val: this.formatRupiah(item.overtime_pay) }
-      ];
-      if (item.bonus && item.bonus > 0) arrPenghasilan.push({ desc: 'Tunjangan & Bonus', val: this.formatRupiah(item.bonus) });
-
-      const arrPotongan = [
-        { desc: 'Potongan PPh21', val: this.formatRupiah(pph21Value) },
-        { desc: 'Potongan BPJS Kesehatan', val: this.formatRupiah(bpjsKesValue) },
-        { desc: 'Potongan BPJS Ketenagakerjaan', val: this.formatRupiah(bpjsTkValue) },
-        { desc: `Potongan Alpa (${alphaLainnya} hari)`, val: this.formatRupiah(alpaValue) }
-      ];
-      if (otherValue > 0) arrPotongan.push({ desc: 'Potongan Lainnya', val: this.formatRupiah(otherValue) });
-
-      const maxRows = Math.max(arrPenghasilan.length, arrPotongan.length);
-      const bodyData = [];
-      for (let i = 0; i < maxRows; i++) {
-        bodyData.push([
-          arrPenghasilan[i] ? arrPenghasilan[i].desc : '', arrPenghasilan[i] ? arrPenghasilan[i].val : '',
-          arrPotongan[i] ? arrPotongan[i].desc : '', arrPotongan[i] ? arrPotongan[i].val : ''
-        ]);
-      }
-
-      const colorBlack: [number, number, number] = [0, 0, 0];
-
-      bodyData.push([
-        { content: 'TOTAL PENDAPATAN', styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
-        { content: this.formatRupiah(item.total_income), styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
-        { content: 'TOTAL POTONGAN', styles: { fontStyle: 'bold' as const, textColor: colorBlack } },
-        { content: this.formatRupiah(item.total_deduction), styles: { fontStyle: 'bold' as const, textColor: colorBlack } }
-      ]);
-
-      autoTable(doc, {
-        startY: startY + 46, theme: 'grid',
-        styles: { fontSize: 6.5, cellPadding: 2.5, lineColor: [200, 200, 200], lineWidth: 0.1, textColor: [40, 40, 40] },
-        headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', fontSize: 7 },
-        columnStyles: { 0: { cellWidth: 56 }, 1: { cellWidth: 38, halign: 'right' }, 2: { cellWidth: 56 }, 3: { cellWidth: 38, halign: 'right' } },
-        head: [['PENGHASILAN', '', 'POTONGAN', '']], body: bodyData, margin: { left: 10, right: 10 }, tableWidth: 'auto' 
-      });
-
-      let thpY = (doc as any).lastAutoTable.finalY + 3;
-      doc.setDrawColor(0, 0, 0); doc.setLineWidth(0.3); doc.rect(10, thpY, 190, 5); 
-      doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(0, 0, 0);
-      const textTHP = `TAKE HOME PAY: ${this.formatRupiah(item.net_salary)}`;
-      doc.text(textTHP, 12, thpY + 3.5);
-
-      doc.setFontSize(6); doc.setFont('helvetica', 'italic');
-      const terbilangText = `# ${this.terbilang(item.net_salary)} #`;
-      const splitTerbilang = doc.splitTextToSize(terbilangText, 180 - doc.getTextWidth(textTHP) - 10);
-      if (splitTerbilang[0]) doc.text(splitTerbilang[0], 198, thpY + 3.5, { align: 'right' });
-
-      let sigY = thpY + 12;
-      doc.setFontSize(7); doc.setFont('helvetica', 'normal');
-      const tglCetak = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-      doc.text(`Deli Serdang, ${tglCetak}`, 160, sigY, { align: 'center' });
-      doc.text('Bendahara', 160, sigY + 4, { align: 'center' });
-      doc.text('( ............................... )', 160, sigY + 22, { align: 'center' });
-      doc.text('Penerima', 45, sigY + 4, { align: 'center' });
-      doc.setFont('helvetica', 'bold'); doc.text(`( ${item.name} )`, 45, sigY + 22, { align: 'center' });
-    };
-
+    
     const img = new Image();
     img.src = 'assets/images/logo.png';
 
     const prosesRenderSemua = (logoObj: HTMLImageElement | null) => {
-      this.filteredDataSlip.forEach((item, index) => {
+      
+      let isFirstPage = true;
+
+      // Loop dua karyawan sekaligus
+      for (let i = 0; i < this.filteredDataSlip.length; i += 2) {
         if (!isFirstPage) doc.addPage();
         isFirstPage = false;
-        drawSlipSection(8, true, item, logoObj);
-        doc.setDrawColor(100, 100, 100); doc.setLineWidth(0.2); doc.setLineDashPattern([2, 2], 0); doc.line(20, 148, 190, 148);
-        doc.setFontSize(6); doc.setFont('helvetica', 'normal'); doc.setTextColor(150, 150, 150);
-        doc.text('- - - - - - - - - - Potong di sini - - - - - - - - - -', 105, 147, { align: 'center' });
-        doc.setLineDashPattern([], 0); doc.setTextColor(0, 0, 0);
-        drawSlipSection(154, false, item, logoObj);
-      });
 
-      const namaFile = `Rekap_Slip_Gaji_${bulanLabel}_${tahunLabel}.pdf`;
+        const item1 = this.filteredDataSlip[i];
+        const item2 = this.filteredDataSlip[i + 1];
+
+        // Gambar Slip Karyawan 1 (Di Atas)
+        this.drawSingleSlip(doc, 8, item1, logoObj, bulanLabel, this.selectedYear);
+
+        // Jika Karyawan 2 ada, beri garis potong dan gambar di bawah
+        if (item2) {
+          const cutLineY = 148; 
+          doc.setDrawColor(100, 100, 100); doc.setLineWidth(0.2); doc.setLineDashPattern([2, 2], 0); doc.line(20, cutLineY, 190, cutLineY);
+          doc.setFontSize(6); doc.setFont('helvetica', 'normal'); doc.setTextColor(150, 150, 150);
+          doc.text('- - - - - - - - - - Potong di sini - - - - - - - - - -', 105, cutLineY - 1, { align: 'center' });
+          doc.setLineDashPattern([], 0); doc.setTextColor(0, 0, 0);
+
+          // Gambar Slip Karyawan 2 (Di Bawah)
+          this.drawSingleSlip(doc, 154, item2, logoObj, bulanLabel, this.selectedYear);
+        }
+      }
+
+      const namaFile = `Rekap_Slip_Gaji_${bulanLabel}_${this.selectedYear}.pdf`;
       doc.save(namaFile);
-      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `${this.filteredDataSlip.length} slip berhasil digabung!`, showConfirmButton: false, timer: 3000 });
+      Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: `Berhasil menggabungkan slip!`, showConfirmButton: false, timer: 3000 });
     };
 
     img.onload = () => prosesRenderSemua(img);

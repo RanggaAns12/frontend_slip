@@ -40,6 +40,7 @@ export class UserListComponent implements OnInit {
   roleOptions = [
     { id: 1, name: 'superadmin', label: 'Super Admin' },
     { id: 2, name: 'admin-hrd', label: 'Admin HRD' },
+    { id: 5, name: 'manager', label: 'Manager' }, // Asumsi ID Manager adalah 5 (Sesuai Seeder)
   ];
 
   constructor(private userApi: UserApiService) { }
@@ -149,37 +150,24 @@ export class UserListComponent implements OnInit {
         this.loadData();
         this.showToast(this.isEditMode ? 'User berhasil diperbarui!' : 'User berhasil ditambahkan!', 'success');
 
-        // ============================================================
-        // FIX: PAKSA BUAT LOCALSTORAGE JIKA EDIT DIRI SENDIRI / SUPERADMIN
-        // ============================================================
         if (this.isEditMode) {
-            
-            // Kita asumsikan orang yang mengedit ini adalah si Superadmin yang sedang login
-            // (Karena saat ini backend Mas belum mengirim data 'user' saat login)
             if (this.isEditingSuperAdmin || this.userForm.username === 'superadmin' || this.editUserId == 1) {
-                
-                // 1. Buat Payload Palsu persis seperti yang diharapkan Sidebar!
                 const freshUserData = {
                     id: this.editUserId,
-                    name: this.userForm.name, // NAMA BARU YANG DIKETIK
+                    name: this.userForm.name,
                     username: this.userForm.username,
-                    role: { name: 'superadmin' }, // Agar sidebar tahu role nya
+                    role: { name: 'superadmin' },
                     role_id: this.userForm.role_id
                 };
 
-                // 2. TEMBAK LANGSUNG KE LOCAL STORAGE!
                 localStorage.setItem('user_data', JSON.stringify(freshUserData));
                 localStorage.setItem('user', JSON.stringify(freshUserData));
 
-                console.log('✅ LocalStorage berhasil dipancing:', freshUserData);
-
-                // 3. Reload Halaman 
                 setTimeout(() => {
                     window.location.reload();
                 }, 1000);
             }
         }
-        // ============================================================
       },
       error: (err) => {
         console.error(err);
@@ -219,7 +207,8 @@ export class UserListComponent implements OnInit {
     switch (roleName?.toLowerCase()) {
       case 'superadmin': return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'admin-hrd':  return 'bg-blue-50 text-blue-700 border-blue-200';
-      default:           return 'bg-gray-100 text-gray-600 border-gray-200';
+      case 'manager':    return 'bg-amber-50 text-amber-700 border-amber-200';
+      default:           return 'bg-slate-100 text-slate-600 border-slate-200';
     }
   }
 
@@ -227,6 +216,7 @@ export class UserListComponent implements OnInit {
     switch (roleName?.toLowerCase()) {
       case 'superadmin': return 'Super Admin';
       case 'admin-hrd':  return 'Admin HRD';
+      case 'manager':    return 'Manager';
       default:           return roleName || 'Tanpa Role';
     }
   }

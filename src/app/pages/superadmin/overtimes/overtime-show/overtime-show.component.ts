@@ -20,11 +20,6 @@ export class OvertimeShowComponent implements OnInit {
   totalBayar = 0;
   totalHari = 0;
 
-  // --- STATE POTONGAN GAJI ---
-  potongan = { pph21: 0, bpjs_kes: 0, bpjs_tk: 0 };
-  showPotonganModal = false;
-  potonganFormStr = { pph21: '', bpjs_kes: '', bpjs_tk: '' };
-
   // --- STATE FORM LEMBUR (CREATE & EDIT) ---
   showFormModal = false;
   isEditMode = false;
@@ -49,7 +44,6 @@ export class OvertimeShowComponent implements OnInit {
   ngOnInit(): void {
     this.namaKaryawan = this.route.snapshot.paramMap.get('nama') ?? '';
     if (this.namaKaryawan) {
-      this.loadSavedPotongan(); 
       this.loadDetail();
     } else {
       this.goBack();
@@ -64,15 +58,6 @@ export class OvertimeShowComponent implements OnInit {
     }, 3500); 
   }
 
-  // --- CALCULATION GETTERS ---
-  get totalPotongan(): number {
-    return Number(this.potongan.pph21) + Number(this.potongan.bpjs_kes) + Number(this.potongan.bpjs_tk);
-  }
-
-  get totalBersih(): number {
-    return this.totalBayar - this.totalPotongan;
-  }
-
   // --- LOAD DATA ---
   loadDetail(): void {
     this.isLoading = true;
@@ -83,6 +68,7 @@ export class OvertimeShowComponent implements OnInit {
         this.totalHari = data.length;
         
         if (data.length > 0) {
+          // Ambil dari row pertama (karena GP/Tarif sama untuk 1 periode)
           this.gajiPokok = parseFloat(data[0].gaji_pokok || 0);
           this.tarifPerJam = parseFloat(data[0].per_jam || 0);
           this.maxJam = Math.max(...data.map((d: any) => parseFloat(d.konversi_lembur || 0)));
@@ -151,6 +137,7 @@ export class OvertimeShowComponent implements OnInit {
       error: (err) => {
         this.isSaving = false;
         this.showToast('Terjadi kesalahan saat menyimpan data', 'error');
+        console.error(err);
       }
     });
   }
@@ -176,78 +163,7 @@ export class OvertimeShowComponent implements OnInit {
         this.isDeleting = false;
         this.showDeleteModal = false;
         this.showToast('Gagal menghapus data lembur', 'error');
-      }
-    });
-  }
-
-  // --- FUNGSI EDIT POTONGAN ---
-  loadSavedPotongan() {
-    const saved = localStorage.getItem(`potongan_${this.namaKaryawan}`);
-    if (saved) {
-      this.potongan = JSON.parse(saved);
-    } else {
-      const kompSaved = localStorage.getItem(`komponen_${this.namaKaryawan}`);
-      if (kompSaved) {
-        const data = JSON.parse(kompSaved);
-        this.potongan = data.potongan || { pph21: 0, bpjs_kes: 0, bpjs_tk: 0 };
-      }
-    }
-  }
-
-  openPotonganModal() {
-    this.potonganFormStr = { 
-      pph21: this.potongan.pph21 ? this.potongan.pph21.toString() : '',
-      bpjs_kes: this.potongan.bpjs_kes ? this.potongan.bpjs_kes.toString() : '',
-      bpjs_tk: this.potongan.bpjs_tk ? this.potongan.bpjs_tk.toString() : ''
-    };
-    this.showPotonganModal = true;
-  }
-
-  onCurrencyInput(field: 'pph21' | 'bpjs_kes' | 'bpjs_tk', event: Event) {
-    const inputElement = event.target as HTMLInputElement;
-    this.potonganFormStr[field] = inputElement.value.replace(/[^0-9]/g, '');
-  }
-
-    savePotongan() {
-    // 1. Ambil nilai inputan
-    this.potongan = { 
-      pph21: Number(this.potonganFormStr.pph21) || 0,
-      bpjs_kes: Number(this.potonganFormStr.bpjs_kes) || 0,
-      bpjs_tk: Number(this.potonganFormStr.bpjs_tk) || 0
-    };
-    
-    // 2. Total seluruh potongan
-    const sumPotongan = this.potongan.pph21 + this.potongan.bpjs_kes + this.potongan.bpjs_tk;
-
-    // 3. Ambil query params 'month' dan 'year' dari URL (jika user sedang memfilter bulan tertentu)
-    const month = this.route.snapshot.queryParamMap.get('month') || undefined;
-    const year = this.route.snapshot.queryParamMap.get('year') || undefined;
-
-    // 4. Buat Payload untuk API
-    const payload: any = {
-      potongan_pph_bpjs: sumPotongan
-    };
-
-    // 5. Tambahkan ke payload jika ada (kirim sebagai query param atau body tergantung API)
-    // Supaya Laravel tahu potongan ini untuk bulan apa
-    if (month) payload.month = month;
-    if (year) payload.year = year;
-
-    // 6. Panggil API ke Backend
-    this.overtimeApi.updatePotongan(this.namaKaryawan, payload).subscribe({
-      next: (res) => {
-        // Jika sukses, simpan juga di local storage untuk load awal yang cepat
-        localStorage.setItem(`potongan_${this.namaKaryawan}`, JSON.stringify(this.potongan));
-        
-        this.showPotonganModal = false;
-        this.showToast('Potongan lembur berhasil disimpan ke database!', 'success');
-        
-        // Reload detail agar angka terbaru terhitung
-        this.loadDetail();
-      },
-      error: (err) => {
         console.error(err);
-        this.showToast(err.error?.message || 'Gagal menyimpan potongan ke database', 'error');
       }
     });
   }

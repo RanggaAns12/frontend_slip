@@ -1,0 +1,120 @@
+<div class="min-h-screen bg-white p-4 sm:p-6 lg:p-10 relative">
+  
+  <div class="relative mb-12">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-1.5 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full animate-pulse"></div>
+          <div>
+            <h1 class="text-4xl font-bold bg-gradient-to-r from-slate-900 via-orange-800 to-amber-800 bg-clip-text text-transparent tracking-tight">
+              Welcome Back, {{ userName }}
+            </h1>
+            <p class="text-slate-500 mt-2 text-sm flex items-center gap-2">
+              <span class="inline-block w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
+              {{ currentDate | date:'EEEE, dd MMMM yyyy' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="px-6 py-3 bg-orange-50/50 border border-orange-100 rounded-2xl flex items-center gap-2">
+            <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            <span class="text-sm font-bold text-orange-700">Mode Read-Only</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+    
+    <div class="group relative bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+      <div class="absolute -right-12 -top-12 w-40 h-40 bg-gradient-to-br from-orange-400 to-amber-400 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-700"></div>
+      
+      <div class="relative flex items-start justify-between">
+        <div>
+          <div class="text-sm font-semibold text-orange-600 uppercase tracking-wider mb-2">Total Karyawan</div>
+          <div class="text-5xl font-black text-slate-800 mb-2 animate-number">{{ totalEmployees }}</div>
+          <div class="flex items-center gap-2 text-sm text-slate-400">Total keseluruhan pegawai terdaftar di sistem</div>
+        </div>
+        <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        </div>
+      </div>
+      <div class="mt-6 h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div class="h-full w-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-full animate-pulse-slow"></div>
+      </div>
+    </div>
+
+    <div class="group relative bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
+      <div class="absolute -right-12 -top-12 w-40 h-40 bg-gradient-to-br from-blue-400 to-indigo-400 rounded-full opacity-10 group-hover:scale-150 transition-transform duration-700"></div>
+      
+      <div class="relative flex items-start justify-between">
+        <div>
+          <div class="text-sm font-semibold text-blue-600 uppercase tracking-wider mb-2">Total Akun Sistem</div>
+          <div class="text-5xl font-black text-slate-800 mb-2 animate-number">{{ totalUsers }}</div>
+          <div class="flex items-center gap-2 text-sm text-slate-400">Total admin, HRD, dan pengguna aplikasi</div>
+        </div>
+        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-blue-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </div>
+      </div>
+      <div class="mt-6 h-2 bg-slate-100 rounded-full overflow-hidden">
+        <div class="h-full w-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full animate-pulse-slow"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <div class="lg:col-span-2 group relative bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col">
+      <div class="relative p-6 border-b border-slate-100">
+        <div class="flex items-center justify-between">
+          <div class="space-y-1">
+            <h3 class="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+              Statistik Kehadiran Mingguan
+            </h3>
+            <p class="text-sm text-slate-500 flex items-center gap-2">
+              <span class="inline-block w-2 h-2 bg-orange-500 rounded-full"></span>
+              Operasional perusahaan
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 relative w-full h-[350px] flex-1">
+        <canvas #attendanceChart class="animate-fade-in"></canvas>
+      </div>
+    </div>
+
+    <div class="lg:col-span-1 group relative bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col">
+      <div class="relative p-6 border-b border-slate-100">
+        <div class="space-y-1">
+          <h3 class="text-xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+            Rasio Status Karyawan
+          </h3>
+        </div>
+      </div>
+
+      <div class="p-6 relative w-full h-[300px] flex-1 flex items-center justify-center">
+        <canvas #statusChart class="animate-float"></canvas>
+      </div>
+
+      <div class="px-6 pb-6 grid grid-cols-2 gap-3">
+        <div class="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+          <div class="text-xs text-slate-500 mb-1">Total Aktif</div>
+          <div class="text-lg font-bold text-emerald-600">{{ activeEmployees }}</div>
+        </div>
+        <div class="bg-slate-50 rounded-xl p-3 text-center border border-slate-100">
+          <div class="text-xs text-slate-500 mb-1">Total Non-Aktif</div>
+          <div class="text-lg font-bold text-rose-600">{{ inactiveEmployees }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

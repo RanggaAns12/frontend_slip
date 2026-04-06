@@ -87,28 +87,32 @@ export class LoginComponent {
         } else {
           console.warn('⚠️ Data User kosong di response login');
         }
-
-        // E. Redirect Logic (Berdasarkan Role Slug atau Role ID)
+// E. Redirect Logic (Berdasarkan Role Slug atau Role ID)
         // PERBAIKAN: Gunakan role?.slug, role?.name, atau fallback ke role_id
         let roleSlug = role?.slug || (role?.name ? role.name.toLowerCase().replace(' ', '') : '');
         
         // Jika dari object role tidak ketemu, fallback gunakan role_id
         if (!roleSlug && user?.role_id) {
-            roleSlug = user.role_id === 1 ? 'superadmin' : (user.role_id === 2 ? 'admin-hrd' : '');
+            // Asumsi: ID 1 = Superadmin, ID 2 = Admin HRD, ID 5 = Manager (sesuai seeder)
+            if (user.role_id === 1) roleSlug = 'superadmin';
+            else if (user.role_id === 2) roleSlug = 'admin-hrd';
+            else if (user.role_id === 5) roleSlug = 'manager';
         }
 
         console.log('🔀 Redirecting user with role:', roleSlug);
 
-        // PERBAIKAN: Tambahkan trick "Sapu Jagat" reload() agar sidebar dinamis langsung ter-update
-        if (roleSlug === 'superadmin' || roleSlug === 'superadmin') { // antisipasi string "superadmin" tanpa spasi
+        // PERBAIKAN: Menambahkan rute khusus untuk Manager
+        if (roleSlug === 'superadmin' || roleSlug === 'superadmin') { 
           this.router.navigate(['/superadmin/dashboard']).then(() => window.location.reload());
         } else if (roleSlug === 'admin-hrd' || roleSlug === 'adminhrd') {
           this.router.navigate(['/hrd/dashboard']).then(() => window.location.reload());
+        } else if (roleSlug === 'manager') { // 👈 INI TAMBAHANNYA, MAS!
+          this.router.navigate(['/manager/dashboard']).then(() => window.location.reload());
         } else {
-          // Fallback Default (Jika role tidak dikenali atau null)
-          // Kita paksa ke superadmin dashboard dulu untuk testing dev
-          console.warn('⚠️ Role tidak dikenali, memaksa redirect ke dashboard superadmin');
-          this.router.navigate(['/superadmin/dashboard']).then(() => window.location.reload()); 
+          // Fallback Default (Jika role tidak dikenali)
+          console.warn('⚠️ Role tidak dikenali, memaksa redirect ke halaman login ulang');
+          this.errorMessage = 'Role Anda tidak dikenali oleh sistem.';
+          this.authApi.logout().subscribe(); // Auto-logout jika role tidak jelas
         }
       },
 

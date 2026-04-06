@@ -1,8 +1,5 @@
 <div class="p-4 md:p-6 bg-gray-50 min-h-screen font-sans animate-fade-in-up pb-20">
   
-  <!-- ========================================== -->
-  <!-- 1. TOAST ALERT (Notifikasi Melayang)       -->
-  <!-- ========================================== -->
   <div *ngIf="toastMessage" 
        [ngClass]="{'bg-green-50 text-green-700 border-green-200': toastType === 'success', 'bg-red-50 text-red-700 border-red-200': toastType === 'error'}"
        class="fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 animate-slide-in-right transition-all duration-300">
@@ -12,70 +9,54 @@
     <button type="button" (click)="closeToast()" class="ml-2 opacity-50 hover:opacity-100"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg></button>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 2. HEADER & ACTIONS (Responsive Stack)     -->
-  <!-- ========================================== -->
-  <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-6 gap-4">
+  <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-5">
     <div>
-      <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">Data Karyawan</h1>
-      <p class="text-xs md:text-sm text-gray-500 mt-1">Kelola database karyawan, penggajian, dan master data PT Agro Deli Serdang.</p>
+      <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">Data Karyawan</h1>
+      <p class="text-sm text-gray-500 mt-1.5 font-medium">Kelola database karyawan, penggajian, dan master data PT Agro Deli Serdang.</p>
     </div>
     
-    <!-- Action Buttons (Scroll Horizontal di Mobile) -->
-    <div class="flex flex-nowrap overflow-x-auto pb-2 w-full xl:w-auto gap-2 md:gap-3 hide-scrollbar">
+    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
       
-      <!-- Excel -->
-      <button type="button" (click)="exportData()" class="shrink-0 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 hover:bg-gray-50 hover:text-green-600 hover:border-green-200 transition-all">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-        <span class="hidden sm:inline">Excel</span>
+      <button type="button" (click)="exportData()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition-all shadow-sm">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+        <span>Excel</span>
       </button>
 
-      <!-- Import -->
-      <button type="button" (click)="openImportModal()" class="shrink-0 px-3 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2 hover:bg-gray-50 hover:text-orange-500 hover:border-orange-200 transition-all">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
-        <span class="hidden sm:inline">Import</span>
+      <button type="button" (click)="openImportModal()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-bold rounded-xl hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
+        <span>Import</span>
       </button>
 
-      <!-- Lihat DB Lengkap -->
-      <button type="button" (click)="goToFullDatabase()" class="shrink-0 px-3 py-2 bg-indigo-50 text-indigo-600 border border-indigo-100 text-sm font-semibold rounded-lg flex items-center gap-2 hover:bg-indigo-100 transition">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
-        <span class="whitespace-nowrap">Database Lengkap</span>
+      <button type="button" (click)="goToFullDatabase()" class="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 text-white text-sm font-bold rounded-xl hover:bg-slate-700 transition-all shadow-sm">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" /></svg>
+        <span class="whitespace-nowrap">Database</span>
       </button>
 
-      <!-- Tambah Baru -->
-      <button type="button" (click)="createEmployee()" class="shrink-0 ml-auto px-4 py-2 bg-gradient-to-r from-[#F4A47B] to-[#E08E60] text-white text-sm font-bold rounded-lg shadow-md flex items-center gap-2 hover:shadow-lg hover:-translate-y-0.5 transition-all">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-        <span class="hidden sm:inline">Tambah</span>
-        <span class="sm:hidden">Baru</span>
+      <button type="button" (click)="createEmployee()" class="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+        <span>Tambah Pegawai</span>
       </button>
+
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 3. FILTER & SEARCH (Responsive Grid)       -->
-  <!-- ========================================== -->
   <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3 items-center">
     
-    <!-- Input Search Real-time (Debounce Logic) -->
     <div class="relative w-full">
       <span class="absolute inset-y-0 left-0 flex items-center pl-3">
         <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
         </svg>
       </span>
-      <input type="text" 
-             id="searchInput"
-             (input)="onSearch($event)" 
+      <input type="text" id="searchInput" (input)="onSearch($event)" 
              class="w-full py-2 pl-10 pr-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition-all" 
              placeholder="Cari Nama / NIK (Ketik langsung)...">
       
-      <!-- Tombol Clear Search -->
       <button type="button" *ngIf="searchKeyword" (click)="resetFilter()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors">
         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
     
-    <!-- Filter Dropdown Group -->
     <div class="flex gap-2 w-full md:w-auto">
       <select [(ngModel)]="filterDept" (change)="applyFilter()" class="w-1/2 md:w-40 py-2 px-3 text-sm bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-orange-200 cursor-pointer">
         <option value="">Semua Dept</option>
@@ -87,18 +68,12 @@
         <option *ngFor="let p of positions" [value]="p">{{ p }}</option>
       </select>
 
-      <!-- Tombol Reset Full -->
       <button type="button" (click)="resetFilter()" title="Reset Semua Filter" class="px-3 py-2 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 hover:text-gray-700 transition">
         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
       </button>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 4. CONTENT VIEW: TABLE vs CARDS            -->
-  <!-- ========================================== -->
-  
-  <!-- A. DESKTOP TABLE (Hidden on Mobile) -->
   <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <table class="w-full text-left">
       <thead class="bg-gray-50/50 text-gray-500 text-xs uppercase font-bold">
@@ -106,15 +81,13 @@
           <th class="px-6 py-4">Karyawan</th>
           <th class="px-6 py-4">Detail Info</th>
           <th class="px-6 py-4">Jabatan</th>
-          <th class="px-6 py-4 text-right">Gaji Pokok</th>
           <th class="px-6 py-4 text-center">Aksi</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-gray-100">
         
-        <!-- Loading State -->
         <tr *ngIf="isLoading">
-          <td colspan="5" class="px-6 py-12 text-center">
+          <td colspan="4" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center gap-3">
               <svg class="animate-spin h-8 w-8 text-[#F4A47B]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               <span class="text-gray-400 font-medium animate-pulse">Sedang memuat data...</span>
@@ -122,9 +95,8 @@
           </td>
         </tr>
 
-        <!-- Empty State -->
         <tr *ngIf="!isLoading && paginatedEmployees.length === 0">
-           <td colspan="5" class="px-6 py-12 text-center">
+           <td colspan="4" class="px-6 py-12 text-center">
              <div class="flex flex-col items-center justify-center">
                <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                  <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
@@ -135,10 +107,8 @@
            </td>
         </tr>
 
-        <!-- Data Rows -->
         <ng-container *ngIf="!isLoading && paginatedEmployees.length > 0">
           <tr *ngFor="let emp of paginatedEmployees" class="hover:bg-orange-50/30 transition-colors group">
-            <!-- Kolom Nama -->
             <td class="px-6 py-3">
               <div class="flex items-center gap-3">
                 <div class="h-9 w-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 text-gray-600 flex items-center justify-center text-xs font-bold border border-white shadow-sm">
@@ -151,7 +121,6 @@
               </div>
             </td>
             
-            <!-- Kolom Detail Info (Dengan Status Pajak) -->
             <td class="px-6 py-3">
                <div class="flex flex-col gap-1">
                   <span class="text-xs text-gray-500 flex items-center gap-1">
@@ -162,7 +131,6 @@
                     <span class="inline-flex w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
                       {{ emp.status_karyawan || 'PKWTT' }}
                     </span>
-                    <!-- INI PERBAIKANNYA: Panggil emp.status_pajak -->
                     <span *ngIf="emp.status_pajak" class="inline-flex w-fit px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100" title="Status PTKP">
                       {{ emp.status_pajak }}
                     </span>
@@ -170,7 +138,6 @@
                </div>
             </td>
 
-            <!-- Kolom Jabatan -->
             <td class="px-6 py-3">
               <div class="flex flex-col">
                 <span class="text-sm font-semibold text-gray-700">{{ emp.posisi || '-' }}</span>
@@ -178,23 +145,8 @@
               </div>
             </td>
 
-            <!-- Kolom Gaji -->
-            <td class="px-6 py-3 text-right">
-              <span class="text-xs font-mono font-bold text-gray-700">Rp {{ (emp.gaji_pokok || 0) | number:'1.0-0' }}</span>
-            </td>
-
-            <!-- Kolom Aksi -->
             <td class="px-6 py-3 text-center">
               <div class="flex justify-center gap-2">
-                
-                <!-- 1. Tombol Edit Gaji (Hijau & Menonjol) -->
-                <button type="button" (click)="editGaji(emp.id)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-100 transition-all shadow-sm" title="Edit Gaji">
-                  <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-
-                <!-- 2. Tombol Detail (Biru) -->
                 <button type="button" (click)="viewDetail(emp.id)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-100 transition-all shadow-sm" title="Lihat Detail">
                   <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" />
@@ -202,13 +154,11 @@
                   </svg>
                 </button>
 
-                <!-- 3. Tombol Hapus (Merah) -->
                 <button type="button" (click)="confirmDelete(emp)" class="group w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white border border-red-100 transition-all shadow-sm" title="Hapus Data">
                   <svg class="w-4 h-4 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                   </svg>
                 </button>
-
               </div>
             </td>
           </tr>
@@ -217,33 +167,27 @@
     </table>
   </div>
 
-  <!-- B. MOBILE CARD LIST (Visible on Mobile) -->
   <div class="block md:hidden space-y-3">
     
-    <!-- Loading Mobile -->
     <div *ngIf="isLoading" class="p-8 text-center bg-white rounded-xl">
        <svg class="animate-spin h-8 w-8 text-orange-400 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
        <span class="text-xs text-gray-500">Memuat...</span>
     </div>
 
-    <!-- Empty Mobile -->
     <div *ngIf="!isLoading && paginatedEmployees.length === 0" class="p-6 text-center bg-white rounded-xl border border-dashed border-gray-300">
        <p class="text-sm text-gray-500">Tidak ada data karyawan.</p>
     </div>
 
     <div *ngFor="let emp of paginatedEmployees" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
-      <!-- Status Badges (Top Right) -->
       <div class="absolute top-4 right-4 flex flex-col items-end gap-1">
         <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-100">
           {{ emp.status_karyawan || 'PKWTT' }}
         </span>
-        <!-- INI PERBAIKANNYA: Panggil emp.status_pajak -->
         <span *ngIf="emp.status_pajak" class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-100">
           {{ emp.status_pajak }}
         </span>
       </div>
 
-      <!-- Profile -->
       <div class="flex items-center gap-3 mb-3">
         <div class="h-10 w-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 text-orange-700 flex items-center justify-center font-bold text-sm">
           {{ emp.nama_lengkap?.charAt(0) || '?' }}
@@ -254,7 +198,6 @@
         </div>
       </div>
 
-      <!-- Info Grid -->
       <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-3 border-t border-b border-gray-50 py-2">
         <div>
           <span class="block text-[10px] uppercase text-gray-400">Jabatan</span>
@@ -266,25 +209,17 @@
         </div>
       </div>
 
-      <!-- Actions (Full Width Buttons) -->
       <div class="flex gap-2">
-        <button type="button" (click)="editGaji(emp.id)" class="flex-1 py-1.5 text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-lg text-center hover:bg-emerald-100 transition flex items-center justify-center gap-1">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-          Gaji
-        </button>
         <button type="button" (click)="viewDetail(emp.id)" class="flex-1 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 rounded-lg text-center hover:bg-blue-100 transition">
           Detail
         </button>
-        <button type="button" (click)="confirmDelete(emp)" class="w-8 flex items-center justify-center text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition">
+        <button type="button" (click)="confirmDelete(emp)" class="w-10 flex items-center justify-center text-red-500 bg-red-50 rounded-lg hover:bg-red-100 transition">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 5. PAGINATION (Responsive)                 -->
-  <!-- ========================================== -->
   <div class="mt-4 flex flex-col sm:flex-row justify-between items-center gap-3 text-xs text-gray-500" *ngIf="paginatedEmployees.length > 0">
     <span class="order-2 sm:order-1">
       Halaman <span class="font-bold text-gray-800">{{ currentPage }}</span> dari {{ totalPages }}
@@ -293,7 +228,6 @@
     <div class="flex gap-2 order-1 sm:order-2 w-full sm:w-auto justify-center">
       <button type="button" (click)="changePage(currentPage - 1)" [disabled]="currentPage === 1" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-50 disabled:opacity-50 shadow-sm flex-1 sm:flex-none transition-colors">Prev</button>
       
-      <!-- Numbered Pagination (Desktop Only) -->
       <div class="hidden sm:flex gap-1">
          <button type="button" *ngFor="let p of getPageNumbers()" (click)="changePage(p)"
                  [class.bg-[#F4A47B]]="p === currentPage" [class.text-white]="p === currentPage" [class.border-transparent]="p === currentPage"
@@ -307,11 +241,6 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 6. MODALS                                  -->
-  <!-- ========================================== -->
-
-  <!-- MODAL DELETE KONFIRMASI -->
   <div *ngIf="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-scale-up text-center">
       <div class="w-16 h-16 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -330,13 +259,11 @@
     </div>
   </div>
 
-  <!-- MODAL IMPORT -->
   <div *ngIf="showImportModal" class="fixed inset-0 z-50 overflow-y-auto animate-fade-in" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" (click)="closeImportModal()"></div>
     <div class="flex items-center justify-center min-h-screen p-4">
       <div class="bg-white rounded-2xl shadow-2xl transform transition-all max-w-lg w-full p-6 animate-scale-up z-10">
         
-        <!-- Header Modal -->
         <div class="flex justify-between items-center mb-2">
           <h3 class="text-xl font-bold text-gray-800">Import Data Excel</h3>
           <button type="button" (click)="closeImportModal()" class="text-gray-400 hover:text-gray-600 transition">
@@ -345,7 +272,6 @@
         </div>
         <p class="text-sm text-gray-500 mb-6">Upload file .xlsx untuk memperbarui data massal. Pastikan format sesuai template.</p>
 
-        <!-- STEP 1: Area Upload File -->
         <div class="border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors relative mb-4"
              [class.border-orange-300]="selectedFile"
              [class.bg-orange-50]="selectedFile"
@@ -363,7 +289,6 @@
           </p>
         </div>
 
-        <!-- STEP 2: Loading Baca Sheet -->
         <div *ngIf="isLoadingSheets" class="flex items-center justify-center gap-2 my-4 text-orange-500">
           <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -372,7 +297,6 @@
           <span class="text-sm font-medium">Membaca daftar sheet...</span>
         </div>
 
-        <!-- STEP 2: Dropdown Pilih Sheet -->
         <div *ngIf="sheetNames.length > 0 && !isLoadingSheets" class="mb-6">
           <label class="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">
             <svg class="w-3.5 h-3.5 inline mr-1 -mt-0.5 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
@@ -407,7 +331,6 @@
           </p>
         </div>
 
-        <!-- Footer Buttons -->
         <div class="flex gap-3 justify-end">
           <button type="button" (click)="closeImportModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors font-medium">Batal</button>
           
@@ -421,42 +344,6 @@
             {{ isProcessing ? 'Mengupload...' : 'Import Sekarang' }}
           </button>
         </div>
-
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL EDIT GAJI POPUP -->
-  <div *ngIf="showSalaryModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-fade-in">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm flex flex-col animate-scale-in overflow-hidden relative">
-      
-      <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-emerald-400 to-teal-500"></div>
-
-      <div class="p-8 pb-4">
-        <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 shadow-sm mx-auto">
-          <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-        </div>
-        
-        <h3 class="text-xl font-extrabold text-slate-800 mb-1 text-center">Update Gaji Pokok</h3>
-        <p class="text-slate-500 text-sm mb-6 text-center">Update gaji untuk <strong class="text-emerald-600">{{ salaryData.nama }}</strong></p>
-        
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-bold text-emerald-600 mb-2 uppercase tracking-wide">Nominal Baru (Rp)</label>
-            <input type="number" [(ngModel)]="salaryData.gaji_pokok" class="w-full px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-2xl font-bold text-emerald-800 outline-none focus:ring-4 focus:ring-emerald-100 transition-all text-center placeholder-emerald-200" placeholder="0">
-            <p class="text-center text-xs text-slate-400 mt-2 font-mono">
-              Preview: Rp {{ salaryData.gaji_pokok | number:'1.0-0' }}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div class="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
-        <button type="button" (click)="closeSalaryModal()" class="flex-1 py-3 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition">Batal</button>
-        <button type="button" (click)="updateSalary()" [disabled]="isSalaryProcessing" class="flex-1 py-3 text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-lg shadow-emerald-200 transition disabled:opacity-70 flex justify-center items-center gap-2">
-           <span *ngIf="isSalaryProcessing" class="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></span>
-           {{ isSalaryProcessing ? 'Menyimpan...' : 'Simpan Gaji' }}
-        </button>
       </div>
     </div>
   </div>

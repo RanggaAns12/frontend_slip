@@ -12,12 +12,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
   greeting: string = 'Selamat Datang';
   userName: string = 'Admin';
   userInitials: string = 'AD';
+  
+  // 👇 TAMBAHAN: Variabel untuk mendeteksi apakah yang login adalah Manager
+  isManager: boolean = false; 
+
   private timerId: any;
 
   constructor(public layoutService: LayoutService) {}
 
   ngOnInit(): void {
-    this.loadUserName();
+    this.loadUserData(); // Nama fungsi saya ubah sedikit agar lebih relevan
     this.updateClockAndGreeting();
     this.timerId = setInterval(() => this.updateClockAndGreeting(), 30000); // Update tiap 30 detik
   }
@@ -35,14 +39,37 @@ export class LayoutComponent implements OnInit, OnDestroy {
     else this.greeting = 'Selamat Malam';
   }
 
-  private loadUserName(): void {
-    const userJson = localStorage.getItem('user_data');
+  private loadUserData(): void {
+    // Membaca data user dari local storage
+    const userJson = localStorage.getItem('user_data') || localStorage.getItem('user');
+    
     if (userJson) {
       try {
         const userObj = JSON.parse(userJson);
+        
+        // 1. Set Nama
         this.userName = userObj.name || userObj.nama_lengkap || userObj.username || 'Admin';
-      } catch (e) {}
+        
+        // 2. 👇 TAMBAHAN: Pengecekan Role Manager
+        let role = '';
+        if (userObj.role?.name) {
+          role = userObj.role.name; // Jika formatnya objek (role.name)
+        } else if (typeof userObj.role === 'string') {
+          role = userObj.role; // Jika formatnya langsung string
+        }
+
+        // Cek apakah string role mengandung kata 'manager' (dibuat huruf kecil semua agar aman)
+        if (role.toLowerCase().includes('manager')) {
+          this.isManager = true;
+        } else {
+          this.isManager = false;
+        }
+
+      } catch (e) {
+        console.error('Gagal membaca data user:', e);
+      }
     } 
+    
     this.generateInitials(this.userName);
   }
 

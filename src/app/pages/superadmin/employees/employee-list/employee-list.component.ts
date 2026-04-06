@@ -3,17 +3,14 @@ import { Router } from '@angular/router';
 import { EmployeeApiService } from '../services/employee-api.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
-import * as XLSX from 'xlsx'; // Pastikan sudah install: npm install xlsx
+import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'app-employee-list',
   templateUrl: './employee-list.component.html',
   styles: [`
-    /* Utility Scrollbar */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    /* Animations */
     .animate-fade-in { animation: fadeIn 0.5s ease-out; }
     .animate-fade-in-up { animation: fadeInUp 0.6s ease-out; }
     .animate-slide-in-right { animation: slideInRight 0.5s ease-out; }
@@ -28,9 +25,9 @@ import * as XLSX from 'xlsx'; // Pastikan sudah install: npm install xlsx
 export class EmployeeListComponent implements OnInit, OnDestroy {
   
   // === 1. DATA STATE ===
-  allEmployees: any[] = [];      // Data mentah dari API
-  filteredEmployees: any[] = []; // Data setelah difilter
-  paginatedEmployees: any[] = []; // Data yang tampil di halaman
+  allEmployees: any[] = [];      
+  filteredEmployees: any[] = []; 
+  paginatedEmployees: any[] = []; 
   isLoading = false;
 
   // === 2. FILTER STATE ===
@@ -40,43 +37,29 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   departments: string[] = [];
   positions: string[] = [];
 
-  // RxJS Subjects untuk Search Real-time
   private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>(); // Untuk cleanup memory
+  private destroy$ = new Subject<void>(); 
 
   // === 3. PAGINATION STATE ===
   currentPage = 1;
   pageSize = 25;
   totalPages = 1;
 
-  // === 4. UI STATE (MODAL & TOAST) ===
-  // Delete Modal
+  // === 4. UI STATE ===
   showDeleteModal = false;
   selectedEmployee: any = null; 
   
-  // Toast Notification
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
   toastTimeout: any;
 
-  // Import Modal
   showImportModal = false;
   selectedFile: File | null = null;
-  isProcessing = false; // Untuk Import
+  isProcessing = false; 
   
-  // State Khusus Pilihan Sheet (NEW)
   sheetNames: string[] = [];
   selectedSheet: string = '';
   isLoadingSheets = false;
-
-  // === 5. SALARY MODAL STATE (NEW) ===
-  showSalaryModal = false;
-  isSalaryProcessing = false; // Loading khusus simpan gaji
-  salaryData: any = {
-    id: null,
-    nama: '',
-    gaji_pokok: 0
-  };
 
   constructor(
     private employeeApi: EmployeeApiService, 
@@ -86,20 +69,17 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   ngOnInit(): void { 
     this.loadEmployees(); 
 
-    // SETUP SEARCH REAL-TIME (DEBOUNCE)
-    // Mencegah lag saat user mengetik cepat
     this.searchSubject.pipe(
-      debounceTime(400),       // Tunggu 400ms setelah berhenti mengetik
-      distinctUntilChanged(),  // Jangan eksekusi jika kata kunci sama
-      takeUntil(this.destroy$) // Unsubscribe otomatis saat component hancur
+      debounceTime(400),       
+      distinctUntilChanged(),  
+      takeUntil(this.destroy$) 
     ).subscribe(searchTerm => {
       this.searchKeyword = searchTerm;
-      this.applyFilter();      // Jalankan filter
+      this.applyFilter();      
     });
   }
 
   ngOnDestroy(): void {
-    // Bersihkan subscription memory leak
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -125,12 +105,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   extractFilterOptions() {
-    // Ambil data unik untuk dropdown filter
     this.departments = [...new Set(this.allEmployees.map(e => e.dept).filter(d => d))].sort();
     this.positions = [...new Set(this.allEmployees.map(e => e.posisi).filter(p => p))].sort();
   }
 
-  // Method dipanggil saat user mengetik di HTML (input)="onSearch($event)"
   onSearch(event: any) {
     const value = event.target.value;
     this.searchSubject.next(value);
@@ -139,7 +117,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   applyFilter() {
     let temp = [...this.allEmployees];
 
-    // Filter Search
     if (this.searchKeyword) {
       const key = this.searchKeyword.toLowerCase();
       temp = temp.filter(e => 
@@ -148,15 +125,12 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       );
     }
 
-    // Filter Dropdown
     if (this.filterDept) temp = temp.filter(e => e.dept === this.filterDept);
     if (this.filterPosisi) temp = temp.filter(e => e.posisi === this.filterPosisi);
 
     this.filteredEmployees = temp;
-    
-    // Recalculate Pagination
     this.totalPages = Math.ceil(this.filteredEmployees.length / this.pageSize) || 1;
-    this.changePage(1); // Reset ke halaman 1
+    this.changePage(1); 
   }
 
   resetFilter() {
@@ -164,7 +138,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.filterDept = '';
     this.filterPosisi = '';
     
-    // Reset value di input HTML jika perlu
     const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
     if (searchInput) searchInput.value = '';
 
@@ -192,14 +165,8 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       start = Math.max(1, end - maxVisible + 1);
     }
 
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
-  }
-  
-  getEndIndex() {
-    return Math.min(this.currentPage * this.pageSize, this.filteredEmployees.length);
   }
 
   // ==========================================
@@ -233,7 +200,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // IMPORT EXCEL LOGIC (COMPLEX)
+  // IMPORT EXCEL LOGIC
   // ==========================================
   openImportModal() { this.showImportModal = true; }
   
@@ -241,8 +208,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.showImportModal = false; 
     this.selectedFile = null; 
     this.isProcessing = false; 
-    
-    // Reset state sheet
     this.sheetNames = [];
     this.selectedSheet = '';
     this.isLoadingSheets = false;
@@ -256,17 +221,13 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       this.sheetNames = [];
       this.selectedSheet = '';
 
-      // Ekstrak nama sheet langsung di frontend
       const reader = new FileReader();
       reader.onload = (e: any) => {
         try {
           const bstr: string = e.target.result;
           const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
-          
           this.sheetNames = wb.SheetNames;
-          if (this.sheetNames.length > 0) {
-            this.selectedSheet = this.sheetNames[0]; // Set default ke sheet pertama
-          }
+          if (this.sheetNames.length > 0) this.selectedSheet = this.sheetNames[0];
           this.isLoadingSheets = false;
         } catch (error) {
           this.isLoadingSheets = false;
@@ -279,7 +240,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
   
   uploadFile() {
-    // Pastikan file dan sheet sudah dipilih
     if (!this.selectedFile || !this.selectedSheet) return;
 
     this.isProcessing = true;
@@ -289,12 +249,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       try {
         const bstr: string = e.target.result;
         const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
-        
-        // AMBIL DATA DARI SHEET YANG DIPILIH USER
         const wsname: string = this.selectedSheet;
         const ws: XLSX.WorkSheet = wb.Sheets[wsname];
 
-        /* HARDCODE INDEX MAPPING: Baris 1-4 Header, Data mulai Baris 5 (Index 4) */
         const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
         
         if (rawData.length < 5) {
@@ -303,30 +260,27 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             return;
         }
 
-        const dataRows = rawData.slice(4); // Skip 4 baris pertama
+        const dataRows = rawData.slice(4); 
 
         const mappedData = dataRows.map((row: any[]) => {
           return {
-            nik_karyawan: row[1] || '',  // Kolom B
-            nik_ktp: row[2] || '',       // Kolom C
-            status_karyawan: row[3] || 'PKWTT', // Kolom D
-            nama_lengkap: row[4] || '',  // Kolom E
-            
-            // ===== PERBAIKAN: Index kolom Status Pajak (K1, TK) =====
-            status_pajak: row[5] || 'TK/0',      // Kolom F (Sebelumnya salah baca di row[7])
-            
-            no_rekening: row[6] || '',   // Kolom G
-            status_pajak_2026: row[7] || '', // Kolom H
-            posisi: row[8] || '',        // Kolom I
-            dept: row[9] || '',          // Kolom J
-            tanggal_diterima: row[10] || null, // Kolom K
-            tanggal_lahir: row[11] || null,    // Kolom L
-            npwp: row[12] || '',         // Kolom M
-            bpjs_ketenagakerjaan: row[13] || '', // Kolom N
-            pendidikan: row[14] || '',   // Kolom O
-            agama: row[15] || '',        // Kolom P
-            jenis_kelamin: row[16] || '',// Kolom Q
-            alamat: row[17] || '',       // Kolom R
+            nik_karyawan: row[1] || '',  
+            nik_ktp: row[2] || '',       
+            status_karyawan: row[3] || 'PKWTT', 
+            nama_lengkap: row[4] || '',  
+            status_pajak: row[5] || 'TK/0',      
+            no_rekening: row[6] || '',   
+            status_pajak_2026: row[7] || '', 
+            posisi: row[8] || '',        
+            dept: row[9] || '',          
+            tanggal_diterima: row[10] || null, 
+            tanggal_lahir: row[11] || null,    
+            npwp: row[12] || '',         
+            bpjs_ketenagakerjaan: row[13] || '', 
+            pendidikan: row[14] || '',   
+            agama: row[15] || '',        
+            jenis_kelamin: row[16] || '',
+            alamat: row[17] || '',       
             is_active: 1
           };
         });
@@ -339,7 +293,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // KIRIM ARRAY DATA LANGSUNG (sesuai EmployeeApiService)
         this.employeeApi.import(cleanData).subscribe({ 
           next: (res: any) => {
             this.isProcessing = false;
@@ -370,7 +323,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   exportData() {
     this.employeeApi.export().subscribe({
       next: (blob: any) => {
-        // Create virtual download link
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -378,7 +330,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         document.body.appendChild(a);
         a.click();
         
-        // Cleanup
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
         
@@ -387,60 +338,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       error: (err) => {
         console.error(err);
         this.showToast('Gagal download Excel', 'error');
-      }
-    });
-  }
-
-  // ==========================================
-  // EDIT GAJI LOGIC (UPDATED & WORKING)
-  // ==========================================
-  editGaji(input: any) { 
-    // Menerima Input ID (number) atau Object (any) agar fleksibel
-    let empData: any;
-
-    if (typeof input === 'number') {
-       empData = this.allEmployees.find(e => e.id === input);
-    } else {
-       empData = input;
-    }
-
-    if (!empData) return;
-
-    // Isi state modal
-    this.salaryData = {
-      id: empData.id,
-      nama: empData.nama_lengkap,
-      gaji_pokok: empData.gaji_pokok ? Number(empData.gaji_pokok) : 0
-    };
-
-    // Buka Modal
-    this.showSalaryModal = true;
-  }
-
-  closeSalaryModal() {
-    this.showSalaryModal = false;
-  }
-
-  updateSalary() {
-    if (!this.salaryData.id) return;
-    this.isSalaryProcessing = true;
-
-    // Payload Partial Update
-    const payload = { gaji_pokok: this.salaryData.gaji_pokok };
-
-    this.employeeApi.update(this.salaryData.id, payload).subscribe({
-      next: (res: any) => {
-        this.isSalaryProcessing = false;
-        this.closeSalaryModal();
-        this.showToast(`Gaji ${this.salaryData.nama} berhasil diperbarui!`, 'success');
-        
-        // Refresh data agar tabel menampilkan angka terbaru
-        this.loadEmployees();
-      },
-      error: (err) => {
-        this.isSalaryProcessing = false;
-        console.error(err);
-        this.showToast('Gagal update gaji. Periksa koneksi.', 'error');
       }
     });
   }

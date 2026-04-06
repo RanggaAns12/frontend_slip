@@ -2,7 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
+// Pastikan import rxjs ini ada
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+
 import { PayrollApiService } from '../services/payroll-api.service';
+import { AttendanceSummaryApiService } from '../../attendance-summaries/services/attendance-summary-api.service';
+import { OvertimeApiService } from '../../overtimes/services/overtime-api.service';
 
 @Component({
   selector: 'app-generate-payroll',
@@ -29,7 +35,6 @@ export class GeneratePayrollComponent implements OnInit {
   
   periodLabel: string = '';
   draftData: any[] = [];
-  isAlreadyGenerated: boolean = false;
 
   // Fitur Filter & Search
   searchQuery: string = '';
@@ -38,6 +43,8 @@ export class GeneratePayrollComponent implements OnInit {
 
   constructor(
     private payrollApi: PayrollApiService,
+    private attendanceApi: AttendanceSummaryApiService,
+    private overtimeApi: OvertimeApiService,
     private router: Router
   ) {}
 
@@ -70,12 +77,11 @@ export class GeneratePayrollComponent implements OnInit {
 
   // ===== Helper Input Rupiah (Menghilangkan 0 & Auto Format) =====
   formatInputRupiah(value: any): string {
-    if (value === 0 || !value) return ''; // Kosongkan jika 0
+    if (value === 0 || !value) return ''; 
     return new Intl.NumberFormat('id-ID').format(Number(value));
   }
 
   onInputCurrency(value: string, item: any, field: string) {
-    // Hapus semua karakter selain angka
     const cleanValue = value.replace(/[^0-9]/g, '');
     item[field] = cleanValue ? parseInt(cleanValue, 10) : 0;
     this.recalculateTotal(item);
@@ -118,20 +124,10 @@ export class GeneratePayrollComponent implements OnInit {
         this.periodLabel = res.period.label;
         this.draftData = res.data;
         
-        // Ekstrak departemen unik untuk opsi filter dropdown
         const depts = this.draftData.map(d => d.department).filter(d => d);
         this.departments = [...new Set(depts)] as string[];
 
-        this.isAlreadyGenerated = res.source === 'database';
-
-        if (this.isAlreadyGenerated) {
-          Swal.fire({
-            title: 'Gaji Terkunci',
-            text: 'Data gaji untuk periode ini sudah dikunci dan tidak bisa diubah.',
-            icon: 'info',
-            confirmButtonColor: '#1e293b' // gray-800
-          });
-        } else if (this.draftData.length === 0) {
+        if (this.draftData.length === 0) {
           Swal.fire('Kosong', 'Tidak ada data karyawan aktif untuk periode ini.', 'warning');
         }
       },
@@ -146,7 +142,7 @@ export class GeneratePayrollComponent implements OnInit {
     const pph = this.toNumber(item.pph21_deduction);
     const bpjsK = this.toNumber(item.bpjs_kesehatan);
     const bpjsT = this.toNumber(item.bpjs_ketenagakerjaan);
-    const alpha = this.toNumber(item.absence_deduction);
+    const alpha = this.toNumber(item.absence_deduction); 
     const other = this.toNumber(item.other_deduction);
     
     item.total_deduction = alpha + bpjsK + bpjsT + pph + other;
@@ -158,13 +154,13 @@ export class GeneratePayrollComponent implements OnInit {
     if (this.draftData.length === 0) return;
 
     Swal.fire({
-      title: 'Kunci Data Gaji?',
-      text: "Data yang sudah digenerate tidak bisa diubah lagi. Pastikan semua rincian sudah sesuai.",
+      title: 'Simpan Data Penggajian?',
+      text: "Data slip gaji akan disimpan dan dapat diakses di menu Daftar Slip Gaji.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#1e293b', 
       cancelButtonColor: '#94a3b8', 
-      confirmButtonText: 'Ya, Simpan & Kunci',
+      confirmButtonText: 'Ya, Simpan',
       cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -187,75 +183,108 @@ export class GeneratePayrollComponent implements OnInit {
     });
   }
 
-  onUnlockPayroll() {
+  // 👇 PERBAIKAN TOTAL: Pencarian 100% menggunakan NIK di kedua API
+  showDetailAbsensi(item: any) {
+    const empName = item.name || item.employee?.name || 'Karyawan';
+    const empNik = item.nik || item.employee?.nik_karyawan || item.employee?.nik || '-';
+
+    if (empNik === '-') {
+      Swal.fire('Peringatan', 'NIK karyawan tidak ditemukan. Tidak dapat mengecek presensi.', 'warning');
+      return;
+    }
+
     Swal.fire({
-      title: 'Buka Kunci Gaji?',
-      text: "Data slip gaji bulan ini akan dibatalkan. Anda harus melakukan generate ulang.",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444', 
-      cancelButtonColor: '#94a3b8',
-      confirmButtonText: 'Buka Kunci',
-      cancelButtonText: 'Batal'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.isLoading = true; 
-        this.payrollApi.resetPayrollPeriod(this.selectedMonth, this.selectedYear).subscribe({
-          next: (res: any) => {
-            Swal.fire('Berhasil!', res.message, 'success');
-            this.isAlreadyGenerated = false;
-            this.onPreview(); 
-          },
-          error: (err: any) => {
-            this.isLoading = false;
-            Swal.fire('Gagal', err.error?.message || 'Gagal membuka kunci gaji.', 'error');
-          }
-        });
+      title: 'Memuat Data...',
+      text: `Mencari Absensi & Lembur untuk NIK: ${empNik}`,
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
       }
     });
-  }
 
-  showDetailAbsensi(item: any) {
-    const empName = item.employee?.name || item.name || 'Karyawan';
-    const empNik = item.employee?.nik_ktp || item.employee?.nik || item.nik || '-';
-    const hadir = item.total_present || 0;
-    const alpha = item.total_absent || 0;
-    const telat = item.total_late || 0;
-    const lemburPoin = item.overtime_hours || 0;
-    const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
+    forkJoin({
+      absensi: this.attendanceApi.getList({
+        month: this.selectedMonth,
+        year: this.selectedYear,
+        search: empNik
+      }).pipe(catchError(() => of(null))), 
+      
+      lembur: this.overtimeApi.getList({
+        month: this.selectedMonth,
+        year: this.selectedYear,
+        search: empNik // 👈 SUDAH MENGGUNAKAN NIK KARENA BACKEND OVERTIME SUDAH KITA UPDATE
+      }).pipe(catchError(() => of(null)))
+    }).subscribe({
+      next: (res: any) => {
+        // --- 1. Ambil & Saring Data Absensi ---
+        const summaries = res.absensi?.data?.data || res.absensi?.data || [];
+        const att = summaries.find((s: any) => s.nik_karyawan === empNik || s.nik === empNik);
 
-    Swal.fire({
-      title: `<span class="text-lg font-bold text-gray-800">Detail Kehadiran</span>`,
-      html: `
-        <div class="text-left bg-gray-50/50 p-5 rounded-2xl border border-gray-100 mt-2">
-          <div class="mb-4 border-b border-gray-100 pb-4">
-            <p class="text-sm font-bold text-gray-800">${empName}</p>
-            <p class="text-xs text-gray-500 font-medium">NIK: ${empNik}</p>
-          </div>
-          <div class="space-y-3 text-sm">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-500 font-medium">Hari Kerja (Hadir)</span>
-              <span class="font-semibold text-gray-800">${hadir} Hari</span>
+        // --- 2. Ambil & Saring Data Lembur ---
+        const overtimes = res.lembur?.data?.data || res.lembur?.data || [];
+        
+        // Coba cari kecocokan persis. Jika tidak ada, ambil index 0 (karena API sudah memfilter NIK)
+        const ovt = overtimes.find((o: any) => 
+          o.employee?.nik_karyawan === empNik || 
+          o.employee?.nik === empNik ||
+          o.employee_id == (item.employee_id || item.id)
+        ) || (overtimes.length > 0 ? overtimes[0] : null);
+
+        // Nilai Absensi (Fallback ke 0 jika data absensi tidak ada)
+        const izin = att?.izin ?? att?.izin_jml ?? 0;
+        const sakit = att?.sakit ?? att?.sakit_jml ?? 0;
+        const alpha = att?.tanpa_izin ?? 0;
+        const telat = att?.terlambat_jml ?? 0;
+        
+        // --- 3. AMBIL POIN LEMBUR ---
+        let lemburPoinRaw = ovt?.total_poin ?? ovt?.konversi_lembur ?? item?.overtime_hours ?? 0;
+        const lemburPoin = parseFloat(lemburPoinRaw) || 0;
+        const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
+
+        Swal.fire({
+          title: `<span class="text-lg font-bold text-gray-800">Detail Kehadiran</span>`,
+          html: `
+            <div class="text-left bg-gray-50/50 p-5 rounded-2xl border border-gray-100 mt-2">
+              <div class="mb-4 border-b border-gray-100 pb-4">
+                <p class="text-sm font-bold text-gray-800">${empName}</p>
+                <p class="text-xs text-gray-500 font-medium">NIK: <span class="font-mono bg-gray-200 px-1 rounded">${empNik}</span></p>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                <div>
+                  <span class="block text-gray-500 font-medium text-[11px] uppercase tracking-wider mb-1">Telat</span>
+                  <span class="font-semibold text-gray-800">${telat} Hari</span>
+                </div>
+                <div>
+                  <span class="block text-gray-500 font-medium text-[11px] uppercase tracking-wider mb-1">Izin</span>
+                  <span class="font-semibold text-indigo-600">${izin} Hari</span>
+                </div>
+                <div>
+                  <span class="block text-gray-500 font-medium text-[11px] uppercase tracking-wider mb-1">Sakit</span>
+                  <span class="font-semibold text-teal-600">${sakit} Hari</span>
+                </div>
+                <div>
+                  <span class="block text-gray-500 font-medium text-[11px] uppercase tracking-wider mb-1">Alpha / Mangkir</span>
+                  <span class="font-semibold text-rose-600">${alpha} Hari</span>
+                </div>
+              </div>
+
+              <div class="flex justify-between items-center pt-3 mt-1 border-t border-gray-100">
+                <span class="text-gray-500 font-medium">Total Lembur</span>
+                <span class="font-semibold text-emerald-600">${lemburPoin} Pts <span class="text-xs text-gray-400 font-normal">(~${estimasiJamLembur} Jam)</span></span>
+              </div>
             </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-500 font-medium">Alpha / Tidak Hadir</span>
-              <span class="font-semibold text-gray-800">${alpha} Hari</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-500 font-medium">Terlambat</span>
-              <span class="font-semibold text-gray-800">${telat} Hari</span>
-            </div>
-            <div class="flex justify-between items-center pt-3 mt-1 border-t border-gray-100">
-              <span class="text-gray-500 font-medium">Total Lembur</span>
-              <span class="font-semibold text-gray-800">${lemburPoin} Pts <span class="text-xs text-gray-400 font-normal">(~${estimasiJamLembur} Jam)</span></span>
-            </div>
-          </div>
-        </div>
-      `,
-      showConfirmButton: true,
-      confirmButtonText: 'Tutup',
-      confirmButtonColor: '#1e293b',
-      customClass: { popup: 'rounded-3xl' }
+          `,
+          showConfirmButton: true,
+          confirmButtonText: 'Tutup',
+          confirmButtonColor: '#1e293b',
+          customClass: { popup: 'rounded-3xl' }
+        });
+      },
+      error: (err: any) => {
+        console.error(err);
+        Swal.fire('Gagal', 'Tidak dapat terhubung ke server. Pastikan koneksi stabil.', 'error');
+      }
     });
   }
 }
