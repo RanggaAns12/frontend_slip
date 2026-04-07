@@ -37,12 +37,33 @@ export class EmployeeFormComponent implements OnInit {
     status_pajak: 'TK/0', bpjs_ketenagakerjaan: ''
   };
 
-  deptOptions = ['Produksi', 'Engineering', 'Logistik', 'HRD', 'WTP/ WWTP', 'Fabrikasi', 'CIVIL'];
-  posisiOptions = [
-    'Operator Pulper', 'Operator DCS PM', 'Operator Rewinder', 'Helper Rewinder', 'Operator Boiler',
-    'Operator WWTP', 'Operator Forklift', 'Checker Logistik', 'Admin', 'Drafter', 'Electric', 'Mekanik',
-    'Welder', 'Bubut', 'Supervisor', 'Shift Leader PM', 'Manager Pabrik', 'Wakil Manager Pabrik'
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sudah Terintegrasi)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD","HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
   ];
+
+  deptOptions = this.departemenData.map(d => d.nama);
+  posisiOptions: string[] = []; // Dikosongkan agar otomatis menyesuaikan dept
+
   agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha'];
   pendidikanOptions = ['SD', 'SMP', 'SMA', 'SMK', 'D3', 'S1', 'S2'];
   statusKaryawanOptions = ['PKWTT', 'PKWT', 'Harian Lepas', 'Magang'];
@@ -79,17 +100,31 @@ export class EmployeeFormComponent implements OnInit {
             nik_ktp: rawData.nik_ktp || '',
             npwp: rawData.npwp || '',
             bpjs_ketenagakerjaan: rawData.bpjs_ketenagakerjaan || '',
-            nama_bank: rawData.nama_bank || 'MANDIRI',
+            nama_bank: rawData.nama_bank || 'MESTIKA',
             status_pajak: rawData.status_pajak || 'TK/0',
             agama: rawData.agama || 'Islam',
             jenis_kelamin: rawData.jenis_kelamin || 'Laki-laki'
         };
+
+        // 👇 Panggil fungsi ini untuk mengisi dropdown Posisi saat Edit Data
+        this.onDeptChange();
       },
       error: () => {
         this.isLoading = false;
         this.goBack();
       }
     });
+  }
+
+  // 👇 Event Cascading Dropdown (Dipanggil dari HTML saat Departemen diganti)
+  onDeptChange() {
+    const selected = this.departemenData.find(d => d.nama === this.formData.dept);
+    this.posisiOptions = selected ? selected.posisi : [];
+
+    // Jika posisi yang sebelumnya dipilih ternyata tidak ada di departemen yang baru, kosongkan posisinya
+    if (!this.posisiOptions.includes(this.formData.posisi)) {
+      this.formData.posisi = '';
+    }
   }
 
   onNameChange() {
@@ -111,17 +146,14 @@ export class EmployeeFormComponent implements OnInit {
     request.subscribe({
       next: () => {
         this.isSubmitting = false;
-        // TAMPILKAN MODAL SUKSES
         this.showSuccessModal = true;
       },
       error: (err) => {
         this.isSubmitting = false;
-        // TAMPILKAN MODAL ERROR
         this.errorMessage = 'Gagal menyimpan data.';
         
         if (err.error && err.error.errors) {
             this.errorMessage = err.error.message || 'Validasi Gagal';
-            // Ubah object error laravel jadi array string
             this.errorDetails = Object.values(err.error.errors).flat() as string[];
         } else if (err.error && err.error.message) {
             this.errorMessage = err.error.message;

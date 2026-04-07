@@ -49,17 +49,38 @@ export class EmployeeDetailComponent implements OnInit {
   toastType: 'success' | 'error' = 'success';
   toastTimeout: any;
 
-  // === DATA DROPDOWN (SAMA DENGAN FORM CREATE) ===
-  deptOptions = ['Produksi', 'Engineering', 'Logistik', 'HRD', 'WTP/ WWTP', 'Fabrikasi', 'CIVIL'];
-  posisiOptions = [
-    'Operator Pulper', 'Operator DCS PM', 'Operator Rewinder', 'Helper Rewinder', 'Operator Boiler',
-    'Operator WWTP', 'Operator Forklift', 'Checker Logistik', 'Admin', 'Drafter', 'Electric', 'Mekanik',
-    'Welder', 'Bubut', 'Supervisor', 'Shift Leader PM', 'Manager Pabrik', 'Wakil Manager Pabrik'
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sesuai Struktur Baru)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD","HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
   ];
+
+  deptOptions = this.departemenData.map(d => d.nama);
+  posisiOptions: string[] = []; // Dikosongkan, diisi dinamis oleh fungsi onDeptChange()
+
   statusKaryawanOptions = ['PKWTT', 'PKWT', 'Harian Lepas', 'Magang'];
   agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha'];
   pendidikanOptions = ['SD', 'SMP', 'SMA', 'SMK', 'D3', 'S1', 'S2'];
   statusPajakOptions = ['TK/0', 'TK/1', 'TK/2', 'TK/3', 'K/0', 'K/1', 'K/2', 'K/3'];
+  bankOptions = ['MESTIKA'];
 
   constructor(
     private route: ActivatedRoute,
@@ -99,29 +120,37 @@ export class EmployeeDetailComponent implements OnInit {
   setTab(tab: any) { this.activeTab = tab; }
 
   openEditModal() {
-    this.editData = { ...this.employee }; // Reset form
+    this.editData = { ...this.employee }; // Reset form dengan data terbaru
+    this.onDeptChange(); // 👇 Panggil fungsi ini agar pilihan posisi langsung ter-load sesuai departemen
     this.showEditModal = true;
   }
+  
   closeEditModal() { this.showEditModal = false; }
 
-    updateEmployee() {
+  // 👇 Event Cascading Dropdown (Dipanggil dari HTML Modal Edit saat Departemen diganti)
+  onDeptChange() {
+    const selected = this.departemenData.find(d => d.nama === this.editData.dept);
+    this.posisiOptions = selected ? selected.posisi : [];
+
+    // Jika posisi yang sebelumnya dipilih ternyata tidak ada di departemen yang baru, kosongkan posisinya
+    if (!this.posisiOptions.includes(this.editData.posisi)) {
+      this.editData.posisi = '';
+    }
+  }
+
+  updateEmployee() {
     if (!this.employeeId) return;
     this.isProcessing = true;
 
     // VALIDASI MANUAL SEBELUM KIRIM
-    // 1. Pastikan Pemilik Rekening tidak null
     if (!this.editData.pemilik_rekening) {
-        this.editData.pemilik_rekening = this.editData.nama_lengkap; // Fallback ke nama sendiri
+        this.editData.pemilik_rekening = this.editData.nama_lengkap; 
     }
-
-    // 2. Pastikan No Rekening string (bukan null)
     if (!this.editData.no_rekening) {
         this.editData.no_rekening = '';
     }
-    
-    // 3. Pastikan Bank string
     if (!this.editData.nama_bank) {
-        this.editData.nama_bank = 'MANDIRI';
+        this.editData.nama_bank = 'MESTIKA'; // Sesuai standar bank perusahaan
     }
 
     this.employeeApi.update(this.employeeId, this.editData).subscribe({
@@ -134,12 +163,11 @@ export class EmployeeDetailComponent implements OnInit {
       error: (err) => {
         this.isProcessing = false;
         console.error('Error Update:', err);
-        // Tampilkan pesan error spesifik
         if (err.error?.errors) {
             const firstError = Object.values(err.error.errors)[0];
             this.showToast(`Gagal: ${firstError}`, 'error');
         } else {
-            this.showToast('Gagal update data. Periksa inputan Payroll.', 'error');
+            this.showToast('Gagal update data. Periksa inputan Form.', 'error');
         }
       }
     });
@@ -172,5 +200,6 @@ export class EmployeeDetailComponent implements OnInit {
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3000);
   }
+  
   closeToast() { this.toastMessage = ''; }
 }

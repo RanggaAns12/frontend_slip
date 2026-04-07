@@ -9,6 +9,11 @@ import { OvertimeApiService } from '../services/overtime-api.service';
 })
 export class OvertimeShowComponent implements OnInit {
   namaKaryawan: string = '';
+  
+  // 👇 Tambahkan penampung State Periode
+  selectedMonth: string = '';
+  selectedYear: string = '';
+
   details: any[] = [];
   isLoading = false;
   maxJam = 0;
@@ -42,7 +47,13 @@ export class OvertimeShowComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // 1. Tangkap Nama Karyawan
     this.namaKaryawan = this.route.snapshot.paramMap.get('nama') ?? '';
+    
+    // 2. 👇 Tangkap Bulan dan Tahun dari URL Query Params
+    this.selectedMonth = this.route.snapshot.queryParamMap.get('month') ?? '';
+    this.selectedYear = this.route.snapshot.queryParamMap.get('year') ?? '';
+
     if (this.namaKaryawan) {
       this.loadDetail();
     } else {
@@ -61,7 +72,13 @@ export class OvertimeShowComponent implements OnInit {
   // --- LOAD DATA ---
   loadDetail(): void {
     this.isLoading = true;
-    this.overtimeApi.getDetail(this.namaKaryawan, {}).subscribe({
+
+    // 👇 Masukkan filter Bulan & Tahun ke dalam request API
+    const params: any = {};
+    if (this.selectedMonth) params.month = this.selectedMonth;
+    if (this.selectedYear) params.year = this.selectedYear;
+
+    this.overtimeApi.getDetail(this.namaKaryawan, params).subscribe({
       next: (res: any) => {
         const data = res.data || res; 
         this.details = data;
@@ -171,6 +188,11 @@ export class OvertimeShowComponent implements OnInit {
   // --- HELPERS ---
   goBack(): void {
     this.router.navigate(['/superadmin/overtimes/list']);
+  }
+
+  getMonthName(m: string | number): string {
+    if (!m) return '';
+    return new Date(2000, Number(m) - 1).toLocaleString('id-ID', { month: 'long' });
   }
 
   formatTanggal(tanggal: string): string {

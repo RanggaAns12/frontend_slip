@@ -17,11 +17,41 @@ export class OvertimeListComponent implements OnInit {
   lastPage = 1;
   total = 0;
   itemsPerPage = 15;
-  filterSearch = '';
   
+  // State Filter
+  filterSearch = '';
+  filterDept = '';
+  filterPosisi = '';
   selectedMonth: number | string = ''; 
   selectedYear: number | string = '';
   
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Terbaru)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+  ];
+
+  departments = this.departemenData.map(d => d.nama);
+  positions: string[] = [];
+
   months = [
     { value: 1, name: 'Januari' }, { value: 2, name: 'Februari' },
     { value: 3, name: 'Maret' }, { value: 4, name: 'April' },
@@ -51,16 +81,28 @@ export class OvertimeListComponent implements OnInit {
       this.years.push(i);
     }
     
-    // MENCEGAH RESET SAAT KEMBALI (BACK)
+    // MENCEGAH RESET SAAT KEMBALI (BACK) + FILTER BARU
     const savedMonth = sessionStorage.getItem('ovt_month');
     const savedYear = sessionStorage.getItem('ovt_year');
     const savedSearch = sessionStorage.getItem('ovt_search');
     const savedPage = sessionStorage.getItem('ovt_page');
+    const savedDept = sessionStorage.getItem('ovt_dept');
+    const savedPosisi = sessionStorage.getItem('ovt_posisi');
 
     if (savedMonth) this.selectedMonth = Number(savedMonth);
     if (savedYear) this.selectedYear = Number(savedYear);
     if (savedSearch) this.filterSearch = savedSearch;
     if (savedPage) this.currentPage = Number(savedPage);
+    if (savedDept) this.filterDept = savedDept;
+    if (savedPosisi) this.filterPosisi = savedPosisi;
+    
+    // Inisialisasi dropdown posisi berdasarkan filter Dept yang tersimpan
+    if (this.filterDept) {
+      const selected = this.departemenData.find(d => d.nama === this.filterDept);
+      this.positions = selected ? selected.posisi : [];
+    } else {
+      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    }
     
     this.loadData();
   }
@@ -70,6 +112,8 @@ export class OvertimeListComponent implements OnInit {
     sessionStorage.setItem('ovt_year', this.selectedYear.toString());
     sessionStorage.setItem('ovt_search', this.filterSearch);
     sessionStorage.setItem('ovt_page', this.currentPage.toString());
+    sessionStorage.setItem('ovt_dept', this.filterDept);
+    sessionStorage.setItem('ovt_posisi', this.filterPosisi);
   }
 
   toNumber(value: any): number {
@@ -136,38 +180,35 @@ export class OvertimeListComponent implements OnInit {
       month: this.selectedMonth,
       year: this.selectedYear
     };
+    
     if (this.filterSearch) params.search = this.filterSearch;
+    // Parameter filter tambahan dikirim ke backend
+    if (this.filterDept) params.departemen = this.filterDept; 
+    if (this.filterPosisi) params.jabatan = this.filterPosisi;
 
     this.overtimeApi.getList(params).subscribe({
       next: (res) => {
         const paginatedData = res?.data || res;
         const rawItems = paginatedData?.data || [];
         
-        // MAPPING SUPER KETAT
        this.items = rawItems.map((item: any) => {
-          
-          // 1. Tangkap Poin Konversi dan Hari (Ini tetap dipertahankan dari Excel/DB)
           let poin = this.toNumber(item?.total_poin) || this.toNumber(item?.konversi_lembur) || 0;
           let hari = this.toNumber(item?.jumlah_hari) || this.toNumber(item?.total_hari) || 0;
           
-          // 👇 PERBAIKAN: "Butakan" dari bawaan Excel. MURNI ambil dari Master Karyawan (Penyesuaian Gaji)
           const gp = this.toNumber(item?.employee?.gaji_pokok ?? 0);
-          
-          // Kalkulasi Tarif & Total HANYA terjadi jika GP di Master Data sudah diisi
           const tarifPerJam = gp > 0 ? Math.round(gp / 173) : 0;
           const totalUpah = gp > 0 ? Math.round(tarifPerJam * poin) : 0;
 
-          // Kembalikan objek utuh agar terbaca oleh HTML
           return {
             ...item,
             konversi_lembur: poin,
             total_poin: poin,
             jumlah_hari: hari,    
             total_hari: hari,     
-            gaji_pokok: gp,               // Sekarang murni ikut Penyesuaian Gaji
-            per_jam: tarifPerJam,         // Otomatis 0 jika belum disesuaikan
+            gaji_pokok: gp,               
+            per_jam: tarifPerJam,         
             tarif_per_jam: tarifPerJam,
-            hitungan_lembur: totalUpah,   // Otomatis 0 jika belum disesuaikan
+            hitungan_lembur: totalUpah,   
             total_bayar: totalUpah
           };
         });
@@ -185,6 +226,20 @@ export class OvertimeListComponent implements OnInit {
     });
   }
 
+  // 👇 Event Cascading Dropdown
+  onDeptChange(): void {
+    if (this.filterDept) {
+      const selected = this.departemenData.find(d => d.nama === this.filterDept);
+      this.positions = selected ? selected.posisi : [];
+    } else {
+      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    }
+    
+    this.filterPosisi = ''; 
+    this.currentPage = 1;
+    this.loadData();
+  }
+
   onSearchDebounce(): void {
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
@@ -194,6 +249,15 @@ export class OvertimeListComponent implements OnInit {
   }
 
   onFilterChange(): void {
+    this.currentPage = 1;
+    this.loadData();
+  }
+
+  resetFilter(): void {
+    this.filterSearch = '';
+    this.filterDept = '';
+    this.filterPosisi = '';
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     this.currentPage = 1;
     this.loadData();
   }

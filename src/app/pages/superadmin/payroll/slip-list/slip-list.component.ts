@@ -32,7 +32,9 @@ interface SlipGajiItem {
   total_absent?: number;
   total_late?: number;
   employee?: any; 
-  allowances?: any[]; // Menyimpan array tunjangan spesifik jika ada dari backend
+  allowances?: any[];
+  // 👇 NOTE LEMBUR: Menambahkan properti untuk menampung data tanggal lembur
+  overtime_dates?: any[] | string; 
 }
 
 @Component({
@@ -105,6 +107,16 @@ export class SlipListComponent implements OnInit {
           const nikVal = emp.nik_ktp || emp.nik || item.nik || '-';
           const nameVal = emp.name || item.name || '-';
 
+          let rawComponents = item.allowances || item.salary_components || emp.salary_components || [];
+          let mappedAllowances = rawComponents.map((comp: any) => {
+              return {
+                  name: comp.nama_komponen || comp.name || 'Tunjangan',
+                  amount: Number(comp.pivot?.custom_amount || comp.amount || comp.nominal || 0)
+              };
+          });
+
+          mappedAllowances = mappedAllowances.filter((c: any) => c.amount > 0);
+
           return {
             ...item,
             name: nameVal,
@@ -112,10 +124,12 @@ export class SlipListComponent implements OnInit {
             department: deptVal,
             position: posVal,
             bonus: item.bonus || 0,
-            allowances: item.allowances || [], // Mapping array tunjangan spesifik
+            allowances: mappedAllowances, 
             total_present: item.total_present !== undefined ? Number(item.total_present) : 25,
             total_absent: item.total_absent !== undefined ? Number(item.total_absent) : 0,
             total_late: item.total_late !== undefined ? Number(item.total_late) : 0,
+            // 👇 NOTE LEMBUR: Ambil data overtime_dates dari API
+            overtime_dates: item.overtime_dates || emp.overtime_dates || []
           };
         });
 
@@ -227,7 +241,7 @@ export class SlipListComponent implements OnInit {
   }
 
   // ==========================================
-  // VIEW SLIP (ELEGANT DESIGN) - Modal View
+  // VIEW SLIP - Modal HTML
   // ==========================================
   viewSlip(slipId: number) {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
@@ -236,7 +250,6 @@ export class SlipListComponent implements OnInit {
     const hariKerja = item.total_present !== undefined ? item.total_present : 25;
     const alpaLainnya = (item.total_absent || 0) + (item.total_late || 0);
     const formatPts = this.formatPoin(item.overtime_hours);
-    const formatJam = this.convertPoinToJam(item.overtime_hours);
 
     let pph21Value = Number(item.pph21_deduction) || 0;
     let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
@@ -244,14 +257,31 @@ export class SlipListComponent implements OnInit {
     let alpaValue = Number(item.absence_deduction) || 0;
     let otherValue = Math.max(0, Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue));
 
-    // Render HTML Tunjangan Dinamis
     let tunjanganHtml = '';
     if (item.allowances && item.allowances.length > 0) {
       item.allowances.forEach(allowance => {
         tunjanganHtml += `<div class="flex justify-between"><span class="text-gray-600">${allowance.name}</span><span class="font-semibold text-gray-900">${this.formatRupiah(allowance.amount)}</span></div>`;
       });
     } else if (item.bonus && item.bonus > 0) {
-      tunjanganHtml = `<div class="flex justify-between"><span class="text-gray-600">Tunjangan & Bonus</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.bonus)}</span></div>`;
+      tunjanganHtml = `<div class="flex justify-between"><span class="text-gray-600">Tunjangan Lainnya</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.bonus)}</span></div>`;
+    }
+
+    // 👇 NOTE LEMBUR: Logika untuk menyusun teks note lembur (Aman untuk Array atau String)
+    let noteLemburHtml = '';
+    let datesStr = '';
+    if (Array.isArray(item.overtime_dates) && item.overtime_dates.length > 0) {
+        datesStr = item.overtime_dates.join(', ');
+    } else if (typeof item.overtime_dates === 'string' && item.overtime_dates.trim() !== '') {
+        datesStr = item.overtime_dates;
+    }
+
+    if (datesStr) {
+        const bulanLabel = this.months.find(m => m.value === this.selectedMonth)?.label || '';
+        noteLemburHtml = `
+          <div class="bg-gray-100 p-3 text-xs text-gray-600 italic border-t border-gray-200">
+            * Note: Lembur tanggal ${datesStr} ${bulanLabel} ${this.selectedYear}
+          </div>
+        `;
     }
 
     Swal.fire({
@@ -325,8 +355,10 @@ export class SlipListComponent implements OnInit {
           <div class="bg-gray-900 text-white p-6">
             <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold mb-1">Take Home Pay</p>
             <p class="text-3xl font-black tracking-tight mb-2">${this.formatRupiah(item.net_salary)}</p>
-            <p class="text-[10px] text-gray-400 italic">Terbilang: ${this.terbilang(item.net_salary)}</p>
+            <p class="text-[10px] text-gray-400 italic mb-2">Terbilang: ${this.terbilang(item.net_salary)}</p>
           </div>
+          
+          ${noteLemburHtml}
         </div>
       `
     });
@@ -351,7 +383,10 @@ export class SlipListComponent implements OnInit {
     doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
     doc.text('SLIP GAJI KARYAWAN', 105, startY + 19, { align: 'center' });
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-    doc.text(`PERIODE: ${bulanLabel} ${tahunLabel}`, 105, startY + 23, { align: 'center' });
+    
+    // Label bulan dirapikan untuk Title huruf besar awal kata (Capitalize)
+    const bulanTitle = bulanLabel.charAt(0).toUpperCase() + bulanLabel.slice(1).toLowerCase();
+    doc.text(`PERIODE: ${bulanTitle.toUpperCase()} ${tahunLabel}`, 105, startY + 23, { align: 'center' });
 
     doc.setFontSize(7);
     doc.text('NIK', 12, startY + 30);             doc.text(`: ${item.nik}`, 28, startY + 30);
@@ -370,33 +405,32 @@ export class SlipListComponent implements OnInit {
     doc.text('Total Lembur', 115, startY + 41);       
     doc.text(`: ${formatPts} Poin (~${formatJam} Jam)`, 150, startY + 41);
 
-    // Menyusun Rincian Penghasilan
     const arrPenghasilan: { desc: string; val: string }[] = [
-      { desc: 'Gaji Pokok', val: this.formatRupiah(item.base_salary) },
-      { desc: `Upah Lembur (${formatPts} Poin)`, val: this.formatRupiah(item.overtime_pay) }
+      { desc: 'Gaji Pokok', val: this.formatRupiah(item.base_salary) }
     ];
+    if (item.overtime_pay > 0) {
+      arrPenghasilan.push({ desc: `Upah Lembur (${formatPts} Poin)`, val: this.formatRupiah(item.overtime_pay) });
+    }
 
     if (item.allowances && item.allowances.length > 0) {
       item.allowances.forEach((allowance: any) => {
         arrPenghasilan.push({ desc: allowance.name, val: this.formatRupiah(allowance.amount) });
       });
     } else if (item.bonus && item.bonus > 0) {
-      arrPenghasilan.push({ desc: 'Tunjangan & Bonus', val: this.formatRupiah(item.bonus) });
+      arrPenghasilan.push({ desc: 'Tunjangan Lainnya', val: this.formatRupiah(item.bonus) });
     }
 
-    // Menyusun Rincian Potongan
     let pph21Value = Number(item.pph21_deduction) || 0;
     let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
     let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
     let alpaValue = Number(item.absence_deduction) || 0;
     let otherValue = Math.max(0, Number(item.total_deduction || 0) - (pph21Value + bpjsKesValue + bpjsTkValue + alpaValue));
 
-    const arrPotongan = [
-      { desc: 'Potongan PPh21', val: this.formatRupiah(pph21Value) },
-      { desc: 'Potongan BPJS Kesehatan', val: this.formatRupiah(bpjsKesValue) },
-      { desc: 'Potongan BPJS Ketenagakerjaan', val: this.formatRupiah(bpjsTkValue) },
-      { desc: `Potongan Alpa (${alphaLainnya} hari)`, val: this.formatRupiah(alpaValue) }
-    ];
+    const arrPotongan = [];
+    if (pph21Value > 0) arrPotongan.push({ desc: 'Potongan PPh21', val: this.formatRupiah(pph21Value) });
+    if (bpjsKesValue > 0) arrPotongan.push({ desc: 'Potongan BPJS Kes.', val: this.formatRupiah(bpjsKesValue) });
+    if (bpjsTkValue > 0) arrPotongan.push({ desc: 'Potongan BPJS TK', val: this.formatRupiah(bpjsTkValue) });
+    if (alpaValue > 0) arrPotongan.push({ desc: `Potongan Alpa (${alphaLainnya} hr)`, val: this.formatRupiah(alpaValue) });
     if (otherValue > 0) arrPotongan.push({ desc: 'Potongan Lainnya', val: this.formatRupiah(otherValue) });
 
     const maxRows = Math.max(arrPenghasilan.length, arrPotongan.length);
@@ -436,12 +470,26 @@ export class SlipListComponent implements OnInit {
     const terbilangText = `# ${this.terbilang(item.net_salary)} #`;
     const splitTerbilang = doc.splitTextToSize(terbilangText, 180 - doc.getTextWidth(textTHP) - 10);
     if (splitTerbilang[0]) doc.text(splitTerbilang[0], 198, thpY + 3.5, { align: 'right' });
-    
-    // TANDA TANGAN DIHILANGKAN
+
+    // 👇 NOTE LEMBUR: Gambar teks catatan lembur di PDF, di bawah kotak THP
+    let datesPdfStr = '';
+    if (Array.isArray(item.overtime_dates) && item.overtime_dates.length > 0) {
+        datesPdfStr = item.overtime_dates.join(', ');
+    } else if (typeof item.overtime_dates === 'string' && item.overtime_dates.trim() !== '') {
+        datesPdfStr = item.overtime_dates;
+    }
+
+    if (datesPdfStr) {
+        const textNoteLembur = `* Note: Lembur tanggal ${datesPdfStr} ${bulanTitle} ${tahunLabel}`;
+        doc.setFontSize(6.5);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 100, 100); // Warna abu-abu agar tidak terlalu mencolok
+        doc.text(textNoteLembur, 12, thpY + 8); 
+    }
   }
 
   // ==========================================
-  // DOWNLOAD 1 SLIP (SATU KARYAWAN)
+  // DOWNLOAD 1 SLIP (Setengah Halaman)
   // ==========================================
   downloadSlip(slipId: number) {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
@@ -457,7 +505,6 @@ export class SlipListComponent implements OnInit {
       img.src = 'assets/images/logo.png';
 
       const renderPDF = (logoObj: HTMLImageElement | null) => {
-        // Menggambar 1 slip di bagian atas
         this.drawSingleSlip(doc, 8, item, logoObj, bulanLabel, this.selectedYear);
 
         const safeName = item.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
@@ -511,7 +558,6 @@ export class SlipListComponent implements OnInit {
       
       let isFirstPage = true;
 
-      // Loop dua karyawan sekaligus
       for (let i = 0; i < this.filteredDataSlip.length; i += 2) {
         if (!isFirstPage) doc.addPage();
         isFirstPage = false;
@@ -519,10 +565,8 @@ export class SlipListComponent implements OnInit {
         const item1 = this.filteredDataSlip[i];
         const item2 = this.filteredDataSlip[i + 1];
 
-        // Gambar Slip Karyawan 1 (Di Atas)
         this.drawSingleSlip(doc, 8, item1, logoObj, bulanLabel, this.selectedYear);
 
-        // Jika Karyawan 2 ada, beri garis potong dan gambar di bawah
         if (item2) {
           const cutLineY = 148; 
           doc.setDrawColor(100, 100, 100); doc.setLineWidth(0.2); doc.setLineDashPattern([2, 2], 0); doc.line(20, cutLineY, 190, cutLineY);
@@ -530,7 +574,6 @@ export class SlipListComponent implements OnInit {
           doc.text('- - - - - - - - - - Potong di sini - - - - - - - - - -', 105, cutLineY - 1, { align: 'center' });
           doc.setLineDashPattern([], 0); doc.setTextColor(0, 0, 0);
 
-          // Gambar Slip Karyawan 2 (Di Bawah)
           this.drawSingleSlip(doc, 154, item2, logoObj, bulanLabel, this.selectedYear);
         }
       }

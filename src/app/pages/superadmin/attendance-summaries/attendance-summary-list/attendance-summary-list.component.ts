@@ -15,7 +15,7 @@ import {
 export class AttendanceSummaryListComponent implements OnInit {
 
   // ── Data ─────────────────────────────────────────────────
-  items       : AttendanceSummary[] = [];
+  items       : any[] = []; 
   isLoading   = false;
   currentPage = 1;
   lastPage    = 1;
@@ -30,15 +30,34 @@ export class AttendanceSummaryListComponent implements OnInit {
   filterPosisi = '';
   private searchTimeout: any;
 
-  // ── Import State ───────────────────────────────────────────
-  isImporting = false;
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Update Terbaru)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+  ];
 
-  // ── Modal Delete State ─────────────────────────────────────
-  showDeleteModal = false;
-  itemToDelete: AttendanceSummary | null = null;
-  isDeleting = false;
+  departments = this.departemenData.map(d => d.nama);
+  positions: string[] = [];
 
-  // ── Options Mapping ───────────────────────────────────────
+  // ── Options Mapping (Bulan) ───────────────────────────────
   months = [
     { value: 1,  label: 'Januari' }, { value: 2,  label: 'Februari' },
     { value: 3,  label: 'Maret'   }, { value: 4,  label: 'April'    },
@@ -48,15 +67,13 @@ export class AttendanceSummaryListComponent implements OnInit {
     { value: 11, label: 'November' }, { value: 12, label: 'Desember' },
   ];
 
-  departments = [
-    'Umum', 'HRD', 'Keuangan', 'Operasional', 
-    'IT', 'Produksi', 'Lapangan', 'Logistik', 'Pemasaran'
-  ];
+  // ── Import State ───────────────────────────────────────────
+  isImporting = false;
 
-  positions = [
-    'Manager', 'Supervisor', 'Staff', 'Admin', 
-    'Operator', 'Mandor', 'Buruh Harian', 'Security', 'Driver'
-  ];
+  // ── Modal Delete State ─────────────────────────────────────
+  showDeleteModal = false;
+  itemToDelete: any | null = null;
+  isDeleting = false;
 
   toastMessage = '';
   toastType    : 'success' | 'error' = 'success';
@@ -70,6 +87,8 @@ export class AttendanceSummaryListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Tampilkan semua posisi di awal
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     this.load();
   }
 
@@ -84,8 +103,8 @@ export class AttendanceSummaryListComponent implements OnInit {
     
     if (this.filterMonth !== '') params['month']      = this.filterMonth;
     if (this.filterSearch)       params['search']     = this.filterSearch;
-    if (this.filterDept)         params['departemen'] = this.filterDept;
-    if (this.filterPosisi)       params['jabatan']    = this.filterPosisi;
+    if (this.filterDept)         params['departemen'] = this.filterDept; // Dikirim ke backend sbg 'departemen'
+    if (this.filterPosisi)       params['jabatan']    = this.filterPosisi; // Dikirim ke backend sbg 'jabatan'
 
     this.api.getList(params).subscribe({
       next: (res) => {
@@ -118,12 +137,30 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.load();
   }
 
+  // 👇 Event Cascading Dropdown
+  onDeptChange(): void {
+    if (this.filterDept) {
+      const selected = this.departemenData.find(d => d.nama === this.filterDept);
+      this.positions = selected ? selected.posisi : [];
+    } else {
+      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    }
+    
+    this.filterPosisi = ''; 
+    this.currentPage = 1;
+    this.load(); // Request data baru ke server
+  }
+
   resetFilter(): void {
     this.filterSearch = '';
     this.filterMonth  = new Date().getMonth() + 1; 
     this.filterYear   = new Date().getFullYear();
     this.filterDept   = '';
     this.filterPosisi = '';
+    
+    // Kembalikan semua posisi
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    
     this.currentPage  = 1;
     this.load();
   }
@@ -139,7 +176,7 @@ export class AttendanceSummaryListComponent implements OnInit {
   }
 
   // ── Feature: Delete with Modal ────────────────────────────
-  confirmDelete(item: AttendanceSummary): void {
+  confirmDelete(item: any): void {
     this.itemToDelete = item;
     this.showDeleteModal = true;
   }
@@ -169,22 +206,41 @@ export class AttendanceSummaryListComponent implements OnInit {
     });
   }
 
+  // ── Kalkulasi Kolom Dinamis (Perbaikan Bug Izin & Sakit) ──
+  getTotalIzin(item: any): number {
+    return (
+      (item.izin_tidak_masuk_pribadi || 0) +
+      (item.izin_pulang_awal_pribadi || 0) +
+      (item.izin_datang_terlambat_pribadi || 0) +
+      (item.izin_meninggalkan_tempat_kerja || 0) +
+      (item.izin_dinas || 0) +
+      (item.izin_datang_terlambat_kantor || 0) +
+      (item.izin_pulang_awal_kantor || 0) +
+      (item.cuti_normatif || 0) +
+      (item.cuti_pribadi || 0) +
+      (item.izin_lain_lain || 0)
+    );
+  }
+
+  getTotalSakit(item: any): number {
+    return (
+      (item.sakit_dengan_surat_dokter || 0) +
+      (item.sakit_tanpa_surat_dokter || 0)
+    );
+  }
+
   // ── Import Feature ─────────────────────────────────────────
   onFileSelected(event: any): void {
     const file: File = event.target.files[0];
     if (file) {
       this.uploadFile(file);
     }
-    // Reset nilai input agar bisa memilih file yang sama lagi jika terjadi error
     event.target.value = '';
   }
 
   uploadFile(file: File): void {
     this.isImporting = true;
-    
-    // Pastikan endpoint ini sesuai dengan yang ada di routes/api.php
     const url = `${environment.apiUrl}/superadmin/attendance-summaries/import`;
-    
     const formData = new FormData();
     formData.append('file', file);
 

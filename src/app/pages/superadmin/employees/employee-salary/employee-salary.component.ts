@@ -15,7 +15,6 @@ export class EmployeeSalaryComponent implements OnInit {
   employees: any[] = [];
   filteredEmployees: any[] = [];
   isLoading = true;
-  searchKeyword = '';
   isProcessing: number | null = null;
 
   toastMessage = '';
@@ -23,7 +22,40 @@ export class EmployeeSalaryComponent implements OnInit {
   toastTimeout: any;
 
   // =========================================================================
-  // STATE BARU UNTUK FITUR MODAL KOMPONEN GAJI (TUNJANGAN / POTONGAN)
+  // STATE FILTER & MASTER DATA (BARU)
+  // =========================================================================
+  searchKeyword = '';
+  filterDept = '';
+  filterPosisi = '';
+
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+  ];
+
+  departments = this.departemenData.map(d => d.nama);
+  positions: string[] = [];
+
+  // =========================================================================
+  // STATE MODAL KOMPONEN GAJI
   // =========================================================================
   showModalComponent = false;
   selectedEmployeeForComponent: any = null;
@@ -37,8 +69,11 @@ export class EmployeeSalaryComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Inisialisasi awal: tampilkan semua posisi jika belum ada departemen yang dipilih
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    
     this.loadEmployees();
-    this.loadMasterSalaryComponents(); // Load master tunjangan di awal
+    this.loadMasterSalaryComponents();
   }
 
   loadEmployees() {
@@ -48,19 +83,16 @@ export class EmployeeSalaryComponent implements OnInit {
         this.isLoading = false;
         
         this.employees = res.data.map((e: any) => {
-          // PERBAIKAN: Gunakan Math.round / parseInt untuk membuang angka .00 dari database
           const gajiPokokMurni = e.gaji_pokok ? Math.round(Number(e.gaji_pokok)) : 0;
-
           return {
             ...e,
             gaji_pokok: gajiPokokMurni,
             original_gaji: gajiPokokMurni,
-            // Format ke string Rupiah ("4.200.000")
             formatted_gaji: this.formatRupiah(gajiPokokMurni)
           };
         });
         
-        this.filteredEmployees = this.employees;
+        this.applyFilter();
       },
       error: () => {
         this.isLoading = false;
@@ -69,47 +101,74 @@ export class EmployeeSalaryComponent implements OnInit {
     });
   }
 
+  // =====================================================================
+  // LOGIKA FILTERING (BARU)
+  // =====================================================================
   onSearch(keyword: string) {
     this.searchKeyword = keyword;
-    const k = keyword.toLowerCase();
-    this.filteredEmployees = this.employees.filter(e => 
-      e.nama_lengkap.toLowerCase().includes(k) || 
-      e.nik_karyawan.toLowerCase().includes(k) ||
-      (e.posisi && e.posisi.toLowerCase().includes(k))
-    );
+    this.applyFilter();
+  }
+
+  onDeptChange() {
+    if (this.filterDept) {
+      const selected = this.departemenData.find(d => d.nama === this.filterDept);
+      this.positions = selected ? selected.posisi : [];
+    } else {
+      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    }
+    
+    this.filterPosisi = ''; 
+    this.applyFilter();
+  }
+
+  applyFilter() {
+    let temp = [...this.employees];
+
+    if (this.searchKeyword) {
+      const k = this.searchKeyword.toLowerCase();
+      temp = temp.filter(e => 
+        (e.nama_lengkap && e.nama_lengkap.toLowerCase().includes(k)) || 
+        (e.nik_karyawan && e.nik_karyawan.toLowerCase().includes(k))
+      );
+    }
+
+    if (this.filterDept) temp = temp.filter(e => e.dept === this.filterDept);
+    if (this.filterPosisi) temp = temp.filter(e => e.posisi === this.filterPosisi);
+
+    this.filteredEmployees = temp;
+  }
+
+  resetFilter() {
+    this.searchKeyword = '';
+    this.filterDept = '';
+    this.filterPosisi = '';
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    
+    const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
+    if (searchInput) searchInput.value = '';
+
+    this.applyFilter();
   }
 
   // =====================================================================
-  // RUPIAH FORMATTER 
+  // RUPIAH FORMATTER & SALARY LOGIC
   // =====================================================================
   formatRupiah(value: string | number): string {
     if (value === null || value === undefined || value === '') return '0';
-    
-    // Konversi ke string. Jika awalnya float (ex: 4200000.00), pastikan dibulatkan dulu.
     const numericValue = Math.round(Number(value));
-    
-    // Hapus semua karakter non-angka (sebagai pengaman tambahan)
     let valString = numericValue.toString().replace(/[^0-9]/g, '');
     if (!valString) return '0';
-    
     return parseInt(valString, 10).toLocaleString('id-ID');
   }
 
   onRupiahInput(event: any, emp: any) {
     let inputVal = event.target.value;
-    
-    // Hapus semua karakter non-angka yang diketik user
     let numericVal = inputVal.replace(/[^0-9]/g, '');
-    
-    // Simpan angka murni ke state (misal: 4200000)
     emp.gaji_pokok = numericVal ? Number(numericVal) : 0;
-    
-    // Tampilkan kembali ke input HTML dengan format titik
     emp.formatted_gaji = this.formatRupiah(numericVal);
     event.target.value = emp.formatted_gaji;
   }
 
-  // === UPDATE SALARY ===
   saveSalary(emp: any) {
     if (emp.gaji_pokok === emp.original_gaji) return;
 
@@ -130,14 +189,11 @@ export class EmployeeSalaryComponent implements OnInit {
   }
 
   // =====================================================================
-  // LOGIKA BARU UNTUK FITUR KOMPONEN GAJI
+  // LOGIKA KOMPONEN GAJI (TETAP SAMA)
   // =====================================================================
-  
   loadMasterSalaryComponents() {
     this.employeeApi.getSalaryComponents().subscribe({
-      next: (res: any) => {
-        this.masterComponents = res.data || res;
-      },
+      next: (res: any) => { this.masterComponents = res.data || res; },
       error: (err) => console.error('Gagal memuat master komponen gaji', err)
     });
   }
@@ -147,17 +203,13 @@ export class EmployeeSalaryComponent implements OnInit {
     this.showModalComponent = true;
     this.employeeComponents = [];
 
-    // Fetch data tunjangan karyawan ini dari backend
     this.employeeApi.getById(employee.id).subscribe({
       next: (res: any) => {
-        // 🔥 PERBAIKAN: Membaca data Pivot dari relasi belongsToMany Laravel
         if (res.data && res.data.salary_components) {
           this.employeeComponents = res.data.salary_components.map((item: any) => {
-            // Karena pakai belongsToMany, data custom_amount ada di objek "pivot"
-            // Dan ID komponen adalah item.id
             const pivotAmount = item.pivot && item.pivot.custom_amount ? item.pivot.custom_amount : 0;
             return {
-              salary_component_id: item.id, // Ambil dari item.id
+              salary_component_id: item.id,
               custom_amount: Math.round(Number(pivotAmount)),
               component: item
             };
@@ -175,10 +227,7 @@ export class EmployeeSalaryComponent implements OnInit {
   }
 
   addComponentRow(): void {
-    this.employeeComponents.push({
-      salary_component_id: 0,
-      custom_amount: 0
-    });
+    this.employeeComponents.push({ salary_component_id: 0, custom_amount: 0 });
   }
 
   removeComponentRow(index: number): void {
@@ -187,35 +236,25 @@ export class EmployeeSalaryComponent implements OnInit {
 
   onComponentSelect(index: number, event: any): void {
     const id = Number(event.target.value);
-    
-    // 🔥 PERBAIKAN: Pastikan tidak memilih komponen yang sudah ada di baris lain
     const isAlreadySelected = this.employeeComponents.some((comp, i) => i !== index && Number(comp.salary_component_id) === id);
     
     if (isAlreadySelected) {
       this.showToast('Komponen ini sudah ditambahkan sebelumnya!', 'error');
-      // Reset dropdown ke default
       this.employeeComponents[index].salary_component_id = 0;
       event.target.value = 0;
       return;
     }
 
     const selectedComp: any = this.masterComponents.find(c => c.id === id);
-    
     if (selectedComp) {
       this.employeeComponents[index].salary_component_id = id;
       this.employeeComponents[index].component = selectedComp;
-      
-      // Mengisi nominal secara otomatis dari data master (jika master punya kolom 'nominal').
-      this.employeeComponents[index].custom_amount = selectedComp.nominal 
-        ? Math.round(Number(selectedComp.nominal)) 
-        : 0;
+      this.employeeComponents[index].custom_amount = selectedComp.nominal ? Math.round(Number(selectedComp.nominal)) : 0;
     }
   }
 
   saveEmployeeComponents(): void {
     if (!this.selectedEmployeeForComponent) return;
-
-    // Filter yang sudah dipilih dropdown-nya saja
     const validComponents = this.employeeComponents.filter(c => c.salary_component_id > 0);
     
     this.isSavingComponents = true;
@@ -234,21 +273,13 @@ export class EmployeeSalaryComponent implements OnInit {
   }
 
   // === UTILS ===
-  goBack() {
-    this.router.navigate(['/superadmin/employees']);
-  }
-
+  goBack() { this.router.navigate(['/superadmin/employees']); }
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMessage = msg;
     this.toastType = type;
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3000);
   }
-  
   closeToast() { this.toastMessage = ''; }
-  
-  // TrackBy function untuk ngFor
-  trackByIndex(index: number, obj: any): any {
-    return index;
-  }
+  trackByIndex(index: number, obj: any): any { return index; }
 }

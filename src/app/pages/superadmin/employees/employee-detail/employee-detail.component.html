@@ -178,7 +178,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label class="modal-label">NIK Karyawan</label><input type="text" [(ngModel)]="editData.nik_karyawan" class="modal-input font-bold text-blue-900 bg-blue-50"></div>
           <div><label class="modal-label">Status Karyawan</label><select [(ngModel)]="editData.status_karyawan" class="modal-input cursor-pointer"><option *ngFor="let st of statusKaryawanOptions" [value]="st">{{ st }}</option></select></div>
-          <div><label class="modal-label">Departemen</label><select [(ngModel)]="editData.dept" class="modal-input cursor-pointer"><option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option></select></div>
+          <div><label class="modal-label">Departemen</label><select [(ngModel)]="editData.dept" name="dept" (change)="onDeptChange()" class="modal-input cursor-pointer"><option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option></select></div>
           <div><label class="modal-label">Posisi</label><select [(ngModel)]="editData.posisi" class="modal-input cursor-pointer"><option *ngFor="let p of posisiOptions" [value]="p">{{ p }}</option></select></div>
           <div><label class="modal-label">Tanggal Masuk</label><input type="date" [(ngModel)]="editData.tanggal_diterima" class="modal-input"></div>
         </div>

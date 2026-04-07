@@ -30,11 +30,36 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   paginatedEmployees: any[] = []; 
   isLoading = false;
 
-  // === 2. FILTER STATE ===
+  // === 2. FILTER STATE & MASTER DATA ===
   searchKeyword = '';
   filterDept = '';
   filterPosisi = '';
-  departments: string[] = [];
+
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Wajib Baku)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+  ];
+
+  departments = this.departemenData.map(d => d.nama);
   positions: string[] = [];
 
   private searchSubject = new Subject<string>();
@@ -67,6 +92,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void { 
+    // 👇 TAMBAHAN: Muat semua posisi saat halaman pertama kali dibuka
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+
     this.loadEmployees(); 
 
     this.searchSubject.pipe(
@@ -93,7 +121,6 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         this.isLoading = false;
         this.allEmployees = res.data || [];
-        this.extractFilterOptions();
         this.applyFilter();
       },
       error: (err) => {
@@ -104,9 +131,19 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  extractFilterOptions() {
-    this.departments = [...new Set(this.allEmployees.map(e => e.dept).filter(d => d))].sort();
-    this.positions = [...new Set(this.allEmployees.map(e => e.posisi).filter(p => p))].sort();
+  // 👇 Event Cascading Dropdown untuk Filter UI
+  onDeptChange() {
+    if (this.filterDept) {
+      // Jika departemen tertentu dipilih, tampilkan posisi departemen itu saja
+      const selected = this.departemenData.find(d => d.nama === this.filterDept);
+      this.positions = selected ? selected.posisi : [];
+    } else {
+      // Jika "Semua Dept" dipilih (kosong), tampilkan kembali SEMUA posisi
+      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    }
+    
+    this.filterPosisi = ''; 
+    this.applyFilter();
   }
 
   onSearch(event: any) {
@@ -137,6 +174,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.searchKeyword = '';
     this.filterDept = '';
     this.filterPosisi = '';
+    
+    // 👇 Kembalikan semua pilihan posisi saat di-reset
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     
     const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
     if (searchInput) searchInput.value = '';
@@ -200,7 +240,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // IMPORT EXCEL LOGIC
+  // IMPORT EXCEL LOGIC (SMART MATCHING)
   // ==========================================
   openImportModal() { this.showImportModal = true; }
   
@@ -263,6 +303,45 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
         const dataRows = rawData.slice(4); 
 
         const mappedData = dataRows.map((row: any[]) => {
+          
+          // 👇 LOGIKA SMART MATCHING V2 (SUPER CERDAS)
+          const rawPosisi = String(row[8] || '').trim().toLowerCase();
+          const rawDept = String(row[9] || '').trim().toLowerCase();
+          
+          let finalDept = '';
+          let finalPosisi = '';
+
+          // 1. PRIORITAS UTAMA: Cari berdasarkan POSISI (karena posisi lebih unik/spesifik)
+          if (rawPosisi) {
+            for (const dept of this.departemenData) {
+              const foundPos = dept.posisi.find(p => 
+                p.toLowerCase() === rawPosisi ||
+                p.toLowerCase().includes(rawPosisi) ||
+                rawPosisi.includes(p.toLowerCase())
+              );
+              
+              // Jika posisinya ketemu, otomatis masukkan posisi DAN departemennya!
+              if (foundPos) {
+                finalPosisi = foundPos;
+                finalDept = dept.nama; 
+                break; // Stop pencarian karena sudah ketemu
+              }
+            }
+          }
+
+          // 2. Jika posisinya tidak ada/kosong, coba cocokkan Departemennya saja
+          if (!finalDept && rawDept) {
+            const foundDept = this.departemenData.find(d => 
+              d.nama.toLowerCase() === rawDept || 
+              d.nama.toLowerCase().includes(rawDept) || 
+              rawDept.includes(d.nama.toLowerCase())
+            );
+            if (foundDept) {
+              finalDept = foundDept.nama;
+            }
+          }
+          // 👆 AKHIR LOGIKA SMART MATCHING
+
           return {
             nik_karyawan: row[1] || '',  
             nik_ktp: row[2] || '',       
@@ -271,8 +350,8 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             status_pajak: row[5] || 'TK/0',      
             no_rekening: row[6] || '',   
             status_pajak_2026: row[7] || '', 
-            posisi: row[8] || '',        
-            dept: row[9] || '',          
+            posisi: finalPosisi,  // <-- Akan terisi Operator Pulper
+            dept: finalDept,      // <-- Otomatis terisi SP & Starch
             tanggal_diterima: row[10] || null, 
             tanggal_lahir: row[11] || null,    
             npwp: row[12] || '',         
@@ -298,7 +377,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             this.isProcessing = false;
             this.closeImportModal();
             this.loadEmployees();
-            this.showToast(`Import Berhasil! ${cleanData.length} data tersimpan.`, 'success');
+            this.showToast(`Import Berhasil! Data karyawan otomatis di-update.`, 'success');
           },
           error: (err: any) => {
             this.isProcessing = false;
