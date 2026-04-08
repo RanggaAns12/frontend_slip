@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiUrl: 'ads-payroll.agrodeliserdang.com/api'
+  apiUrl: 'https://ads-payroll.agrodeliserdang.com/api'
 };
