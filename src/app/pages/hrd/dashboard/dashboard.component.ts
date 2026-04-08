@@ -1,12 +1,13 @@
 import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment'; // Pastikan path sesuai
+import { environment } from '../../../../environments/environment'; 
 import { Chart, registerables } from 'chart.js';
 
 Chart.register(...registerables);
 
 @Component({
   selector: 'app-dashboard',
+  standalone: false,
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']
 })
@@ -14,16 +15,15 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   @ViewChild('attendanceChart') attendanceChartRef!: ElementRef;
   @ViewChild('statusChart') statusChartRef!: ElementRef;
 
-  // Variabel Header
   currentDate: Date = new Date();
-  userName: string = 'Admin HRD'; // 👈 Fallback default diubah ke Admin HRD
+  userName: string = 'HRD'; 
   isLoading: boolean = true; 
 
-  // Variabel Data (Default di set 0 dulu)
+  // Variabel Data Murni (Diambil dari API)
   totalEmployees = 0;
-  presentToday = 0;
-  lateToday = 0;
-  overtimeHours = 0;
+  totalUsers = 0;
+  activeEmployees = 0;
+  inactiveEmployees = 0;
 
   barChart: any;
   doughnutChart: any;
@@ -35,9 +35,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.fetchDashboardData();
   }
 
-  ngAfterViewInit(): void {
-    // Render dipanggil dari dalam fetchDashboardData
-  }
+  ngAfterViewInit(): void {}
 
   loadUserData() {
     const userDataStr = localStorage.getItem('user_data') || localStorage.getItem('user');
@@ -53,49 +51,44 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  get attendancePercentage(): string {
-    if (this.totalEmployees === 0) return '0.0';
-    return ((this.presentToday / this.totalEmployees) * 100).toFixed(1);
-  }
-
-  // 🔴 MENGAMBIL DATA DARI BACKEND
+  // 🔴 MENGAMBIL DATA MURNI DARI DATABASE
   fetchDashboardData() {
     this.isLoading = true;
-    
-    // 👇 TETAP MENGGUNAKAN /superadmin KARENA ROUTE BACKEND LARAVELNYA SEPERTI ITU (Sudah diizinkan oleh Middleware role)
-    const apiUrl = `${environment.apiUrl}/superadmin/dashboard`;
+    // 👇 API Endpoint disesuaikan ke HRD
+    const apiUrl = `${environment.apiUrl}/hrd/dashboard`; 
 
     this.http.get<any>(apiUrl).subscribe({
       next: (res) => {
         const data = res.data || res; 
         
-        // Coba ambil dari API, kalau kosong/belum dibuat di backend, pakai data DUMMY
-        this.totalEmployees = data?.total_employees ?? 124;
-        this.presentToday   = data?.present_today ?? 110;
-        this.lateToday      = data?.late_today ?? 5;
-        this.overtimeHours  = data?.overtime_hours ?? 45;
+        // Membaca data yang dikirim Laravel
+        this.totalEmployees    = Number(data?.total_employees || data?.totalEmployees || 0);
+        this.totalUsers        = Number(data?.total_users || data?.totalUsers || 0);
+        this.activeEmployees   = Number(data?.active_employees || data?.activeEmployees || 0);
+        this.inactiveEmployees = Number(data?.inactive_employees || data?.inactiveEmployees || 0);
 
         this.isLoading = false;
 
         setTimeout(() => {
           this.renderBarChart(data?.weekly_stats);
-          this.renderDoughnutChart(data?.today_status);
-        }, 100);
+          
+          const statusKaryawan = [this.activeEmployees, this.inactiveEmployees];
+          this.renderDoughnutChart(statusKaryawan);
+        }, 200);
       },
       error: (err) => {
-        console.error('API Dashboard error/belum siap. Menampilkan data fallback.', err);
+        console.error('Gagal mengambil data dari database:', err);
         
-        // Jika API error (misal 404/500), tetap tampilkan data DUMMY agar UI tidak rusak
-        this.totalEmployees = 124;
-        this.presentToday = 110;
-        this.lateToday = 5;
-        this.overtimeHours = 45;
+        this.totalEmployees = 0;
+        this.totalUsers = 0;
+        this.activeEmployees = 0;
+        this.inactiveEmployees = 0;
         this.isLoading = false;
         
         setTimeout(() => {
           this.renderBarChart(null); 
-          this.renderDoughnutChart(null);
-        }, 100);
+          this.renderDoughnutChart([0, 0]); 
+        }, 200);
       }
     });
   }
@@ -105,11 +98,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (!this.attendanceChartRef) return;
     if (this.barChart) this.barChart.destroy();
 
-    // Jika API belum ngirim 'weekly_stats', pakai data dummy yang cantik ini
     const labels = weeklyStats?.labels || ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
-    const dataHadir = weeklyStats?.hadir || [110, 115, 112, 118, 120, 90];
-    const dataIzin = weeklyStats?.izin || [8, 5, 6, 4, 2, 10];
-    const dataSakit = weeklyStats?.sakit || [6, 4, 6, 2, 2, 24];
+    const dataHadir = weeklyStats?.hadir || [0, 0, 0, 0, 0, 0];
+    const dataIzin = weeklyStats?.izin || [0, 0, 0, 0, 0, 0];
+    const dataSakit = weeklyStats?.sakit || [0, 0, 0, 0, 0, 0];
 
     this.barChart = new Chart(this.attendanceChartRef.nativeElement, {
       type: 'bar',
@@ -133,21 +125,18 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // 🔴 RENDER DOUGHNUT CHART
-  renderDoughnutChart(todayStatus: any) {
+  // 🔴 RENDER DOUGHNUT CHART 
+  renderDoughnutChart(statusArray: any[]) {
     if (!this.statusChartRef) return;
     if (this.doughnutChart) this.doughnutChart.destroy();
-
-    // Jika API belum ngirim 'today_status', pakai data dummy [Hadir, Izin, Sakit, Alpa]
-    const dataStatus = todayStatus || [110, 8, 4, 2];
 
     this.doughnutChart = new Chart(this.statusChartRef.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['Hadir', 'Izin', 'Sakit', 'Alpa'],
+        labels: ['Karyawan Aktif', 'Non-Aktif / Resign'],
         datasets: [{
-          data: dataStatus,
-          backgroundColor: ['#10b981', '#f59e0b', '#f43f5e', '#ef4444'],
+          data: statusArray,
+          backgroundColor: ['#10b981', '#f43f5e'],
           borderWidth: 0,
           hoverOffset: 4
         }]

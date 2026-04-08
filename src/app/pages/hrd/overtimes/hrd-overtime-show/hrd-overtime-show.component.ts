@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-// Sesuaikan path ini dengan lokasi service Mas Rangga
 import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service';
 
 @Component({
@@ -15,22 +14,31 @@ export class HrdOvertimeShowComponent implements OnInit {
   isLoading = false;
   maxJam = 0;
 
-  // Header Summary Data (Khusus HRD: Hanya Hari & Poin)
+  filterMonth: number = new Date().getMonth() + 1;
+  filterYear: number = new Date().getFullYear();
+  periodLabel: string = '';
+
+  months = [
+    { value: 1, label: 'Januari' }, { value: 2, label: 'Februari' },
+    { value: 3, label: 'Maret' }, { value: 4, label: 'April' },
+    { value: 5, label: 'Mei' }, { value: 6, label: 'Juni' },
+    { value: 7, label: 'Juli' }, { value: 8, label: 'Agustus' },
+    { value: 9, label: 'September' }, { value: 10, label: 'Oktober' },
+    { value: 11, label: 'November' }, { value: 12, label: 'Desember' }
+  ];
+
   totalPoin = 0;
   totalHari = 0;
 
-  // --- STATE FORM LEMBUR (CREATE & EDIT) ---
   showFormModal = false;
   isEditMode = false;
   isSaving = false;
   lemburForm: any = {};
 
-  // --- STATE DELETE MODAL ---
   showDeleteModal = false;
   isDeleting = false;
   deleteId: number | string | null = null;
 
-  // --- STATE TOAST ALERT ---
   toastMessage: string = '';
   toastType: 'success' | 'error' = 'success';
 
@@ -42,11 +50,24 @@ export class HrdOvertimeShowComponent implements OnInit {
 
   ngOnInit(): void {
     this.namaKaryawan = this.route.snapshot.paramMap.get('nama') ?? '';
-    if (this.namaKaryawan) {
-      this.loadDetail();
-    } else {
-      this.goBack();
-    }
+    
+    this.route.queryParams.subscribe(params => {
+      if (params['month']) this.filterMonth = +params['month'];
+      if (params['year']) this.filterYear = +params['year'];
+      
+      this.updatePeriodLabel();
+
+      if (this.namaKaryawan) {
+        this.loadDetail();
+      } else {
+        this.goBack();
+      }
+    });
+  }
+
+  updatePeriodLabel() {
+    const monthName = this.months.find(m => m.value === this.filterMonth)?.label || '';
+    this.periodLabel = `${monthName} ${this.filterYear}`;
   }
 
   showToast(message: string, type: 'success' | 'error') {
@@ -57,10 +78,15 @@ export class HrdOvertimeShowComponent implements OnInit {
     }, 3500); 
   }
 
-  // --- LOAD DATA ---
   loadDetail(): void {
     this.isLoading = true;
-    this.overtimeApi.getDetail(this.namaKaryawan, {}).subscribe({
+    
+    const params = {
+      month: this.filterMonth,
+      year: this.filterYear
+    };
+
+    this.overtimeApi.getDetail(this.namaKaryawan, params).subscribe({
       next: (res: any) => {
         const data = res.data || res; 
         this.details = data;
@@ -82,12 +108,11 @@ export class HrdOvertimeShowComponent implements OnInit {
     });
   }
 
-  // --- FUNGSI CREATE & EDIT LEMBUR ---
   openCreateModal() {
     this.isEditMode = false;
     this.lemburForm = {
       nama_karyawan: this.namaKaryawan,
-      tanggal_lembur: '',
+      tanggal_lembur: '', 
       konversi_lembur: 0
     };
     this.showFormModal = true;
@@ -123,7 +148,6 @@ export class HrdOvertimeShowComponent implements OnInit {
     });
   }
 
-  // --- FUNGSI DELETE BARIS LEMBUR ---
   openDeleteModal(id: number | string) {
     this.deleteId = id;
     this.showDeleteModal = true;
@@ -148,10 +172,13 @@ export class HrdOvertimeShowComponent implements OnInit {
     });
   }
 
-  // --- HELPERS ---
   goBack(): void {
-    // 🔴 Kembalikan navigasi ke list HRD
-    this.router.navigate(['/hrd/overtimes']);
+    this.router.navigate(['/hrd/overtimes'], {
+      queryParams: {
+        month: this.filterMonth,
+        year: this.filterYear
+      }
+    });
   }
 
   formatTanggal(tanggal: string): string {

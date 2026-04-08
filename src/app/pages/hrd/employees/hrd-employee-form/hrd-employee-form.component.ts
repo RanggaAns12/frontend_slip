@@ -16,19 +16,17 @@ export class HrdEmployeeFormComponent implements OnChanges {
   isLoading: boolean = false;
   isSubmitting: boolean = false;
 
-  // Data Binding Form
   formData: any = {};
 
-  // Opsi Dropdown
   agamaOptions = ['Islam', 'Kristen Protestan', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
   pendidikanOptions = ['SD', 'SMP', 'SMA/SMK', 'D3', 'S1', 'S2', 'S3'];
   statusKaryawanOptions = ['PKWTT (Tetap)', 'PKWT (Kontrak)', 'Harian', 'Magang'];
   deptOptions = ['Umum', 'IT', 'HRD', 'Keuangan', 'Operasional', 'Pemasaran'];
   posisiOptions = ['Staff', 'Supervisor', 'Manajer', 'Direktur'];
+  // DIKEMBALIKAN: Opsi Bank & Pajak
   bankOptions = ['BCA', 'Mandiri', 'BNI', 'BRI', 'BSI', 'CIMB Niaga', 'Lainnya'];
   statusPajakOptions = ['TK/0', 'TK/1', 'TK/2', 'TK/3', 'K/0', 'K/1', 'K/2', 'K/3'];
 
-  // Modal Status Internal
   showSuccessModal: boolean = false;
   showErrorModal: boolean = false;
   errorMessage: string = '';
@@ -52,13 +50,14 @@ export class HrdEmployeeFormComponent implements OnChanges {
       tempat_lahir: '', tanggal_lahir: '', agama: 'Islam',
       pendidikan: 'SMA/SMK', alamat: '', nik_karyawan: '',
       status_karyawan: 'PKWTT (Tetap)', dept: '', posisi: '',
-      tanggal_diterima: '', nama_bank: 'BCA', no_rekening: '',
-      pemilik_rekening: '', npwp: '', status_pajak: 'TK/0',
-      bpjs_ketenagakerjaan: ''
+      tanggal_diterima: '',
+      // DIKEMBALIKAN: Inisiasi data Bank & Pajak
+      nama_bank: 'BCA', no_rekening: '', pemilik_rekening: '',
+      npwp: '', status_pajak: 'TK/0', bpjs_ketenagakerjaan: ''
     };
   }
 
-  // Auto-fill Pemilik Rekening sesuai Nama Lengkap
+  // DIKEMBALIKAN: Autofill Pemilik Rekening
   onNameChange() {
     if (this.formData.nama_lengkap) {
       this.formData.pemilik_rekening = this.formData.nama_lengkap.toUpperCase();
@@ -71,10 +70,7 @@ export class HrdEmployeeFormComponent implements OnChanges {
 
   onSubmit() {
     this.isSubmitting = true;
-    // Emit data ke Parent Component (hrd-employee-list)
     this.save.emit(this.formData);
-    
-    // Matikan loading di form (karena proses API dihandle oleh parent)
     setTimeout(() => {
       this.isSubmitting = false;
     }, 1000);

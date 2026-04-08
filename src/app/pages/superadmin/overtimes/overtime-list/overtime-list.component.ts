@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { OvertimeApiService } from '../services/overtime-api.service';
-import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-overtime-list',
+  standalone: false,
   templateUrl: './overtime-list.component.html',
   styleUrls: ['./overtime-list.component.scss']
 })
@@ -18,51 +18,20 @@ export class OvertimeListComponent implements OnInit {
   total = 0;
   itemsPerPage = 15;
   
-  // State Filter
+  // State Filter Pencarian, Bulan, dan Tahun
   filterSearch = '';
-  filterDept = '';
-  filterPosisi = '';
-  selectedMonth: number | string = ''; 
-  selectedYear: number | string = '';
-  
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Terbaru)
-  departemenData = [
-    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
-    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
-    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
-    { nama: "Legal", posisi: ["Legal Staff"] },
-    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
-    { nama: "PPIC", posisi: ["PPIC Staff"] },
-    { nama: "HRD & HSE & Civil", posisi: ["HRD Staff", "HSE", "Civil", "Supervisor"] },
-    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
-    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
-    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
-    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
-    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP"] },
-    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter"] },
-    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
-    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
-    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
-    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
-    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
-    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift"] },
-    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
-  ];
-
-  departments = this.departemenData.map(d => d.nama);
-  positions: string[] = [];
+  filterMonth: number | '' = new Date().getMonth() + 1; 
+  filterYear: number = new Date().getFullYear();
+  private searchTimeout: any;
 
   months = [
-    { value: 1, name: 'Januari' }, { value: 2, name: 'Februari' },
-    { value: 3, name: 'Maret' }, { value: 4, name: 'April' },
-    { value: 5, name: 'Mei' }, { value: 6, name: 'Juni' },
-    { value: 7, name: 'Juli' }, { value: 8, name: 'Agustus' },
-    { value: 9, name: 'September' }, { value: 10, name: 'Oktober' },
-    { value: 11, name: 'November' }, { value: 12, name: 'Desember' }
+    { value: 1, label: 'Januari' }, { value: 2, label: 'Februari' },
+    { value: 3, label: 'Maret' }, { value: 4, label: 'April' },
+    { value: 5, label: 'Mei' }, { value: 6, label: 'Juni' },
+    { value: 7, label: 'Juli' }, { value: 8, label: 'Agustus' },
+    { value: 9, label: 'September' }, { value: 10, label: 'Oktober' },
+    { value: 11, label: 'November' }, { value: 12, label: 'Desember' }
   ];
-  years: number[] = [];
-
-  private searchTimeout: any;
 
   // Import Upload State
   isImporting = false;
@@ -72,67 +41,21 @@ export class OvertimeListComponent implements OnInit {
 
   constructor(
     private overtimeApi: OvertimeApiService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    const currentYear = new Date().getFullYear();
-    for (let i = currentYear - 3; i <= currentYear + 1; i++) {
-      this.years.push(i);
-    }
-    
-    // MENCEGAH RESET SAAT KEMBALI (BACK) + FILTER BARU
-    const savedMonth = sessionStorage.getItem('ovt_month');
-    const savedYear = sessionStorage.getItem('ovt_year');
-    const savedSearch = sessionStorage.getItem('ovt_search');
-    const savedPage = sessionStorage.getItem('ovt_page');
-    const savedDept = sessionStorage.getItem('ovt_dept');
-    const savedPosisi = sessionStorage.getItem('ovt_posisi');
-
-    if (savedMonth) this.selectedMonth = Number(savedMonth);
-    if (savedYear) this.selectedYear = Number(savedYear);
-    if (savedSearch) this.filterSearch = savedSearch;
-    if (savedPage) this.currentPage = Number(savedPage);
-    if (savedDept) this.filterDept = savedDept;
-    if (savedPosisi) this.filterPosisi = savedPosisi;
-    
-    // Inisialisasi dropdown posisi berdasarkan filter Dept yang tersimpan
-    if (this.filterDept) {
-      const selected = this.departemenData.find(d => d.nama === this.filterDept);
-      this.positions = selected ? selected.posisi : [];
-    } else {
-      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
-    }
-    
-    this.loadData();
+    this.route.queryParams.subscribe(params => {
+      if (params['month']) this.filterMonth = +params['month'];
+      if (params['year']) this.filterYear = +params['year'];
+      this.loadData();
+    });
   }
 
-  private saveFilters(): void {
-    sessionStorage.setItem('ovt_month', this.selectedMonth.toString());
-    sessionStorage.setItem('ovt_year', this.selectedYear.toString());
-    sessionStorage.setItem('ovt_search', this.filterSearch);
-    sessionStorage.setItem('ovt_page', this.currentPage.toString());
-    sessionStorage.setItem('ovt_dept', this.filterDept);
-    sessionStorage.setItem('ovt_posisi', this.filterPosisi);
-  }
-
+  // ===== Helpers =====
   toNumber(value: any): number {
-    if (value === null || value === undefined) return 0;
-    if (typeof value === 'number') return value;
-
-    let strValue = String(value).trim();
-    
-    if (strValue.includes('.') && strValue.includes(',')) {
-        if (strValue.indexOf('.') < strValue.indexOf(',')) {
-            strValue = strValue.replace(/\./g, '').replace(',', '.');
-        } else {
-            strValue = strValue.replace(/,/g, '');
-        }
-    } else if (strValue.includes(',')) {
-        strValue = strValue.replace(/,/g, '.');
-    }
-
-    const n = Number(strValue);
+    const n = Number(value);
     return Number.isFinite(n) ? n : 0;
   }
 
@@ -141,78 +64,44 @@ export class OvertimeListComponent implements OnInit {
     return s.length > 0 ? s.charAt(0).toUpperCase() : '?';
   }
 
-  formatRupiah(value: any): string {
-    const numValue = this.toNumber(value);
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(numValue);
+  formatRupiah(value: number | string): string {
+    const val = parseFloat(value as string || '0');
+    if (val === 0) return 'Rp 0';
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
   }
 
+  // ===== Rekap Header =====
   get totalPoinKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      return acc + this.toNumber(curr?.konversi_lembur ?? curr?.total_poin ?? 0);
+      const poin = this.toNumber(curr?.total_poin ?? curr?.konversi_lembur);
+      return acc + poin;
     }, 0);
   }
 
   get totalUpahKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      return acc + this.toNumber(curr?.hitungan_lembur ?? curr?.total_bayar ?? 0);
+      const upah = this.toNumber(curr?.total_upah ?? curr?.hitungan_lembur);
+      return acc + upah;
     }, 0);
   }
 
-  // ===== Load Data & KALKULASI DINAMIS =====
+  // ===== Load Data =====
   loadData(): void {
-    if (!this.selectedMonth || !this.selectedYear) {
-      this.items = [];
-      this.total = 0;
-      this.isLoading = false;
-      return;
-    }
-
     this.isLoading = true;
-    this.saveFilters(); 
 
     const params: any = {
       page: this.currentPage,
       per_page: this.itemsPerPage,
-      month: this.selectedMonth,
-      year: this.selectedYear
+      year: this.filterYear
     };
     
+    if (this.filterMonth !== '') params.month = this.filterMonth;
     if (this.filterSearch) params.search = this.filterSearch;
-    // Parameter filter tambahan dikirim ke backend
-    if (this.filterDept) params.departemen = this.filterDept; 
-    if (this.filterPosisi) params.jabatan = this.filterPosisi;
 
     this.overtimeApi.getList(params).subscribe({
       next: (res) => {
         const paginatedData = res?.data || res;
-        const rawItems = paginatedData?.data || [];
-        
-       this.items = rawItems.map((item: any) => {
-          let poin = this.toNumber(item?.total_poin) || this.toNumber(item?.konversi_lembur) || 0;
-          let hari = this.toNumber(item?.jumlah_hari) || this.toNumber(item?.total_hari) || 0;
-          
-          const gp = this.toNumber(item?.employee?.gaji_pokok ?? 0);
-          const tarifPerJam = gp > 0 ? Math.round(gp / 173) : 0;
-          const totalUpah = gp > 0 ? Math.round(tarifPerJam * poin) : 0;
-
-          return {
-            ...item,
-            konversi_lembur: poin,
-            total_poin: poin,
-            jumlah_hari: hari,    
-            total_hari: hari,     
-            gaji_pokok: gp,               
-            per_jam: tarifPerJam,         
-            tarif_per_jam: tarifPerJam,
-            hitungan_lembur: totalUpah,   
-            total_bayar: totalUpah
-          };
-        });
-
+        this.items = paginatedData?.data || [];
         this.total = paginatedData?.total ?? this.items.length;
         this.currentPage = paginatedData?.current_page ?? 1;
         this.lastPage = paginatedData?.last_page ?? 1;
@@ -226,20 +115,6 @@ export class OvertimeListComponent implements OnInit {
     });
   }
 
-  // 👇 Event Cascading Dropdown
-  onDeptChange(): void {
-    if (this.filterDept) {
-      const selected = this.departemenData.find(d => d.nama === this.filterDept);
-      this.positions = selected ? selected.posisi : [];
-    } else {
-      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
-    }
-    
-    this.filterPosisi = ''; 
-    this.currentPage = 1;
-    this.loadData();
-  }
-
   onSearchDebounce(): void {
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
@@ -248,18 +123,23 @@ export class OvertimeListComponent implements OnInit {
     }, 500);
   }
 
-  onFilterChange(): void {
+  onSearch(): void {
     this.currentPage = 1;
     this.loadData();
   }
 
   resetFilter(): void {
     this.filterSearch = '';
-    this.filterDept = '';
-    this.filterPosisi = '';
-    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    this.filterMonth = new Date().getMonth() + 1;
+    this.filterYear = new Date().getFullYear();
     this.currentPage = 1;
     this.loadData();
+    
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true
+    });
   }
 
   goPage(page: number): void {
@@ -280,26 +160,22 @@ export class OvertimeListComponent implements OnInit {
   goToDetail(nama: string): void {
     this.router.navigate(['/superadmin/overtimes/show', nama], {
       queryParams: {
-        month: this.selectedMonth,
-        year: this.selectedYear
+        month: this.filterMonth,
+        year: this.filterYear
       }
     });
   }
 
+  // ===== Import Excel =====
   onFileSelected(event: any): void {
     const file: File = event?.target?.files?.[0];
     if (!file) return;
 
-    if (!this.selectedMonth || !this.selectedYear) {
-      Swal.fire('Perhatian', 'Pilih Bulan dan Tahun terlebih dahulu sebelum melakukan Import.', 'warning');
-      event.target.value = '';
-      return;
-    }
-
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('month', this.selectedMonth.toString());
-    formData.append('year', this.selectedYear.toString());
+    
+    formData.append('month', this.filterMonth.toString());
+    formData.append('year', this.filterYear.toString());
 
     this.isImporting = true;
     this.overtimeApi.importExcel(formData).subscribe({

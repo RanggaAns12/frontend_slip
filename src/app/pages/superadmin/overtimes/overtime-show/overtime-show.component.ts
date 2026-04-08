@@ -10,7 +10,6 @@ import { OvertimeApiService } from '../services/overtime-api.service';
 export class OvertimeShowComponent implements OnInit {
   namaKaryawan: string = '';
   
-  // 👇 Tambahkan penampung State Periode
   selectedMonth: string = '';
   selectedYear: string = '';
 
@@ -50,7 +49,7 @@ export class OvertimeShowComponent implements OnInit {
     // 1. Tangkap Nama Karyawan
     this.namaKaryawan = this.route.snapshot.paramMap.get('nama') ?? '';
     
-    // 2. 👇 Tangkap Bulan dan Tahun dari URL Query Params
+    // 2. Tangkap Bulan dan Tahun dari URL Query Params
     this.selectedMonth = this.route.snapshot.queryParamMap.get('month') ?? '';
     this.selectedYear = this.route.snapshot.queryParamMap.get('year') ?? '';
 
@@ -59,6 +58,11 @@ export class OvertimeShowComponent implements OnInit {
     } else {
       this.goBack();
     }
+  }
+
+  // 👇 Helper untuk HTML: Mengecek apakah gaji sudah disetting (> 0)
+  get isGajiSet(): boolean {
+    return this.gajiPokok > 0;
   }
 
   showToast(message: string, type: 'success' | 'error') {
@@ -73,7 +77,6 @@ export class OvertimeShowComponent implements OnInit {
   loadDetail(): void {
     this.isLoading = true;
 
-    // 👇 Masukkan filter Bulan & Tahun ke dalam request API
     const params: any = {};
     if (this.selectedMonth) params.month = this.selectedMonth;
     if (this.selectedYear) params.year = this.selectedYear;
@@ -132,7 +135,7 @@ export class OvertimeShowComponent implements OnInit {
   recalcLembur() {
     const poin = parseFloat(this.lemburForm.konversi_lembur || 0);
     const gapok = parseFloat(this.lemburForm.gaji_pokok || 0);
-    const tarifPresisi = gapok / 173; 
+    const tarifPresisi = gapok > 0 ? gapok / 173 : 0; // Menghindari NaN/Infinity
     
     this.lemburForm.hitungan_lembur = Math.round(poin * tarifPresisi);
     this.lemburForm.per_jam = Math.round(tarifPresisi); 
@@ -187,7 +190,12 @@ export class OvertimeShowComponent implements OnInit {
 
   // --- HELPERS ---
   goBack(): void {
-    this.router.navigate(['/superadmin/overtimes/list']);
+    this.router.navigate(['/superadmin/overtimes/list'], {
+      queryParams: {
+        month: this.selectedMonth,
+        year: this.selectedYear
+      }
+    });
   }
 
   getMonthName(m: string | number): string {

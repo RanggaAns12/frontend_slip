@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-// Sesuaikan path import service ini dengan struktur folder Mas Rangga
+import { Router, ActivatedRoute } from '@angular/router';
 import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service';
 
 @Component({
@@ -18,10 +17,22 @@ export class HrdOvertimeListComponent implements OnInit {
   lastPage = 1;
   total = 0;
   itemsPerPage = 15;
+  
+  // State Filter Pencarian, Bulan, dan Tahun
   filterSearch = '';
+  filterMonth: number | '' = new Date().getMonth() + 1; 
+  filterYear: number = new Date().getFullYear();
   private searchTimeout: any;
 
-  // Import Upload State
+  months = [
+    { value: 1, label: 'Januari' }, { value: 2, label: 'Februari' },
+    { value: 3, label: 'Maret' }, { value: 4, label: 'April' },
+    { value: 5, label: 'Mei' }, { value: 6, label: 'Juni' },
+    { value: 7, label: 'Juli' }, { value: 8, label: 'Agustus' },
+    { value: 9, label: 'September' }, { value: 10, label: 'Oktober' },
+    { value: 11, label: 'November' }, { value: 12, label: 'Desember' }
+  ];
+
   isImporting = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
@@ -29,14 +40,19 @@ export class HrdOvertimeListComponent implements OnInit {
 
   constructor(
     private overtimeApi: OvertimeApiService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    this.loadData();
+    // Menangkap parameter dari URL (persistence filter)
+    this.route.queryParams.subscribe(params => {
+      if (params['month']) this.filterMonth = +params['month'];
+      if (params['year']) this.filterYear = +params['year'];
+      this.loadData();
+    });
   }
 
-  // ===== Helpers (aman untuk data string/number/null) =====
   toNumber(value: any): number {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -47,31 +63,23 @@ export class HrdOvertimeListComponent implements OnInit {
     return s.length > 0 ? s.charAt(0).toUpperCase() : '?';
   }
 
-  formatRupiah(value: any): string {
-    const numValue = this.toNumber(value);
-    return new Intl.NumberFormat('id-ID', {
-      style: 'currency',
-      currency: 'IDR',
-      minimumFractionDigits: 0
-    }).format(numValue);
-  }
-
-  // ===== Rekap =====
   get totalPoinKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const poin = this.toNumber(curr?.total_poin ?? curr?.total_jam);
+      const poin = this.toNumber(curr?.total_poin ?? curr?.konversi_lembur);
       return acc + poin;
     }, 0);
   }
 
-  // ===== Load Data =====
   loadData(): void {
     this.isLoading = true;
 
     const params: any = {
       page: this.currentPage,
-      per_page: this.itemsPerPage
+      per_page: this.itemsPerPage,
+      year: this.filterYear
     };
+    
+    if (this.filterMonth !== '') params.month = this.filterMonth;
     if (this.filterSearch) params.search = this.filterSearch;
 
     this.overtimeApi.getList(params).subscribe({
@@ -99,6 +107,25 @@ export class HrdOvertimeListComponent implements OnInit {
     }, 500);
   }
 
+  onSearch(): void {
+    this.currentPage = 1;
+    this.loadData();
+  }
+
+  resetFilter(): void {
+    this.filterSearch = '';
+    this.filterMonth = new Date().getMonth() + 1;
+    this.filterYear = new Date().getFullYear();
+    this.currentPage = 1;
+    this.loadData();
+    
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {},
+      replaceUrl: true
+    });
+  }
+
   goPage(page: number): void {
     if (page >= 1 && page <= this.lastPage) {
       this.currentPage = page;
@@ -115,16 +142,24 @@ export class HrdOvertimeListComponent implements OnInit {
   }
 
   goToDetail(nama: string): void {
-    this.router.navigate(['/hrd/overtimes/show', nama]);
+    this.router.navigate(['/hrd/overtimes/show', nama], {
+      queryParams: {
+        month: this.filterMonth,
+        year: this.filterYear
+      }
+    });
   }
 
-  // ===== Import Excel =====
   onFileSelected(event: any): void {
     const file: File = event?.target?.files?.[0];
     if (!file) return;
 
     const formData = new FormData();
     formData.append('file', file);
+    
+    // SELARAS DENGAN SUPERADMIN: Kirim bulan & tahun agar tanggal Excel dikunci di backend
+    formData.append('month', this.filterMonth.toString());
+    formData.append('year', this.filterYear.toString());
 
     this.isImporting = true;
     this.overtimeApi.importExcel(formData).subscribe({

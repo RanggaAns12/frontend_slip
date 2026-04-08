@@ -38,7 +38,7 @@ export class HrdEmployeeListComponent implements OnInit {
   // Modal State (Form Create/Edit & Detail)
   isFormOpen: boolean = false;
   isDetailOpen: boolean = false;
-  selectedEmployeeForm: any = null; // Menyimpan data untuk Edit atau Detail
+  selectedEmployeeForm: any = null;
 
   // Modal Delete
   showDeleteModal: boolean = false;
@@ -61,10 +61,6 @@ export class HrdEmployeeListComponent implements OnInit {
     this.loadData();
   }
 
-  // ==========================================
-  // 1. DATA FETCHING & FILTERING
-  // ==========================================
-  
   loadData(): void {
     this.isLoading = true;
     this.employeeApi.getAll().subscribe({
@@ -90,10 +86,10 @@ export class HrdEmployeeListComponent implements OnInit {
     this.positions = Array.from(pos).sort();
   }
 
-  onSearch(event: any): void {
+  // 👇 PERBAIKAN: Fungsi pencarian debounce yang lebih clean menggunakan ngModelChange
+  onSearchDebounce(): void {
     clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
-      this.searchKeyword = event.target.value;
       this.applyFilter();
     }, 300);
   }
@@ -123,20 +119,14 @@ export class HrdEmployeeListComponent implements OnInit {
     this.updatePagination();
   }
 
+  // 👇 PERBAIKAN: Tidak perlu lagi document.getElementById
   resetFilter(): void {
     this.searchKeyword = '';
-    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
-    if (searchInput) searchInput.value = '';
-
     this.filterDept = '';
     this.filterPosisi = '';
     this.applyFilter();
   }
 
-  // ==========================================
-  // 2. PAGINATION
-  // ==========================================
-  
   updatePagination(): void {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     this.paginatedEmployees = this.filteredEmployees.slice(startIndex, startIndex + this.pageSize);
@@ -157,17 +147,13 @@ export class HrdEmployeeListComponent implements OnInit {
     return pages;
   }
 
-  // ==========================================
-  // 3. NAVIGATION & CRUD ACTIONS (MODAL)
-  // ==========================================
-
   openCreateModal(): void {
     this.selectedEmployeeForm = null;
     this.isFormOpen = true;
   }
 
   openEditModal(emp: any): void {
-    this.selectedEmployeeForm = { ...emp }; // Clone data agar langsung terisi di form
+    this.selectedEmployeeForm = { ...emp };
     this.isFormOpen = true;
   }
 
@@ -178,7 +164,6 @@ export class HrdEmployeeListComponent implements OnInit {
 
   saveEmployee(data: any): void {
     if (data.id) {
-      // Proses Update (Edit)
       this.employeeApi.update(data.id, data).subscribe({
         next: () => {
           this.showToast('Data karyawan berhasil diperbarui.', 'success');
@@ -191,7 +176,6 @@ export class HrdEmployeeListComponent implements OnInit {
         }
       });
     } else {
-      // Proses Create (Tambah Baru)
       this.employeeApi.create(data).subscribe({
         next: () => {
           this.showToast('Karyawan baru berhasil ditambahkan.', 'success');
@@ -209,10 +193,6 @@ export class HrdEmployeeListComponent implements OnInit {
   goToFullDatabase(): void {
     this.showToast('Fitur tabel penuh segera hadir.', 'success');
   }
-
-  // ==========================================
-  // 4. MODAL DELETE
-  // ==========================================
   
   confirmDelete(emp: any): void {
     this.employeeToDelete = emp;
@@ -240,10 +220,6 @@ export class HrdEmployeeListComponent implements OnInit {
       }
     });
   }
-
-  // ==========================================
-  // 5. IMPORT & EXPORT EXCEL
-  // ==========================================
 
   exportData(): void {
     this.showToast('Mempersiapkan file Excel...', 'success');
@@ -318,7 +294,6 @@ export class HrdEmployeeListComponent implements OnInit {
         const workbook = XLSX.read(data, { type: 'array' });
         const worksheet = workbook.Sheets[this.selectedSheet];
         
-        // Convert to Array JSON
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
 
         if (jsonData.length === 0) {
@@ -351,10 +326,6 @@ export class HrdEmployeeListComponent implements OnInit {
 
     reader.readAsArrayBuffer(this.selectedFile);
   }
-
-  // ==========================================
-  // 6. TOAST NOTIFICATION HELPERS
-  // ==========================================
 
   showToast(message: string, type: 'success' | 'error'): void {
     this.toastMessage = message;
