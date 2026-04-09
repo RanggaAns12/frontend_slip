@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { EmployeeApiService } from '../../../superadmin/employees/services/employee-api.service'; // Sesuaikan path menuju service Superadmin
+import { EmployeeApiService } from '../../../superadmin/employees/services/employee-api.service'; // Path aman bawaan mas
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
@@ -190,11 +190,10 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   // NAVIGATION (READ ONLY)
   // ==========================================
   viewDetail(id: number) { 
-    this.router.navigate(['/manager/employees/detail', id]); // 👈 PERBAIKAN RUTE KE MANAGER
+    this.router.navigate(['/manager/employees/detail', id]); 
   }
   
   goToFullDatabase() { 
-    // Jika Manager punya halaman database lengkap
     this.router.navigate(['/manager/employees/database']); 
   }
 

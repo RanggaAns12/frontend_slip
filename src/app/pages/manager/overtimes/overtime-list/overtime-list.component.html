@@ -6,17 +6,11 @@
          'bg-red-50 text-red-700 border-red-200': toastType === 'error'
        }"
        class="fixed top-5 right-5 z-50 px-4 py-3 rounded-xl shadow-lg border flex items-center gap-3 animate-slide-in-right transition-all duration-300">
-    <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    </svg>
-    <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-    </svg>
+    <svg *ngIf="toastType === 'success'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+    <svg *ngIf="toastType === 'error'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
     <span class="font-medium text-sm">{{ toastMessage }}</span>
     <button (click)="toastMessage = ''" class="ml-2 opacity-50 hover:opacity-100">
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
+      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
     </button>
   </div>
 
@@ -28,10 +22,7 @@
 
     <div class="flex flex-nowrap overflow-x-auto pb-2 w-full xl:w-auto gap-2 md:gap-3 hide-scrollbar">
       <div class="shrink-0 px-4 py-2 bg-orange-50/50 border border-orange-100 text-orange-600 text-sm font-semibold rounded-lg flex items-center gap-2 shadow-sm">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-        </svg>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
         <span>Mode Read-Only</span>
       </div>
     </div>
@@ -40,33 +31,27 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
     <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 hover:border-blue-200 transition-colors">
       <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
       </div>
       <div>
-        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Karyawan Lembur</p>
+        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Karyawan Lembur</p>
         <p class="text-2xl font-black text-gray-800">{{ total }} <span class="text-sm font-medium text-gray-400">Orang</span></p>
       </div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 hover:border-orange-200 transition-colors">
       <div class="w-12 h-12 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
       </div>
       <div>
-        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Poin Konversi</p>
+        <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Poin Konversi</p>
         <p class="text-2xl font-black text-gray-800">{{ totalPoinKeseluruhan | number:'1.0-2' }} <span class="text-sm font-medium text-gray-400">Poin</span></p>
       </div>
     </div>
 
     <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-100 flex items-center gap-4 hover:border-green-200 transition-colors">
       <div class="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
       </div>
       <div>
         <p class="text-xs text-gray-500 font-bold uppercase tracking-wider">Total Upah Lembur</p>
@@ -78,30 +63,24 @@
   <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row gap-3 items-center">
     <div class="relative w-full">
       <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-        </svg>
+        <svg class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
       </span>
-
       <input type="text"
              [(ngModel)]="filterSearch"
              (ngModelChange)="onSearchDebounce()"
              class="w-full py-2 pl-10 pr-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition-all"
              placeholder="Cari Nama Karyawan...">
-
       <button *ngIf="filterSearch"
               (click)="filterSearch = ''; onSearchDebounce()"
               class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors">
-        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
       </button>
     </div>
   </div>
 
-  <div class="hidden md:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+  <div class="hidden xl:block bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
     <table class="w-full text-left">
-      <thead class="bg-gray-50/50 text-gray-500 text-xs uppercase font-bold">
+      <thead class="bg-gray-50/50 text-gray-500 text-xs uppercase font-bold border-b border-gray-100">
         <tr>
           <th class="px-6 py-4 w-16 text-center">No</th>
           <th class="px-6 py-4">Karyawan</th>
@@ -109,20 +88,15 @@
           <th class="px-6 py-4 text-center">Poin Konversi</th>
           <th class="px-6 py-4 text-right">Tarif / Jam</th>
           <th class="px-6 py-4 text-right">Total Upah</th>
-          <th class="px-6 py-4 text-right">Total Potongan</th>
           <th class="px-6 py-4 text-right">Total Bersih</th>
-        </tr>
+          <th class="px-6 py-4 text-center">Aksi</th> </tr>
       </thead>
 
       <tbody class="divide-y divide-gray-100">
-
         <tr *ngIf="isLoading">
           <td colspan="8" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center gap-3">
-              <svg class="animate-spin h-8 w-8 text-[#F4A47B]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
+              <svg class="animate-spin h-8 w-8 text-[#F4A47B]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               <span class="text-gray-400 font-medium animate-pulse">Sedang memuat data rekap lembur...</span>
             </div>
           </td>
@@ -132,9 +106,7 @@
           <td colspan="8" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center">
               <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                </svg>
+                <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
               </div>
               <h3 class="text-lg font-bold text-gray-800">Tidak ada data ditemukan</h3>
               <p class="text-gray-500 text-sm mt-1">Belum ada rekap lembur di database.</p>
@@ -143,9 +115,7 @@
         </tr>
 
         <ng-container *ngIf="!isLoading && items.length > 0">
-          <tr *ngFor="let item of items; let i = index" 
-              (click)="goToDetail(item?.nama_karyawan)"
-              class="hover:bg-orange-50/30 cursor-pointer transition-colors group">
+          <tr *ngFor="let item of items; let i = index" class="hover:bg-orange-50/30 transition-colors group">
             <td class="px-6 py-3 text-center text-sm font-medium text-gray-400">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
 
             <td class="px-6 py-3">
@@ -177,11 +147,17 @@
             </td>
 
             <td class="px-6 py-3 text-right">
-              <span class="text-sm font-mono font-extrabold text-red-600">{{ formatRupiah(item?.total_potongan || 0) }}</span>
+              <span class="text-sm font-mono font-extrabold text-emerald-700">{{ formatRupiah(item?.total_bersih_diterima || 0) }}</span>
             </td>
 
-            <td class="px-6 py-3 text-right">
-              <span class="text-sm font-mono font-extrabold text-emerald-700">{{ formatRupiah(item?.total_bersih_diterima || 0) }}</span>
+            <td class="px-6 py-3 text-center">
+              <button type="button" (click)="goToDetail(item?.nama_karyawan)" class="group px-3 py-1.5 flex items-center justify-center gap-1.5 mx-auto rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white border border-blue-100 transition-all shadow-sm text-xs font-bold">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                Detail
+              </button>
             </td>
           </tr>
         </ng-container>
@@ -190,12 +166,9 @@
     </table>
   </div>
 
-  <div class="block md:hidden space-y-3">
+  <div class="block xl:hidden space-y-3">
     <div *ngIf="isLoading" class="p-8 text-center bg-white rounded-xl border border-gray-100 shadow-sm">
-      <svg class="animate-spin h-8 w-8 text-orange-400 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
+      <svg class="animate-spin h-8 w-8 text-orange-400 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
       <span class="text-xs text-gray-500">Memuat rekap lembur...</span>
     </div>
 
@@ -229,7 +202,6 @@
           <span class="block text-[10px] uppercase text-gray-400">Total Upah</span>
           <span class="font-bold text-green-600">{{ formatRupiah(item?.total_bayar) }}</span>
         </div>
-
         <div>
           <span class="block text-[10px] uppercase text-gray-400">Potongan</span>
           <span class="font-bold text-red-600">{{ formatRupiah(item?.total_potongan || 0) }}</span>

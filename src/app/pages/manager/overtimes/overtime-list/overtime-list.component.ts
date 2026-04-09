@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service'; // Sesuaikan path menuju service superadmin
+import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service'; // Path aman bawaan mas
 
 @Component({
   selector: 'app-manager-overtime-list',
+  standalone: false,
   templateUrl: './overtime-list.component.html',
   styleUrls: ['./overtime-list.component.scss']
 })
@@ -78,7 +79,7 @@ export class OvertimeListComponent implements OnInit {
     if (this.filterSearch) params.search = this.filterSearch;
 
     this.overtimeApi.getList(params).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         const paginatedData = res?.data || res;
         this.items = paginatedData?.data || [];
         this.total = paginatedData?.total ?? this.items.length;
@@ -86,7 +87,7 @@ export class OvertimeListComponent implements OnInit {
         this.lastPage = paginatedData?.last_page ?? 1;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Gagal memuat rekap', err);
         this.isLoading = false;
         this.showToast('Gagal memuat data dari server.', 'error');
@@ -119,7 +120,6 @@ export class OvertimeListComponent implements OnInit {
 
   // ===== Navigasi Read-Only =====
   goToDetail(nama: string): void {
-    // 👈 PERBAIKAN: Mengarah ke rute Manager
     this.router.navigate(['/manager/overtimes/detail', nama]); 
   }
 
