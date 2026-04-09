@@ -59,7 +59,15 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
             <div><label class="label-text text-blue-600">NIK Karyawan <span class="text-red-500">*</span></label><input type="text" [(ngModel)]="formData.nik_karyawan" class="input-field font-mono font-bold text-blue-900 bg-blue-50/50 border-blue-200 focus:border-blue-500 focus:ring-blue-100" placeholder="ADS-..."></div>
             <div><label class="label-text">Status Karyawan</label><select [(ngModel)]="formData.status_karyawan" class="input-field cursor-pointer"><option *ngFor="let st of statusKaryawanOptions" [value]="st">{{ st }}</option></select></div>
-            <div><label class="label-text">Departemen</label><select [(ngModel)]="formData.dept" class="input-field cursor-pointer"><option value="" disabled selected>Pilih Dept</option><option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option></select></div>
+            
+            <div>
+              <label class="label-text">Departemen</label>
+              <select [(ngModel)]="formData.dept" (change)="onDeptChange()" class="input-field cursor-pointer">
+                <option value="" disabled selected>Pilih Dept</option>
+                <option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option>
+              </select>
+            </div>
+            
             <div><label class="label-text">Posisi</label><select [(ngModel)]="formData.posisi" class="input-field cursor-pointer"><option value="" disabled selected>Pilih Posisi</option><option *ngFor="let p of posisiOptions" [value]="p">{{ p }}</option></select></div>
             <div><label class="label-text">Tanggal Bergabung</label><input type="date" [(ngModel)]="formData.tanggal_diterima" class="input-field"></div>
           </div>
