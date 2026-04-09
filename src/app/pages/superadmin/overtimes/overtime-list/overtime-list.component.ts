@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { OvertimeApiService } from '../services/overtime-api.service';
+import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service'; // Sesuaikan path jika perlu
 
 @Component({
-  selector: 'app-overtime-list',
+  selector: 'app-manager-overtime-list',
   standalone: false,
   templateUrl: './overtime-list.component.html',
   styleUrls: ['./overtime-list.component.scss']
@@ -33,8 +33,6 @@ export class OvertimeListComponent implements OnInit {
     { value: 11, label: 'November' }, { value: 12, label: 'Desember' }
   ];
 
-  // Import Upload State
-  isImporting = false;
   toastMessage = '';
   toastType: 'success' | 'error' = 'success';
   private toastTimer: any;
@@ -99,7 +97,7 @@ export class OvertimeListComponent implements OnInit {
     if (this.filterSearch) params.search = this.filterSearch;
 
     this.overtimeApi.getList(params).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         const paginatedData = res?.data || res;
         this.items = paginatedData?.data || [];
         this.total = paginatedData?.total ?? this.items.length;
@@ -107,7 +105,7 @@ export class OvertimeListComponent implements OnInit {
         this.lastPage = paginatedData?.last_page ?? 1;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Gagal memuat rekap', err);
         this.isLoading = false;
         this.showToast('Gagal memuat data dari server.', 'error');
@@ -157,42 +155,14 @@ export class OvertimeListComponent implements OnInit {
     return pages;
   }
 
+  // ===== RUTE DETAIL MANAGER =====
   goToDetail(nama: string): void {
-    this.router.navigate(['/superadmin/overtimes/show', nama], {
+    this.router.navigate(['/manager/overtimes/show', nama], {
       queryParams: {
         month: this.filterMonth,
         year: this.filterYear
       }
     });
-  }
-
-  // ===== Import Excel =====
-  onFileSelected(event: any): void {
-    const file: File = event?.target?.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    formData.append('month', this.filterMonth.toString());
-    formData.append('year', this.filterYear.toString());
-
-    this.isImporting = true;
-    this.overtimeApi.importExcel(formData).subscribe({
-      next: () => {
-        this.isImporting = false;
-        this.showToast('File Excel berhasil diimpor & disimpan!', 'success');
-        this.currentPage = 1;
-        this.loadData();
-      },
-      error: (err) => {
-        this.isImporting = false;
-        this.showToast('Terjadi kesalahan saat mengimpor file.', 'error');
-        console.error('Error import:', err);
-      }
-    });
-
-    event.target.value = '';
   }
 
   private showToast(msg: string, type: 'success' | 'error'): void {
