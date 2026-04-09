@@ -37,7 +37,7 @@ export class EmployeeFormComponent implements OnInit {
     status_pajak: 'TK/0', bpjs_ketenagakerjaan: ''
   };
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sudah Terintegrasi dengan Mapping Baru)
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Disamakan dengan format baku terbaru)
   departemenData = [
     { 
       nama: "Engineering", 
@@ -64,11 +64,11 @@ export class EmployeeFormComponent implements OnInit {
       posisi: ["Supervisor", "QC"] 
     },
     { 
-      nama: "UMUM", 
+      nama: "Umum", // Format baku
       posisi: ["Kebersihan", "Supir", "Driver", "Office Boy", "Office Girl", "Gardener"] 
     },
     { nama: "Security", posisi: ["Danru"] },
-    { nama: "CIVIL", posisi: ["CIVIL"] },
+    { nama: "Civil", posisi: ["Civil"] }, // Format baku
     { nama: "Fabrikasi", posisi: ["Engineering"] },
     { nama: "Bahan Baku", posisi: ["SPV"] },
     { nama: "HSE", posisi: ["HSE"] },

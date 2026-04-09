@@ -49,7 +49,7 @@ export class EmployeeDetailComponent implements OnInit {
   toastType: 'success' | 'error' = 'success';
   toastTimeout: any;
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sesuai Struktur Baru)
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sesuai Format Baku Terbaru)
   departemenData = [
     { 
       nama: "Engineering", 
@@ -76,11 +76,11 @@ export class EmployeeDetailComponent implements OnInit {
       posisi: ["Supervisor", "QC"] 
     },
     { 
-      nama: "UMUM", 
+      nama: "Umum", // Format baku
       posisi: ["Kebersihan", "Supir", "Driver", "Office Boy", "Office Girl", "Gardener"] 
     },
     { nama: "Security", posisi: ["Danru"] },
-    { nama: "CIVIL", posisi: ["CIVIL"] },
+    { nama: "Civil", posisi: ["Civil"] }, // Format baku
     { nama: "Fabrikasi", posisi: ["Engineering"] },
     { nama: "Bahan Baku", posisi: ["SPV"] },
     { nama: "HSE", posisi: ["HSE"] },
