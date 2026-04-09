@@ -35,45 +35,28 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   filterDept = '';
   filterPosisi = '';
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sudah disesuaikan dengan mapping terbaru)
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Wajib Baku)
   departemenData = [
-    { 
-      nama: "Engineering", 
-      posisi: ["Supervisor", "Karu Mekanik", "Karu Elektrik", "Elektrik Preventif Repair", "Drafter", "Mekanik", "Instrument", "Electrical", "Admin Engineering"] 
-    },
-    { 
-      nama: "Produksi", 
-      posisi: ["Supervisor", "Shift Leader PM", "Shift Leader SP", "Karu Rewinder", "Boiler", "Op. Boiler", "Operator", "Operator Alat Berat", "Operator Dryer", "Operator Wire Press", "Operator DCS PM", "Operator Size Press", "Operator Coarse Screen", "Operator SCS SP", "Operator Pulper"] 
-    },
-    { 
-      nama: "WTP/WWTP", 
-      posisi: ["SPV", "Karu WWTP", "Operator RO", "Operator WWTP", "Kebersihan", "Anggota"] 
-    },
-    { 
-      nama: "Logistik", 
-      posisi: ["Supervisor", "Admin", "Anggota"] 
-    },
-    { 
-      nama: "HRD", 
-      posisi: ["Supervisor", "Staff"] 
-    },
-    { 
-      nama: "QC/R&D", 
-      posisi: ["Supervisor", "QC"] 
-    },
-    { 
-      nama: "UMUM", 
-      posisi: ["Kebersihan", "Supir", "Driver", "Office Boy", "Office Girl", "Gardener"] 
-    },
-    { nama: "Security", posisi: ["Danru"] },
-    { nama: "CIVIL", posisi: ["CIVIL"] },
-    { nama: "Fabrikasi", posisi: ["Engineering"] },
-    { nama: "Bahan Baku", posisi: ["SPV"] },
-    { nama: "HSE", posisi: ["HSE"] },
-    { nama: "IT", posisi: ["IT"] },
-    { nama: "Purchasing", posisi: [] },
-    { nama: "Finance", posisi: [] },
-    { nama: "Accounting", posisi: [] }
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
   ];
 
   departments = this.departemenData.map(d => d.nama);
@@ -367,8 +350,8 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             status_pajak: row[5] || 'TK/0',      
             no_rekening: row[6] || '',   
             status_pajak_2026: row[7] || '', 
-            posisi: finalPosisi,  
-            dept: finalDept,      
+            posisi: finalPosisi,  // <-- Akan terisi Operator Pulper
+            dept: finalDept,      // <-- Otomatis terisi SP & Starch
             tanggal_diterima: row[10] || null, 
             tanggal_lahir: row[11] || null,    
             npwp: row[12] || '',         
