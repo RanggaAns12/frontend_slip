@@ -6,207 +6,167 @@ import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-manager-employee-list',
+  standalone: false,
   templateUrl: './employee-list.component.html',
-  styles: [`
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
-    .animate-fade-in-up { animation: fadeInUp 0.6s ease-out; }
-    .animate-slide-in-right { animation: slideInRight 0.5s ease-out; }
-    .animate-scale-up { animation: scaleUp 0.3s ease-out; }
-    
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-    @keyframes scaleUp { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-  `]
+  styleUrls: ['./employee-list.component.scss']
 })
 export class EmployeeListComponent implements OnInit, OnDestroy {
-  
-  // === 1. DATA STATE ===
-  allEmployees: any[] = [];      
-  filteredEmployees: any[] = []; 
-  paginatedEmployees: any[] = []; 
-  isLoading = false;
 
-  // === 2. FILTER STATE ===
-  searchKeyword = '';
-  filterDept = '';
-  filterPosisi = '';
+  employees: any[] = [];
+  filteredEmployees: any[] = [];
+  paginatedEmployees: any[] = [];
+  isLoading: boolean = true;
+
+  currentPage: number = 1;
+  pageSize: number = 10;
+  totalPages: number = 1;
+
+  searchKeyword: string = '';
+  searchTimeout: any;
+  filterDept: string = '';
+  filterPosisi: string = '';
   departments: string[] = [];
   positions: string[] = [];
 
-  private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>(); 
-
-  // === 3. PAGINATION STATE ===
-  currentPage = 1;
-  pageSize = 25;
-  totalPages = 1;
-
-  // === 4. UI STATE (TOAST) ===
-  toastMessage = '';
+  toastMessage: string = '';
   toastType: 'success' | 'error' = 'success';
-  toastTimeout: any;
+  toastTimer: any;
+
+  isDetailOpen: boolean = false;
+  selectedEmployeeDetail: any = null;
 
   constructor(
-    private employeeApi: EmployeeApiService, 
+    private employeeApi: EmployeeApiService,
     private router: Router
   ) {}
 
-  ngOnInit(): void { 
-    this.loadEmployees(); 
-
-    this.searchSubject.pipe(
-      debounceTime(400),       
-      distinctUntilChanged(),  
-      takeUntil(this.destroy$) 
-    ).subscribe(searchTerm => {
-      this.searchKeyword = searchTerm;
-      this.applyFilter();      
-    });
+  ngOnInit(): void {
+    this.loadData();
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
   }
 
-  // ==========================================
-  // DATA LOADING & FILTERING
-  // ==========================================
-  loadEmployees() {
+  loadData(): void {
     this.isLoading = true;
     this.employeeApi.getAll().subscribe({
       next: (res: any) => {
-        this.isLoading = false;
-        this.allEmployees = res.data || [];
-        this.extractFilterOptions();
+        this.employees = res.data || res;
+        this.extractFilters();
         this.applyFilter();
-      },
-      error: (err) => {
         this.isLoading = false;
-        this.showToast('Gagal memuat data dari server', 'error');
-        console.error(err);
+      },
+      error: (err: any) => {
+        console.error('Error fetching employees', err);
+        this.showToast('Gagal memuat data karyawan.', 'error');
+        this.isLoading = false;
       }
     });
   }
 
-  extractFilterOptions() {
-    this.departments = [...new Set(this.allEmployees.map(e => e.dept).filter(d => d))].sort();
-    this.positions = [...new Set(this.allEmployees.map(e => e.posisi).filter(p => p))].sort();
+  extractFilters(): void {
+    const depts = new Set(this.employees.map(e => e.dept).filter(d => !!d));
+    this.departments = Array.from(depts).sort();
+
+    const pos = new Set(this.employees.map(e => e.posisi).filter(p => !!p));
+    this.positions = Array.from(pos).sort();
   }
 
-  onSearch(event: any) {
-    const value = event.target.value;
-    this.searchSubject.next(value);
+  onSearchDebounce(): void {
+    clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.applyFilter();
+    }, 300);
   }
 
-  applyFilter() {
-    let temp = [...this.allEmployees];
+  applyFilter(): void {
+    let temp = this.employees;
 
     if (this.searchKeyword) {
-      const key = this.searchKeyword.toLowerCase();
+      const keyword = this.searchKeyword.toLowerCase();
       temp = temp.filter(e => 
-        (e.nama_lengkap && e.nama_lengkap.toLowerCase().includes(key)) || 
-        (e.nik_karyawan && e.nik_karyawan.toLowerCase().includes(key))
+        e.nama_lengkap?.toLowerCase().includes(keyword) || 
+        e.nik_karyawan?.toLowerCase().includes(keyword) ||
+        e.nik_ktp?.toLowerCase().includes(keyword)
       );
     }
 
-    if (this.filterDept) temp = temp.filter(e => e.dept === this.filterDept);
-    if (this.filterPosisi) temp = temp.filter(e => e.posisi === this.filterPosisi);
+    if (this.filterDept) {
+      temp = temp.filter(e => e.dept === this.filterDept);
+    }
+    if (this.filterPosisi) {
+      temp = temp.filter(e => e.posisi === this.filterPosisi);
+    }
 
     this.filteredEmployees = temp;
-    
     this.totalPages = Math.ceil(this.filteredEmployees.length / this.pageSize) || 1;
-    this.changePage(1); 
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
-  resetFilter() {
+  resetFilter(): void {
     this.searchKeyword = '';
     this.filterDept = '';
     this.filterPosisi = '';
-    
-    const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
-    if (searchInput) searchInput.value = '';
-
     this.applyFilter();
   }
 
-  // ==========================================
-  // PAGINATION LOGIC
-  // ==========================================
-  changePage(page: number) {
-    if (page < 1 || page > this.totalPages) return;
-    this.currentPage = page;
-    const start = (page - 1) * this.pageSize;
-    const end = start + this.pageSize;
-    this.paginatedEmployees = this.filteredEmployees.slice(start, end);
+  updatePagination(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    this.paginatedEmployees = this.filteredEmployees.slice(startIndex, startIndex + this.pageSize);
+  }
+
+  changePage(page: number): void {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      this.updatePagination();
+    }
   }
 
   getPageNumbers(): number[] {
-    const pages = [];
-    const maxVisible = 5;
-    let start = Math.max(1, this.currentPage - 2);
-    let end = Math.min(this.totalPages, start + maxVisible - 1);
-    
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-
-    for (let i = start; i <= end; i++) {
+    const pages: number[] = [];
+    for (let i = 1; i <= this.totalPages; i++) {
       pages.push(i);
     }
     return pages;
   }
 
-  // ==========================================
-  // EXPORT EXCEL LOGIC
-  // ==========================================
-  exportData() {
+  openDetailModal(emp: any): void {
+    this.selectedEmployeeDetail = emp;
+    this.isDetailOpen = true;
+  }
+
+  exportData(): void {
+    this.showToast('Mempersiapkan file Excel...', 'success');
+    
     this.employeeApi.export().subscribe({
-      next: (blob: any) => {
+      next: (blob: Blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `Data_Karyawan_${new Date().toISOString().slice(0,10)}.xlsx`;
+        a.download = `Laporan_Karyawan_${new Date().getTime()}.xlsx`;
         document.body.appendChild(a);
         a.click();
-        
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
-        this.showToast('File Excel berhasil didownload', 'success');
       },
-      error: (err) => {
-        console.error(err);
-        this.showToast('Gagal download Excel', 'error');
-      }
+      error: (err: any) => this.showToast('Gagal mendownload data.', 'error')
     });
   }
 
-  // ==========================================
-  // NAVIGATION (READ ONLY)
-  // ==========================================
-  viewDetail(id: number) { 
-    this.router.navigate(['/manager/employees/detail', id]); // 👈 PERBAIKAN RUTE KE MANAGER
-  }
-  
-  goToFullDatabase() { 
-    // Jika Manager punya halaman database lengkap
-    this.router.navigate(['/manager/employees/database']); 
+  showToast(message: string, type: 'success' | 'error'): void {
+    this.toastMessage = message;
+    this.toastType = type;
+    
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => {
+      this.closeToast();
+    }, 4000);
   }
 
-  // ==========================================
-  // TOAST HELPER
-  // ==========================================
-  showToast(msg: string, type: 'success' | 'error') {
-    this.toastMessage = msg;
-    this.toastType = type;
-    if (this.toastTimeout) clearTimeout(this.toastTimeout);
-    this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3000);
+  closeToast(): void {
+    this.toastMessage = '';
   }
-  
-  closeToast() { this.toastMessage = ''; }
 }
