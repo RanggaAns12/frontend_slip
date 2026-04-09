@@ -35,7 +35,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   filterDept = '';
   filterPosisi = '';
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Format Baku/Rapi yang akan digunakan di Frontend & DB)
+  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sudah disesuaikan dengan mapping terbaru)
   departemenData = [
     { 
       nama: "Engineering", 
@@ -62,11 +62,11 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
       posisi: ["Supervisor", "QC"] 
     },
     { 
-      nama: "Umum", // <-- Format baku yang diinginkan
+      nama: "UMUM", 
       posisi: ["Kebersihan", "Supir", "Driver", "Office Boy", "Office Girl", "Gardener"] 
     },
     { nama: "Security", posisi: ["Danru"] },
-    { nama: "Civil", posisi: ["Civil"] }, // Dirapikan dari CIVIL
+    { nama: "CIVIL", posisi: ["CIVIL"] },
     { nama: "Fabrikasi", posisi: ["Engineering"] },
     { nama: "Bahan Baku", posisi: ["SPV"] },
     { nama: "HSE", posisi: ["HSE"] },
@@ -109,7 +109,9 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void { 
+    // 👇 TAMBAHAN: Muat semua posisi saat halaman pertama kali dibuka
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+
     this.loadEmployees(); 
 
     this.searchSubject.pipe(
@@ -146,13 +148,17 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
+  // 👇 Event Cascading Dropdown untuk Filter UI
   onDeptChange() {
     if (this.filterDept) {
+      // Jika departemen tertentu dipilih, tampilkan posisi departemen itu saja
       const selected = this.departemenData.find(d => d.nama === this.filterDept);
       this.positions = selected ? selected.posisi : [];
     } else {
+      // Jika "Semua Dept" dipilih (kosong), tampilkan kembali SEMUA posisi
       this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     }
+    
     this.filterPosisi = ''; 
     this.applyFilter();
   }
@@ -186,6 +192,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.filterDept = '';
     this.filterPosisi = '';
     
+    // 👇 Kembalikan semua pilihan posisi saat di-reset
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     
     const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
@@ -250,7 +257,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // IMPORT EXCEL LOGIC (SMART MATCHING V3)
+  // IMPORT EXCEL LOGIC (SMART MATCHING)
   // ==========================================
   openImportModal() { this.showImportModal = true; }
   
@@ -314,14 +321,14 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
         const mappedData = dataRows.map((row: any[]) => {
           
-          // 👇 LOGIKA SMART MATCHING V3: Mengabaikan kapitalisasi (case-insensitive)
+          // 👇 LOGIKA SMART MATCHING V2 (SUPER CERDAS)
           const rawPosisi = String(row[8] || '').trim().toLowerCase();
           const rawDept = String(row[9] || '').trim().toLowerCase();
           
-          let finalDept = rawDept; // Default awal jika tidak ada kecocokan
-          let finalPosisi = rawPosisi; // Default awal jika tidak ada kecocokan
+          let finalDept = '';
+          let finalPosisi = '';
 
-          // 1. Coba cocokkan berdasarkan POSISI terlebih dahulu
+          // 1. PRIORITAS UTAMA: Cari berdasarkan POSISI (karena posisi lebih unik/spesifik)
           if (rawPosisi) {
             for (const dept of this.departemenData) {
               const foundPos = dept.posisi.find(p => 
@@ -330,34 +337,27 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
                 rawPosisi.includes(p.toLowerCase())
               );
               
+              // Jika posisinya ketemu, otomatis masukkan posisi DAN departemennya!
               if (foundPos) {
-                // Jika posisi ditemukan di master data, gunakan penulisan baku dari frontend
                 finalPosisi = foundPos;
                 finalDept = dept.nama; 
-                break;
+                break; // Stop pencarian karena sudah ketemu
               }
             }
           }
 
-          // 2. Jika Posisi tidak menghasilkan Dept yang valid, coba cocokkan Departemen langsung
-          if ((!finalDept || finalDept === rawDept) && rawDept) {
+          // 2. Jika posisinya tidak ada/kosong, coba cocokkan Departemennya saja
+          if (!finalDept && rawDept) {
             const foundDept = this.departemenData.find(d => 
               d.nama.toLowerCase() === rawDept || 
               d.nama.toLowerCase().includes(rawDept) || 
               rawDept.includes(d.nama.toLowerCase())
             );
-            
             if (foundDept) {
-              // Jika departemen ditemukan ("UMUM" === "umum"), gunakan penulisan baku dari frontend ("Umum")
               finalDept = foundDept.nama;
-            } else {
-              // Jika benar-benar tidak terdaftar di master data, rapikan kapitalisasinya (Title Case)
-              finalDept = rawDept.replace(
-                /\w\S*/g,
-                (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-              );
             }
           }
+          // 👆 AKHIR LOGIKA SMART MATCHING
 
           return {
             nik_karyawan: row[1] || '',  
@@ -368,7 +368,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
             no_rekening: row[6] || '',   
             status_pajak_2026: row[7] || '', 
             posisi: finalPosisi,  
-            dept: finalDept,      // Akan selalu tersimpan sebagai "Umum" bukan "UMUM"
+            dept: finalDept,      
             tanggal_diterima: row[10] || null, 
             tanggal_lahir: row[11] || null,    
             npwp: row[12] || '',         
