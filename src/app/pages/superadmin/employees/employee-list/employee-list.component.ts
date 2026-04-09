@@ -35,7 +35,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   filterDept = '';
   filterPosisi = '';
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Wajib Baku)
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI (Sudah Disamakan Persis dengan Data Excel)
   departemenData = [
     { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
     { nama: "Purchasing", posisi: ["Purchasing Staff"] },
@@ -92,7 +92,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void { 
-    // 👇 TAMBAHAN: Muat semua posisi saat halaman pertama kali dibuka
+    // Muat semua posisi saat halaman pertama kali dibuka
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
 
     this.loadEmployees(); 
@@ -131,7 +131,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     });
   }
 
-  // 👇 Event Cascading Dropdown untuk Filter UI
+  // Event Cascading Dropdown untuk Filter UI
   onDeptChange() {
     if (this.filterDept) {
       // Jika departemen tertentu dipilih, tampilkan posisi departemen itu saja
@@ -175,7 +175,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
     this.filterDept = '';
     this.filterPosisi = '';
     
-    // 👇 Kembalikan semua pilihan posisi saat di-reset
+    // Kembalikan semua pilihan posisi saat di-reset
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     
     const searchInput = document.querySelector('input[type="text"]') as HTMLInputElement;
@@ -240,7 +240,7 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
   }
 
   // ==========================================
-  // IMPORT EXCEL LOGIC (SMART MATCHING)
+  // IMPORT EXCEL LOGIC (SMART MATCHING EXCEL FIRST)
   // ==========================================
   openImportModal() { this.showImportModal = true; }
   
@@ -304,62 +304,42 @@ export class EmployeeListComponent implements OnInit, OnDestroy {
 
         const mappedData = dataRows.map((row: any[]) => {
           
-          // 👇 LOGIKA SMART MATCHING V2 (SUPER CERDAS)
-          const rawPosisi = String(row[8] || '').trim().toLowerCase();
-          const rawDept = String(row[9] || '').trim().toLowerCase();
+          // 🚀 LOGIKA: EXCEL ADALAH SUMBER UTAMA (Ambil data asli, hilangkan spasi sisa)
+          const excelPosisi = String(row[8] || '').trim();
+          const excelDept = String(row[9] || '').trim();
           
-          let finalDept = '';
-          let finalPosisi = '';
+          let finalDept = excelDept;
+          let finalPosisi = excelPosisi;
 
-          // 1. PRIORITAS UTAMA: Cari berdasarkan POSISI (karena posisi lebih unik/spesifik)
-          if (rawPosisi) {
-            for (const dept of this.departemenData) {
-              const foundPos = dept.posisi.find(p => 
-                p.toLowerCase() === rawPosisi ||
-                p.toLowerCase().includes(rawPosisi) ||
-                rawPosisi.includes(p.toLowerCase())
-              );
-              
-              // Jika posisinya ketemu, otomatis masukkan posisi DAN departemennya!
-              if (foundPos) {
-                finalPosisi = foundPos;
-                finalDept = dept.nama; 
-                break; // Stop pencarian karena sudah ketemu
-              }
-            }
-          }
-
-          // 2. Jika posisinya tidak ada/kosong, coba cocokkan Departemennya saja
-          if (!finalDept && rawDept) {
+          // FALLBACK LOGIC: 
+          // Jika HRD lupa mengisi kolom Departemen di Excel, tapi kolom Posisi diisi:
+          if (finalPosisi && !finalDept) {
             const foundDept = this.departemenData.find(d => 
-              d.nama.toLowerCase() === rawDept || 
-              d.nama.toLowerCase().includes(rawDept) || 
-              rawDept.includes(d.nama.toLowerCase())
+              d.posisi.some(p => p.toLowerCase() === finalPosisi.toLowerCase())
             );
             if (foundDept) {
               finalDept = foundDept.nama;
             }
           }
-          // 👆 AKHIR LOGIKA SMART MATCHING
 
           return {
-            nik_karyawan: row[1] || '',  
-            nik_ktp: row[2] || '',       
-            status_karyawan: row[3] || 'PKWTT', 
-            nama_lengkap: row[4] || '',  
-            status_pajak: row[5] || 'TK/0',      
-            no_rekening: row[6] || '',   
-            status_pajak_2026: row[7] || '', 
-            posisi: finalPosisi,  // <-- Akan terisi Operator Pulper
-            dept: finalDept,      // <-- Otomatis terisi SP & Starch
+            nik_karyawan: String(row[1] || '').trim(),  
+            nik_ktp: String(row[2] || '').trim(),       
+            status_karyawan: String(row[3] || '').trim() || 'PKWTT', 
+            nama_lengkap: String(row[4] || '').trim(),  
+            status_pajak: String(row[5] || '').trim() || 'TK/0',      
+            no_rekening: String(row[6] || '').trim(),   
+            status_pajak_2026: String(row[7] || '').trim(), 
+            posisi: finalPosisi,  
+            dept: finalDept,      
             tanggal_diterima: row[10] || null, 
             tanggal_lahir: row[11] || null,    
-            npwp: row[12] || '',         
-            bpjs_ketenagakerjaan: row[13] || '', 
-            pendidikan: row[14] || '',   
-            agama: row[15] || '',        
-            jenis_kelamin: row[16] || '',
-            alamat: row[17] || '',       
+            npwp: String(row[12] || '').trim(),         
+            bpjs_ketenagakerjaan: String(row[13] || '').trim(), 
+            pendidikan: String(row[14] || '').trim(),   
+            agama: String(row[15] || '').trim(),        
+            jenis_kelamin: String(row[16] || '').trim(),
+            alamat: String(row[17] || '').trim(),       
             is_active: 1
           };
         });
