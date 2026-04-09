@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { EmployeeApiService } from '../../../superadmin/employees/services/employee-api.service';
 import * as XLSX from 'xlsx';
@@ -9,7 +9,7 @@ import * as XLSX from 'xlsx';
   templateUrl: './hrd-employee-list.component.html',
   styleUrls: ['./hrd-employee-list.component.scss']
 })
-export class HrdEmployeeListComponent implements OnInit {
+export class HrdEmployeeListComponent implements OnInit, OnDestroy {
 
   // Data Karyawan
   employees: any[] = [];
@@ -29,6 +29,30 @@ export class HrdEmployeeListComponent implements OnInit {
   filterPosisi: string = '';
   departments: string[] = [];
   positions: string[] = [];
+
+  // ✅ MASTER DATA DEPARTEMEN & POSISI (Wajib Baku untuk Smart Matching Import)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+  ];
 
   // Toast Notifikasi
   toastMessage: string = '';
@@ -61,6 +85,11 @@ export class HrdEmployeeListComponent implements OnInit {
     this.loadData();
   }
 
+  ngOnDestroy(): void {
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    if (this.toastTimer) clearTimeout(this.toastTimer);
+  }
+
   loadData(): void {
     this.isLoading = true;
     this.employeeApi.getAll().subscribe({
@@ -86,10 +115,10 @@ export class HrdEmployeeListComponent implements OnInit {
     this.positions = Array.from(pos).sort();
   }
 
-  // 👇 PERBAIKAN: Fungsi pencarian debounce yang lebih clean menggunakan ngModelChange
-  onSearchDebounce(): void {
+  onSearch(event: any): void {
     clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
+      this.searchKeyword = event.target.value;
       this.applyFilter();
     }, 300);
   }
@@ -119,9 +148,11 @@ export class HrdEmployeeListComponent implements OnInit {
     this.updatePagination();
   }
 
-  // 👇 PERBAIKAN: Tidak perlu lagi document.getElementById
   resetFilter(): void {
     this.searchKeyword = '';
+    const searchInput = document.getElementById('searchInput') as HTMLInputElement;
+    if (searchInput) searchInput.value = '';
+
     this.filterDept = '';
     this.filterPosisi = '';
     this.applyFilter();
@@ -248,41 +279,42 @@ export class HrdEmployeeListComponent implements OnInit {
 
   closeImportModal(): void {
     this.showImportModal = false;
+    this.selectedFile = null;
+    this.isProcessing = false;
+    this.sheetNames = [];
+    this.selectedSheet = '';
+    this.isLoadingSheets = false;
   }
 
+  // ✅ PERBAIKAN: Menggunakan readAsBinaryString seperti Superadmin
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;
-      this.readExcelSheets(file);
+      this.isLoadingSheets = true;
+      this.sheetNames = [];
+      this.selectedSheet = '';
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        try {
+          const bstr: string = e.target.result;
+          const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+          this.sheetNames = wb.SheetNames;
+          if (this.sheetNames.length > 0) this.selectedSheet = this.sheetNames[0];
+          this.isLoadingSheets = false;
+        } catch (error) {
+          this.isLoadingSheets = false;
+          console.error(error);
+          this.showToast('Gagal membaca daftar sheet pada file.', 'error');
+        }
+      };
+      reader.readAsBinaryString(file);
     }
   }
 
-  readExcelSheets(file: File): void {
-    this.isLoadingSheets = true;
-    const reader = new FileReader();
-
-    reader.onload = (e: any) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        
-        this.sheetNames = workbook.SheetNames;
-        if (this.sheetNames.length > 0) {
-          this.selectedSheet = this.sheetNames[0];
-        }
-      } catch (error) {
-        console.error('Gagal membaca sheet excel:', error);
-        this.showToast('Format Excel tidak valid.', 'error');
-      } finally {
-        this.isLoadingSheets = false;
-      }
-    };
-
-    reader.readAsArrayBuffer(file);
-  }
-
-  uploadFile(): void {
+  // ✅ PERBAIKAN: Menyalin penuh logika array 2D & Smart Matching dari Superadmin
+  uploadFile() {
     if (!this.selectedFile || !this.selectedSheet) return;
 
     this.isProcessing = true;
@@ -290,41 +322,116 @@ export class HrdEmployeeListComponent implements OnInit {
 
     reader.onload = (e: any) => {
       try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const worksheet = workbook.Sheets[this.selectedSheet];
-        
-        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+        const bstr: string = e.target.result;
+        const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
+        const wsname: string = this.selectedSheet;
+        const ws: XLSX.WorkSheet = wb.Sheets[wsname];
 
-        if (jsonData.length === 0) {
-          this.showToast('Sheet Excel kosong atau format tidak sesuai!', 'error');
-          this.isProcessing = false;
-          return;
+        // Membaca file sebagai array of arrays
+        const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        
+        if (rawData.length < 5) {
+            this.showToast('File Excel kosong atau format salah (Harus melebihi 4 baris header).', 'error');
+            this.isProcessing = false;
+            return;
         }
 
-        this.employeeApi.import(jsonData).subscribe({
+        // Potong 4 baris pertama (karena isinya adalah judul / header dari perusahaan)
+        const dataRows = rawData.slice(4); 
+
+        const mappedData = dataRows.map((row: any[]) => {
+          
+          // === LOGIKA SMART MATCHING DEPARTEMEN ===
+          const rawPosisi = String(row[8] || '').trim().toLowerCase();
+          const rawDept = String(row[9] || '').trim().toLowerCase();
+          
+          let finalDept = '';
+          let finalPosisi = '';
+
+          // 1. Prioritas Utama: Cari berdasarkan POSISI
+          if (rawPosisi) {
+            for (const dept of this.departemenData) {
+              const foundPos = dept.posisi.find(p => 
+                p.toLowerCase() === rawPosisi ||
+                p.toLowerCase().includes(rawPosisi) ||
+                rawPosisi.includes(p.toLowerCase())
+              );
+              
+              if (foundPos) {
+                finalPosisi = foundPos;
+                finalDept = dept.nama; 
+                break;
+              }
+            }
+          }
+
+          // 2. Jika posisinya kosong/tidak valid, coba cari dari Departemennya saja
+          if (!finalDept && rawDept) {
+            const foundDept = this.departemenData.find(d => 
+              d.nama.toLowerCase() === rawDept || 
+              d.nama.toLowerCase().includes(rawDept) || 
+              rawDept.includes(d.nama.toLowerCase())
+            );
+            if (foundDept) {
+              finalDept = foundDept.nama;
+            }
+          }
+          // === END SMART MATCHING ===
+
+          return {
+            nik_karyawan: row[1] || '',  
+            nik_ktp: row[2] || '',       
+            status_karyawan: row[3] || 'PKWTT', 
+            nama_lengkap: row[4] || '',  
+            status_pajak: row[5] || 'TK/0',      
+            no_rekening: row[6] || '',   
+            status_pajak_2026: row[7] || '', 
+            posisi: finalPosisi,
+            dept: finalDept,
+            tanggal_diterima: row[10] || null, 
+            tanggal_lahir: row[11] || null,    
+            npwp: row[12] || '',         
+            bpjs_ketenagakerjaan: row[13] || '', 
+            pendidikan: row[14] || '',   
+            agama: row[15] || '',        
+            jenis_kelamin: row[16] || '',
+            alamat: row[17] || '',       
+            is_active: 1
+          };
+        });
+
+        // Filter hanya yang memiliki nama dan nik karyawan
+        const cleanData = mappedData.filter(d => d.nama_lengkap && d.nik_karyawan);
+
+        if (cleanData.length === 0) {
+            this.showToast('Tidak ada baris data valid ditemukan (Pastikan format data dimulai dari baris ke-5).', 'error');
+            this.isProcessing = false;
+            return;
+        }
+
+        // Kirim ke API Laravel
+        this.employeeApi.import(cleanData).subscribe({ 
           next: (res: any) => {
-            this.showToast('Data karyawan berhasil diimport!', 'success');
             this.isProcessing = false;
             this.closeImportModal();
-            this.loadData();
+            this.loadData(); // Langsung fetch data ulang untuk memperbarui tabel
+            this.showToast(`Import Berhasil! Data karyawan otomatis di-update.`, 'success');
           },
           error: (err: any) => {
-            console.error('Error Import API:', err);
-            const errorMsg = err.error?.message || 'Gagal melakukan import data. Cek template Anda.';
-            this.showToast(errorMsg, 'error');
             this.isProcessing = false;
+            console.error(err);
+            this.showToast('Gagal Import: ' + (err.error?.message || 'Error Server'), 'error');
           }
         });
 
       } catch (error) {
-        console.error('Gagal parsing Excel:', error);
-        this.showToast('Gagal memproses file Excel.', 'error');
         this.isProcessing = false;
+        console.error(error);
+        this.showToast('Gagal membaca format data Excel.', 'error');
       }
     };
-
-    reader.readAsArrayBuffer(this.selectedFile);
+    
+    reader.readAsBinaryString(this.selectedFile);
   }
 
   showToast(message: string, type: 'success' | 'error'): void {

@@ -47,8 +47,9 @@
         </svg>
       </span>
       <input type="text" 
-             [(ngModel)]="searchKeyword"
-             (ngModelChange)="onSearchDebounce()"
+             id="searchInput"
+             [value]="searchKeyword"
+             (input)="onSearch($event)" 
              class="w-full py-2 pl-10 pr-10 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-orange-200 focus:border-orange-400 outline-none transition-all" 
              placeholder="Cari Nama / NIK (Ketik langsung)...">
       <button type="button" *ngIf="searchKeyword" (click)="resetFilter()" class="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors">
