@@ -14,7 +14,7 @@ import {
 })
 export class AttendanceSummaryListComponent implements OnInit {
 
-  // ── Data ─────────────────────────────────────────────────
+  // ── Data State ─────────────────────────────────────────────
   items       : any[] = []; 
   isLoading   = false;
   currentPage = 1;
@@ -22,7 +22,7 @@ export class AttendanceSummaryListComponent implements OnInit {
   total       = 0;
   Math        = Math;
 
-  // ── Filter ─────────────────────────────────────────────────
+  // ── Filter State ───────────────────────────────────────────
   filterMonth  : number | '' = new Date().getMonth() + 1; 
   filterYear   : number      = new Date().getFullYear();
   filterSearch = '';
@@ -30,7 +30,7 @@ export class AttendanceSummaryListComponent implements OnInit {
   filterPosisi = '';
   private searchTimeout: any;
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Update Terbaru)
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI (SINKRON 100% DENGAN MODUL KARYAWAN)
   departemenData = [
     { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
     { nama: "Purchasing", posisi: ["Purchasing Staff"] },
@@ -38,19 +38,19 @@ export class AttendanceSummaryListComponent implements OnInit {
     { nama: "Legal", posisi: ["Legal Staff"] },
     { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
     { nama: "PPIC", posisi: ["PPIC Staff"] },
-    { nama: "HRD & HSE & Civil", posisi: ["HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
     { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
     { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
     { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
     { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
-    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP"] },
-    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
     { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
     { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
     { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
     { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
     { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
-    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
     { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
   ];
 
@@ -75,6 +75,7 @@ export class AttendanceSummaryListComponent implements OnInit {
   itemToDelete: any | null = null;
   isDeleting = false;
 
+  // ── Toast State ────────────────────────────────────────────
   toastMessage = '';
   toastType    : 'success' | 'error' = 'success';
   private toastTimer: any;
@@ -87,7 +88,7 @@ export class AttendanceSummaryListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Tampilkan semua posisi di awal
+    // Tampilkan semua opsi posisi saat halaman dimuat pertama kali
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     this.load();
   }
@@ -103,18 +104,19 @@ export class AttendanceSummaryListComponent implements OnInit {
     
     if (this.filterMonth !== '') params['month']      = this.filterMonth;
     if (this.filterSearch)       params['search']     = this.filterSearch;
-    if (this.filterDept)         params['departemen'] = this.filterDept; // Dikirim ke backend sbg 'departemen'
-    if (this.filterPosisi)       params['jabatan']    = this.filterPosisi; // Dikirim ke backend sbg 'jabatan'
+    if (this.filterDept)         params['departemen'] = this.filterDept; // Param API untuk Departemen
+    if (this.filterPosisi)       params['jabatan']    = this.filterPosisi; // Param API untuk Posisi
 
     this.api.getList(params).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.items       = res.data.data;
         this.total       = res.data.total;
         this.currentPage = res.data.current_page;
         this.lastPage    = res.data.last_page;
         this.isLoading   = false;
       },
-      error: () => { 
+      error: (err) => { 
+        console.error(err);
         this.isLoading = false; 
         this.showToast('Gagal memuat data rekap absensi.', 'error');
       },
@@ -137,18 +139,21 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.load();
   }
 
-  // 👇 Event Cascading Dropdown
+  // 👇 Event Cascading Dropdown (Filter Dinamis)
   onDeptChange(): void {
     if (this.filterDept) {
+      // Filter list posisi berdasarkan departemen yang dipilih
       const selected = this.departemenData.find(d => d.nama === this.filterDept);
       this.positions = selected ? selected.posisi : [];
     } else {
+      // Jika "Semua Departemen", kembalikan semua opsi posisi
       this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     }
     
+    // Reset filter posisi dan ambil data baru dari server
     this.filterPosisi = ''; 
     this.currentPage = 1;
-    this.load(); // Request data baru ke server
+    this.load(); 
   }
 
   resetFilter(): void {
@@ -158,7 +163,7 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.filterDept   = '';
     this.filterPosisi = '';
     
-    // Kembalikan semua posisi
+    // Kembalikan semua posisi ke opsi dropdown
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     
     this.currentPage  = 1;
@@ -194,14 +199,14 @@ export class AttendanceSummaryListComponent implements OnInit {
       next: () => {
         this.isDeleting = false;
         this.showDeleteModal = false;
-        this.showToast('Data berhasil dihapus', 'success');
+        this.showToast('Data absensi berhasil dihapus', 'success');
         this.load(); 
       },
       error: (err) => {
         this.isDeleting = false;
         this.showDeleteModal = false;
         console.error(err);
-        this.showToast('Gagal menghapus data', 'error');
+        this.showToast('Gagal menghapus data absensi', 'error');
       }
     });
   }
@@ -235,6 +240,7 @@ export class AttendanceSummaryListComponent implements OnInit {
     if (file) {
       this.uploadFile(file);
     }
+    // Reset value input agar bisa milih file yang sama lagi jika perlu
     event.target.value = '';
   }
 
@@ -247,7 +253,7 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.http.post(url, formData).subscribe({
       next: (res: any) => {
         this.isImporting = false;
-        this.showToast(res.message || 'File Excel berhasil diimpor.', 'success');
+        this.showToast(res.message || 'File Excel Absensi berhasil diimpor.', 'success');
         this.currentPage = 1;
         this.load(); 
       },
