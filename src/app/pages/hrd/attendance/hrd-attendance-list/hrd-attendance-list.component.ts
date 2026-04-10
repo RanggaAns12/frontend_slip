@@ -36,33 +36,6 @@ export class HrdAttendanceListComponent implements OnInit {
   selectedAttendance: Partial<AttendanceSummaryDetail> | null = null;
   isEditing = false;
 
-  // 🏢 MASTER DATA DEPARTEMEN & POSISI (SINKRON 100% DENGAN SISTEM)
-  departemenData = [
-    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
-    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
-    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
-    { nama: "Legal", posisi: ["Legal Staff"] },
-    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
-    { nama: "PPIC", posisi: ["PPIC Staff"] },
-    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
-    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
-    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
-    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
-    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
-    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
-    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
-    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
-    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
-    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
-    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
-    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
-    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
-    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
-  ];
-
-  departments = this.departemenData.map(d => d.nama);
-  positions: string[] = [];
-
   // ── Options Mapping ───────────────────────────────────────
   months = [
     { value: 1,  label: 'Januari' }, { value: 2,  label: 'Februari' },
@@ -71,6 +44,16 @@ export class HrdAttendanceListComponent implements OnInit {
     { value: 7,  label: 'Juli'    }, { value: 8,  label: 'Agustus'  },
     { value: 9,  label: 'September'},{ value: 10, label: 'Oktober'  },
     { value: 11, label: 'November' }, { value: 12, label: 'Desember' },
+  ];
+
+  departments = [
+    'Umum', 'HRD', 'Keuangan', 'Operasional', 
+    'IT', 'Produksi', 'Lapangan', 'Logistik', 'Pemasaran'
+  ];
+
+  positions = [
+    'Manager', 'Supervisor', 'Staff', 'Admin', 
+    'Operator', 'Mandor', 'Buruh Harian', 'Security', 'Driver'
   ];
 
   // ── Toast ─────────────────────────────────────────────────
@@ -85,8 +68,6 @@ export class HrdAttendanceListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Tampilkan semua posisi di awal
-    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     this.load();
   }
 
@@ -136,30 +117,12 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
-  // 👇 Event Cascading Dropdown (Filter Dinamis)
-  onDeptChange(): void {
-    if (this.filterDept) {
-      const selected = this.departemenData.find(d => d.nama === this.filterDept);
-      this.positions = selected ? selected.posisi : [];
-    } else {
-      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
-    }
-    
-    this.filterPosisi = ''; 
-    this.currentPage = 1;
-    this.load(); 
-  }
-
   resetFilter(): void {
     this.filterSearch = '';
     this.filterMonth  = new Date().getMonth() + 1; 
     this.filterYear   = new Date().getFullYear();
     this.filterDept   = '';
     this.filterPosisi = '';
-    
-    // Kembalikan semua posisi
-    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
-    
     this.currentPage  = 1;
     this.load();
   }
@@ -195,9 +158,9 @@ export class HrdAttendanceListComponent implements OnInit {
 
     this.isProcessing = true;
     this.api.import(this.selectedFile, Number(this.filterMonth), this.filterYear).subscribe({
-      next: (res: any) => {
-        if (res.success || res.message) {
-          this.showToast(res.message || `Import Berhasil! Data absensi disimpan.`, 'success');
+      next: (res) => {
+        if (res.success) {
+          this.showToast(`Import Berhasil! ${res.data?.saved || 0} data disimpan.`, 'success');
           this.closeImportModal();
           this.load();
         } else {
@@ -214,11 +177,12 @@ export class HrdAttendanceListComponent implements OnInit {
   }
 
   // ── Feature: Edit Manual (Modal HRD) ──────────────────────
+  // Di HRD kita ganti navigasi Detail menjadi Modal Edit
   openEditModal(item: AttendanceSummary): void {
     this.isEditing = true;
     this.api.getById(item.id).subscribe({
-      next: (res: any) => {
-        if (res.success || res.data) {
+      next: (res) => {
+        if (res.success) {
           this.selectedAttendance = { ...res.data };
           this.showEditModal = true;
         }
@@ -241,8 +205,8 @@ export class HrdAttendanceListComponent implements OnInit {
 
     this.isProcessing = true;
     this.api.update(this.selectedAttendance.id, this.selectedAttendance).subscribe({
-      next: (res: any) => {
-        if (res.success || res.message) {
+      next: (res) => {
+        if (res.success) {
           this.showToast('Data absensi berhasil diperbarui.', 'success');
           this.closeEditModal();
           this.load(); 
