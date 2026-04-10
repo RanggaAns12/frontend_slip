@@ -30,45 +30,28 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
   departments: string[] = [];
   positions: string[] = [];
 
-  // ✅ MASTER DATA DEPARTEMEN & POSISI (Wajib Baku untuk Smart Matching Import)
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI (SINKRON 100% DENGAN MODUL LAIN)
   departemenData = [
-    { 
-      nama: "Engineering", 
-      posisi: ["Supervisor", "Karu Mekanik", "Karu Elektrik", "Elektrik Preventif Repair", "Drafter", "Mekanik", "Instrument", "Electrical", "Admin Engineering"] 
-    },
-    { 
-      nama: "Produksi", 
-      posisi: ["Supervisor", "Shift Leader PM", "Shift Leader SP", "Karu Rewinder", "Boiler", "Op. Boiler", "Operator", "Operator Alat Berat", "Operator Dryer", "Operator Wire Press", "Operator DCS PM", "Operator Size Press", "Operator Coarse Screen", "Operator SCS SP", "Operator Pulper"] 
-    },
-    { 
-      nama: "WTP/WWTP", 
-      posisi: ["SPV", "Karu WWTP", "Operator RO", "Operator WWTP", "Kebersihan", "Anggota"] 
-    },
-    { 
-      nama: "Logistik", 
-      posisi: ["Supervisor", "Admin", "Anggota"] 
-    },
-    { 
-      nama: "HRD", 
-      posisi: ["Supervisor", "Staff"] 
-    },
-    { 
-      nama: "QC/R&D", 
-      posisi: ["Supervisor", "QC"] 
-    },
-    { 
-      nama: "UMUM", 
-      posisi: ["Kebersihan", "Supir", "Driver", "Office Boy", "Office Girl", "Gardener"] 
-    },
-    { nama: "Security", posisi: ["Danru"] },
-    { nama: "CIVIL", posisi: ["CIVIL"] },
-    { nama: "Fabrikasi", posisi: ["Engineering"] },
-    { nama: "Bahan Baku", posisi: ["SPV"] },
-    { nama: "HSE", posisi: ["HSE"] },
-    { nama: "IT", posisi: ["IT"] },
-    { nama: "Purchasing", posisi: [] },
-    { nama: "Finance", posisi: [] },
-    { nama: "Accounting", posisi: [] }
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
   ];
 
   // Toast Notifikasi
@@ -152,12 +135,8 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
       );
     }
 
-    if (this.filterDept) {
-      temp = temp.filter(e => e.dept === this.filterDept);
-    }
-    if (this.filterPosisi) {
-      temp = temp.filter(e => e.posisi === this.filterPosisi);
-    }
+    if (this.filterDept) temp = temp.filter(e => e.dept === this.filterDept);
+    if (this.filterPosisi) temp = temp.filter(e => e.posisi === this.filterPosisi);
 
     this.filteredEmployees = temp;
     this.totalPages = Math.ceil(this.filteredEmployees.length / this.pageSize) || 1;
@@ -303,7 +282,6 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
     this.isLoadingSheets = false;
   }
 
-  // ✅ PERBAIKAN: Menggunakan readAsBinaryString seperti Superadmin
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) {
@@ -330,7 +308,7 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ✅ PERBAIKAN: Menyalin penuh logika array 2D & Smart Matching dari Superadmin
+  // 🚀 PERBAIKAN: Smart Matching "Excel First"
   uploadFile() {
     if (!this.selectedFile || !this.selectedSheet) return;
 
@@ -344,7 +322,6 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
         const wsname: string = this.selectedSheet;
         const ws: XLSX.WorkSheet = wb.Sheets[wsname];
 
-        // Membaca file sebagai array of arrays
         const rawData: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
         
         if (rawData.length < 5) {
@@ -353,71 +330,50 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // Potong 4 baris pertama (karena isinya adalah judul / header dari perusahaan)
         const dataRows = rawData.slice(4); 
 
         const mappedData = dataRows.map((row: any[]) => {
           
-          // === LOGIKA SMART MATCHING DEPARTEMEN ===
-          const rawPosisi = String(row[8] || '').trim().toLowerCase();
-          const rawDept = String(row[9] || '').trim().toLowerCase();
+          // AMBIL DATA DARI EXCEL APA ADANYA
+          const excelPosisi = String(row[8] || '').trim();
+          const excelDept = String(row[9] || '').trim();
           
-          let finalDept = '';
-          let finalPosisi = '';
+          let finalDept = excelDept;
+          let finalPosisi = excelPosisi;
 
-          // 1. Prioritas Utama: Cari berdasarkan POSISI
-          if (rawPosisi) {
-            for (const dept of this.departemenData) {
-              const foundPos = dept.posisi.find(p => 
-                p.toLowerCase() === rawPosisi ||
-                p.toLowerCase().includes(rawPosisi) ||
-                rawPosisi.includes(p.toLowerCase())
-              );
-              
-              if (foundPos) {
-                finalPosisi = foundPos;
-                finalDept = dept.nama; 
-                break;
-              }
-            }
-          }
-
-          // 2. Jika posisinya kosong/tidak valid, coba cari dari Departemennya saja
-          if (!finalDept && rawDept) {
+          // FALLBACK LOGIC: 
+          // Jika HRD di Excel mengisi Posisi tapi mengosongkan Departemen
+          if (finalPosisi && !finalDept) {
             const foundDept = this.departemenData.find(d => 
-              d.nama.toLowerCase() === rawDept || 
-              d.nama.toLowerCase().includes(rawDept) || 
-              rawDept.includes(d.nama.toLowerCase())
+              d.posisi.some(p => p.toLowerCase() === finalPosisi.toLowerCase())
             );
             if (foundDept) {
               finalDept = foundDept.nama;
             }
           }
-          // === END SMART MATCHING ===
 
           return {
-            nik_karyawan: row[1] || '',  
-            nik_ktp: row[2] || '',       
-            status_karyawan: row[3] || 'PKWTT', 
-            nama_lengkap: row[4] || '',  
-            status_pajak: row[5] || 'TK/0',      
-            no_rekening: row[6] || '',   
-            status_pajak_2026: row[7] || '', 
-            posisi: finalPosisi,
-            dept: finalDept,
+            nik_karyawan: String(row[1] || '').trim(),  
+            nik_ktp: String(row[2] || '').trim(),       
+            status_karyawan: String(row[3] || '').trim() || 'PKWTT', 
+            nama_lengkap: String(row[4] || '').trim(),  
+            status_pajak: String(row[5] || '').trim() || 'TK/0',      
+            no_rekening: String(row[6] || '').trim(),   
+            status_pajak_2026: String(row[7] || '').trim(), 
+            posisi: finalPosisi, 
+            dept: finalDept,      
             tanggal_diterima: row[10] || null, 
             tanggal_lahir: row[11] || null,    
-            npwp: row[12] || '',         
-            bpjs_ketenagakerjaan: row[13] || '', 
-            pendidikan: row[14] || '',   
-            agama: row[15] || '',        
-            jenis_kelamin: row[16] || '',
-            alamat: row[17] || '',       
+            npwp: String(row[12] || '').trim(),         
+            bpjs_ketenagakerjaan: String(row[13] || '').trim(), 
+            pendidikan: String(row[14] || '').trim(),   
+            agama: String(row[15] || '').trim(),        
+            jenis_kelamin: String(row[16] || '').trim(),
+            alamat: String(row[17] || '').trim(),       
             is_active: 1
           };
         });
 
-        // Filter hanya yang memiliki nama dan nik karyawan
         const cleanData = mappedData.filter(d => d.nama_lengkap && d.nik_karyawan);
 
         if (cleanData.length === 0) {
@@ -426,12 +382,11 @@ export class HrdEmployeeListComponent implements OnInit, OnDestroy {
             return;
         }
 
-        // Kirim ke API Laravel
         this.employeeApi.import(cleanData).subscribe({ 
           next: (res: any) => {
             this.isProcessing = false;
             this.closeImportModal();
-            this.loadData(); // Langsung fetch data ulang untuk memperbarui tabel
+            this.loadData();
             this.showToast(`Import Berhasil! Data karyawan otomatis di-update.`, 'success');
           },
           error: (err: any) => {

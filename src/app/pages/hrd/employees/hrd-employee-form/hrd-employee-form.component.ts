@@ -18,56 +18,40 @@ export class HrdEmployeeFormComponent implements OnChanges {
 
   formData: any = {};
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sesuai Mapping Terbaru)
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI (SINKRON 100% DENGAN EXCEL & SUPERADMIN)
   departemenData = [
-    { 
-      nama: "Engineering", 
-      posisi: ["Supervisor", "Karu Mekanik", "Karu Elektrik", "Elektrik Preventif Repair", "Drafter", "Mekanik", "Instrument", "Electrical", "Admin Engineering"] 
-    },
-    { 
-      nama: "Produksi", 
-      posisi: ["Supervisor", "Shift Leader PM", "Shift Leader SP", "Karu Rewinder", "Boiler", "Op. Boiler", "Operator", "Operator Alat Berat", "Operator Dryer", "Operator Wire Press", "Operator DCS PM", "Operator Size Press", "Operator Coarse Screen", "Operator SCS SP", "Operator Pulper"] 
-    },
-    { 
-      nama: "WTP/WWTP", 
-      posisi: ["SPV", "Karu WWTP", "Operator RO", "Operator WWTP", "Kebersihan", "Anggota"] 
-    },
-    { 
-      nama: "Logistik", 
-      posisi: ["Supervisor", "Admin", "Anggota"] 
-    },
-    { 
-      nama: "HRD", 
-      posisi: ["Supervisor", "Staff"] 
-    },
-    { 
-      nama: "QC/R&D", 
-      posisi: ["Supervisor", "QC"] 
-    },
-    { 
-      nama: "UMUM", 
-      posisi: ["Kebersihan", "Supir", "Driver", "Office Boy", "Office Girl", "Gardener"] 
-    },
-    { nama: "Security", posisi: ["Danru"] },
-    { nama: "CIVIL", posisi: ["CIVIL"] },
-    { nama: "Fabrikasi", posisi: ["Engineering"] },
-    { nama: "Bahan Baku", posisi: ["SPV"] },
-    { nama: "HSE", posisi: ["HSE"] },
-    { nama: "IT", posisi: ["IT"] },
-    { nama: "Purchasing", posisi: [] },
-    { nama: "Finance", posisi: [] },
-    { nama: "Accounting", posisi: [] }
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
   ];
 
   deptOptions = this.departemenData.map(d => d.nama);
   posisiOptions: string[] = []; // Akan terisi otomatis oleh fungsi onDeptChange()
 
-  agamaOptions = ['Islam', 'Kristen Protestan', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
-  pendidikanOptions = ['SD', 'SMP', 'SMA/SMK', 'D3', 'S1', 'S2', 'S3'];
-  statusKaryawanOptions = ['PKWTT (Tetap)', 'PKWT (Kontrak)', 'Harian', 'Magang'];
+  // Opsi Dropdown Standar
+  agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'];
+  pendidikanOptions = ['SD', 'SMP', 'SMA', 'SMK', 'D3', 'S1', 'S2'];
+  statusKaryawanOptions = ['PKWTT', 'PKWT', 'Harian Lepas', 'Magang', 'Borongan'];
   
-  // DIKEMBALIKAN: Opsi Bank & Pajak
-  bankOptions = ['BCA', 'Mandiri', 'BNI', 'BRI', 'BSI', 'CIMB Niaga', 'Lainnya'];
+  // Opsi Bank & Pajak (Default Bank Mestika sesuai standar)
+  bankOptions = ['MESTIKA', 'BCA', 'Mandiri', 'BNI', 'BRI', 'BSI', 'CIMB Niaga', 'Lainnya'];
   statusPajakOptions = ['TK/0', 'TK/1', 'TK/2', 'TK/3', 'K/0', 'K/1', 'K/2', 'K/3'];
 
   showSuccessModal: boolean = false;
@@ -78,24 +62,26 @@ export class HrdEmployeeFormComponent implements OnChanges {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['employeeData'] && this.isOpen) {
       if (this.employeeData) {
+        // STATE: EDIT DATA
         this.isEditMode = true;
         this.formData = { ...this.employeeData };
         
-        // 👇 Panggil saat Edit agar pilihan dropdown posisi terbuka sesuai dengan departemen karyawan
+        // Panggil ini agar pilihan dropdown posisi langsung terbuka sesuai dengan departemen karyawan
         this.onDeptChange();
       } else {
+        // STATE: TAMBAH DATA BARU
         this.isEditMode = false;
         this.resetForm();
       }
     }
   }
 
-  // 👇 Fungsi untuk Cascading Dropdown Posisi
+  // 🚀 FUNGSI CASCADING DROPDOWN POSISI
   onDeptChange() {
     const selected = this.departemenData.find(d => d.nama === this.formData.dept);
     this.posisiOptions = selected ? selected.posisi : [];
 
-    // Jika posisi sebelumnya tidak ada di departemen yang baru dipilih, kosongkan posisinya
+    // Jika user ganti departemen, dan posisi lamanya nggak ada di departemen baru, kosongkan posisinya!
     if (!this.posisiOptions.includes(this.formData.posisi)) {
       this.formData.posisi = '';
     }
@@ -103,19 +89,31 @@ export class HrdEmployeeFormComponent implements OnChanges {
 
   resetForm() {
     this.formData = {
-      nama_lengkap: '', nik_ktp: '', jenis_kelamin: 'Laki-laki',
-      tempat_lahir: '', tanggal_lahir: '', agama: 'Islam',
-      pendidikan: 'SMA/SMK', alamat: '', nik_karyawan: '',
-      status_karyawan: 'PKWTT (Tetap)', dept: '', posisi: '',
+      nama_lengkap: '', 
+      nik_ktp: '', 
+      jenis_kelamin: 'Laki-laki',
+      tempat_lahir: '', 
+      tanggal_lahir: '', 
+      agama: 'Islam',
+      pendidikan: 'SMA', 
+      alamat: '', 
+      nik_karyawan: '',
+      status_karyawan: 'PKWTT', 
+      dept: '', 
+      posisi: '',
       tanggal_diterima: '',
-      // DIKEMBALIKAN: Inisiasi data Bank & Pajak
-      nama_bank: 'BCA', no_rekening: '', pemilik_rekening: '',
-      npwp: '', status_pajak: 'TK/0', bpjs_ketenagakerjaan: ''
+      nama_bank: 'MESTIKA', // Default disamakan dengan sistem
+      no_rekening: '', 
+      pemilik_rekening: '',
+      npwp: '', 
+      status_pajak: 'TK/0', 
+      bpjs_ketenagakerjaan: '',
+      is_active: 1
     };
-    this.posisiOptions = []; // Kosongkan posisi saat form direset
+    this.posisiOptions = []; 
   }
 
-  // DIKEMBALIKAN: Autofill Pemilik Rekening
+  // AUTO-FILL Pemilik Rekening sesuai Nama Lengkap jika diketik
   onNameChange() {
     if (this.formData.nama_lengkap) {
       this.formData.pemilik_rekening = this.formData.nama_lengkap.toUpperCase();
@@ -128,7 +126,15 @@ export class HrdEmployeeFormComponent implements OnChanges {
 
   onSubmit() {
     this.isSubmitting = true;
+    
+    // Validasi & fallback default sebelum dilempar ke server
+    if (!this.formData.pemilik_rekening) {
+      this.formData.pemilik_rekening = this.formData.nama_lengkap;
+    }
+    
     this.save.emit(this.formData);
+    
+    // Matikan loading animasi setelah dikirim
     setTimeout(() => {
       this.isSubmitting = false;
     }, 1000);
