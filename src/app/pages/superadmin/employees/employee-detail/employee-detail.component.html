@@ -1,8 +1,7 @@
 <div class="min-h-screen bg-gray-50/50 pb-20 font-sans relative">
   
-  <!-- TOAST NOTIFICATION -->
   <div *ngIf="toastMessage" 
-       [ngClass]="{'bg-green-500': toastType === 'success', 'bg-red-500': toastType === 'error'}"
+       [ngClass]="{'bg-emerald-500': toastType === 'success', 'bg-red-500': toastType === 'error'}"
        class="fixed top-6 right-6 z-50 px-6 py-3 rounded-full shadow-2xl text-white font-bold flex items-center gap-3 animate-fade-in transition-all">
     <span>{{ toastMessage }}</span>
     <button (click)="closeToast()" class="opacity-70 hover:opacity-100">&times;</button>
@@ -10,7 +9,6 @@
 
   <div class="max-w-5xl mx-auto px-4 pt-8 relative z-10">
     
-    <!-- NAVIGATION BACK -->
     <button (click)="goBack()" class="mb-6 flex items-center gap-2 text-gray-500 hover:text-orange-600 transition-colors group">
       <div class="p-2 bg-white border border-gray-200 rounded-full group-hover:border-orange-200 shadow-sm transition">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
@@ -18,26 +16,21 @@
       <span class="font-bold text-sm tracking-wide">Kembali ke List</span>
     </button>
 
-    <!-- LOADING STATE -->
     <div *ngIf="isLoading" class="bg-white rounded-3xl p-12 shadow-sm border border-gray-100 text-center animate-pulse">
       <div class="h-24 w-24 bg-gray-200 rounded-full mx-auto mb-4"></div>
       <div class="h-6 w-1/3 bg-gray-200 mx-auto rounded mb-2"></div>
       <div class="h-4 w-1/4 bg-gray-200 mx-auto rounded"></div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div *ngIf="!isLoading && employee" class="animate-slide-up space-y-6">
       
-      <!-- HEADER PROFILE CARD -->
       <div class="bg-white rounded-3xl shadow-[0_4px_20px_-5px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
         <div class="p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-8 text-center md:text-left">
           
-          <!-- Avatar dengan Gradient Orange -->
           <div class="w-28 h-28 rounded-2xl bg-gradient-to-br from-orange-400 to-amber-500 text-white flex items-center justify-center text-4xl font-extrabold shadow-lg shadow-orange-200 ring-4 ring-orange-50 rotate-3 md:rotate-0 hover:rotate-6 transition-transform duration-300">
-            {{ employee.nama_lengkap?.charAt(0) }}
+            {{ employee.nama_lengkap?.charAt(0) || '?' }}
           </div>
 
-          <!-- Info Utama -->
           <div class="flex-1 space-y-2">
             <h1 class="text-3xl font-extrabold text-gray-800 tracking-tight leading-tight">
               {{ employee.nama_lengkap }}
@@ -46,38 +39,35 @@
             <div class="flex flex-col md:flex-row items-center gap-3 text-gray-500 font-medium justify-center md:justify-start">
               <span class="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
                 <svg class="w-4 h-4 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                {{ employee.posisi }}
+                {{ employee.posisi || '-' }}
               </span>
               <span class="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-lg border border-gray-100">
                 <svg class="w-4 h-4 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                {{ employee.dept }}
+                {{ employee.dept || '-' }}
               </span>
             </div>
 
-            <!-- Badges -->
             <div class="flex flex-wrap justify-center md:justify-start gap-2 pt-3">
               <span class="px-3 py-1 bg-gray-100 text-gray-600 rounded-lg text-xs font-bold border border-gray-200 font-mono">
                 NIK: {{ employee.nik_karyawan }}
               </span>
               <span [class]="employee.status_karyawan === 'PKWTT' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-amber-50 text-amber-600 border-amber-100'" 
                     class="px-3 py-1 rounded-lg text-xs font-bold border">
-                {{ employee.status_karyawan }}
+                {{ employee.status_karyawan || 'PKWTT' }}
               </span>
             </div>
           </div>
 
-          <!-- Action Buttons -->
           <div class="flex gap-2">
-            <button (click)="openEditModal()" class="p-3 bg-white text-gray-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition shadow-sm border border-gray-200 group" title="Edit">
+            <button (click)="openEditModal()" class="p-3 bg-white text-gray-600 rounded-xl hover:bg-orange-50 hover:text-orange-600 transition shadow-sm border border-gray-200 group" title="Edit Data">
               <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
             </button>
-            <button (click)="openDeleteModal()" class="p-3 bg-white text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition shadow-sm border border-gray-200 group" title="Hapus">
+            <button (click)="openDeleteModal()" class="p-3 bg-white text-gray-600 rounded-xl hover:bg-red-50 hover:text-red-600 transition shadow-sm border border-gray-200 group" title="Hapus Karyawan">
               <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
             </button>
           </div>
         </div>
 
-        <!-- TABS MENU -->
         <div class="px-6 md:px-8 border-t border-gray-100 flex gap-8 overflow-x-auto hide-scrollbar bg-gray-50/30">
           <button (click)="setTab('overview')" [class]="activeTab === 'overview' ? 'text-orange-600 border-orange-500' : 'text-gray-400 border-transparent hover:text-gray-600'" class="pb-4 pt-5 text-sm font-bold border-b-2 transition-all whitespace-nowrap">Ringkasan</button>
           <button (click)="setTab('personal')" [class]="activeTab === 'personal' ? 'text-orange-600 border-orange-500' : 'text-gray-400 border-transparent hover:text-gray-600'" class="pb-4 pt-5 text-sm font-bold border-b-2 transition-all whitespace-nowrap">Data Pribadi</button>
@@ -85,10 +75,8 @@
         </div>
       </div>
 
-      <!-- TABS CONTENT -->
       <div class="grid grid-cols-1 gap-6 animate-fade-in">
         
-        <!-- TAB 1: OVERVIEW -->
         <div *ngIf="activeTab === 'overview'" class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
           <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
             <span class="w-1.5 h-6 bg-orange-500 rounded-full"></span> Informasi Jabatan
@@ -96,12 +84,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
             <div><label class="modal-label">Departemen</label><p class="text-lg font-semibold text-gray-800">{{ employee.dept || '-' }}</p></div>
             <div><label class="modal-label">Posisi Saat Ini</label><p class="text-lg font-semibold text-gray-800">{{ employee.posisi || '-' }}</p></div>
-            <div><label class="modal-label">Tanggal Bergabung</label><p class="text-lg font-semibold text-gray-800">{{ employee.tanggal_diterima || '-' }}</p></div>
+            <div><label class="modal-label">Tanggal Bergabung</label><p class="text-lg font-semibold text-gray-800">{{ formatDate(employee.tanggal_diterima) }}</p></div>
             <div><label class="modal-label">NIK Karyawan</label><p class="text-lg font-mono font-medium text-gray-800 bg-gray-50 inline-block px-2 rounded">{{ employee.nik_karyawan }}</p></div>
           </div>
         </div>
 
-        <!-- TAB 2: PERSONAL -->
         <div *ngIf="activeTab === 'personal'" class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
           <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
             <span class="w-1.5 h-6 bg-pink-500 rounded-full"></span> Biodata Diri
@@ -110,9 +97,8 @@
             <div><label class="modal-label">Nama Lengkap</label><p class="text-lg font-semibold text-gray-800">{{ employee.nama_lengkap }}</p></div>
             <div><label class="modal-label">NIK KTP</label><p class="text-lg font-semibold text-gray-800">{{ employee.nik_ktp || '-' }}</p></div>
             
-            <!-- Tempat & Tanggal Lahir DIPISAH -->
             <div><label class="modal-label">Tempat Lahir</label><p class="text-lg font-semibold text-gray-800">{{ employee.tempat_lahir || '-' }}</p></div>
-            <div><label class="modal-label">Tanggal Lahir</label><p class="text-lg font-semibold text-gray-800">{{ employee.tanggal_lahir || '-' }}</p></div>
+            <div><label class="modal-label">Tanggal Lahir</label><p class="text-lg font-semibold text-gray-800">{{ formatDate(employee.tanggal_lahir) }}</p></div>
             
             <div><label class="modal-label">Jenis Kelamin</label><p class="text-lg font-semibold text-gray-800">{{ employee.jenis_kelamin || '-' }}</p></div>
             <div><label class="modal-label">Agama</label><p class="text-lg font-semibold text-gray-800">{{ employee.agama || '-' }}</p></div>
@@ -121,7 +107,6 @@
           </div>
         </div>
 
-        <!-- TAB 3: PAYROLL -->
         <div *ngIf="activeTab === 'payroll'" class="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
           <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
             <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span> Data Finansial
@@ -130,7 +115,7 @@
             <div class="p-5 bg-gray-50 border border-gray-100 rounded-2xl">
               <label class="modal-label mb-2">Rekening Bank</label>
               <p class="text-xl font-mono font-bold text-gray-800">{{ employee.no_rekening || 'Belum Ada' }}</p>
-              <p class="text-xs text-gray-400 mt-1">Bank Mandiri (Default)</p>
+              <p class="text-xs text-gray-400 mt-1">{{ employee.nama_bank || 'MESTIKA' }} (Default)</p>
             </div>
             <div class="p-5 bg-gray-50 border border-gray-100 rounded-2xl">
               <label class="modal-label mb-2">NPWP</label>
@@ -147,52 +132,76 @@
     </div>
   </div>
 
-  <!-- === MODAL EDIT DATA (FULL FORM) === -->
-  <div *ngIf="showEditModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div *ngIf="showEditModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col animate-scale-in">
       
-      <!-- Header -->
       <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center bg-white rounded-t-3xl">
         <h3 class="text-xl font-extrabold text-gray-800">Edit Data Karyawan</h3>
-        <button (click)="closeEditModal()" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition">&times;</button>
+        <button (click)="closeEditModal()" class="w-8 h-8 rounded-full bg-gray-50 text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition flex items-center justify-center">&times;</button>
       </div>
 
-      <!-- Content Scrollable -->
-      <div class="p-8 overflow-y-auto space-y-6">
+      <div class="p-8 overflow-y-auto space-y-6 flex-1 hide-scrollbar">
         
-        <!-- Section Identitas -->
         <h4 class="text-sm font-bold text-orange-500 uppercase tracking-wider border-b border-orange-100 pb-1 mb-4">Identitas</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label class="modal-label">Nama Lengkap</label><input type="text" [(ngModel)]="editData.nama_lengkap" class="modal-input"></div>
           <div><label class="modal-label">NIK KTP</label><input type="text" [(ngModel)]="editData.nik_ktp" class="modal-input"></div>
           <div><label class="modal-label">Tempat Lahir</label><input type="text" [(ngModel)]="editData.tempat_lahir" class="modal-input"></div>
           <div><label class="modal-label">Tanggal Lahir</label><input type="date" [(ngModel)]="editData.tanggal_lahir" class="modal-input"></div>
-          <div><label class="modal-label">Jenis Kelamin</label><select [(ngModel)]="editData.jenis_kelamin" class="modal-input cursor-pointer"><option value="Laki-laki">Laki-laki</option><option value="Perempuan">Perempuan</option></select></div>
-          <div><label class="modal-label">Agama</label><select [(ngModel)]="editData.agama" class="modal-input cursor-pointer"><option *ngFor="let ag of agamaOptions" [value]="ag">{{ ag }}</option></select></div>
-          <div><label class="modal-label">Pendidikan</label><select [(ngModel)]="editData.pendidikan" class="modal-input cursor-pointer"><option *ngFor="let p of pendidikanOptions" [value]="p">{{ p }}</option></select></div>
+          <div><label class="modal-label">Jenis Kelamin</label>
+            <select [(ngModel)]="editData.jenis_kelamin" class="modal-input cursor-pointer">
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+          <div><label class="modal-label">Agama</label>
+            <select [(ngModel)]="editData.agama" class="modal-input cursor-pointer">
+              <option *ngFor="let ag of agamaOptions" [value]="ag">{{ ag }}</option>
+            </select>
+          </div>
+          <div><label class="modal-label">Pendidikan</label>
+            <select [(ngModel)]="editData.pendidikan" class="modal-input cursor-pointer">
+              <option *ngFor="let p of pendidikanOptions" [value]="p">{{ p }}</option>
+            </select>
+          </div>
           <div class="md:col-span-2"><label class="modal-label">Alamat</label><textarea [(ngModel)]="editData.alamat" rows="2" class="modal-input resize-none"></textarea></div>
         </div>
 
-        <!-- Section Kepegawaian -->
         <h4 class="text-sm font-bold text-blue-500 uppercase tracking-wider border-b border-blue-100 pb-1 mb-4 pt-4">Kepegawaian</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><label class="modal-label">NIK Karyawan</label><input type="text" [(ngModel)]="editData.nik_karyawan" class="modal-input font-bold text-blue-900 bg-blue-50"></div>
-          <div><label class="modal-label">Status Karyawan</label><select [(ngModel)]="editData.status_karyawan" class="modal-input cursor-pointer"><option *ngFor="let st of statusKaryawanOptions" [value]="st">{{ st }}</option></select></div>
-          <div><label class="modal-label">Departemen</label><select [(ngModel)]="editData.dept" name="dept" (change)="onDeptChange()" class="modal-input cursor-pointer"><option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option></select></div>
-          <div><label class="modal-label">Posisi</label><select [(ngModel)]="editData.posisi" class="modal-input cursor-pointer"><option *ngFor="let p of posisiOptions" [value]="p">{{ p }}</option></select></div>
+          <div><label class="modal-label">Status Karyawan</label>
+            <select [(ngModel)]="editData.status_karyawan" class="modal-input cursor-pointer">
+              <option *ngFor="let st of statusKaryawanOptions" [value]="st">{{ st }}</option>
+            </select>
+          </div>
+          <div><label class="modal-label">Departemen</label>
+            <select [(ngModel)]="editData.dept" name="dept" (change)="onDeptChange()" class="modal-input cursor-pointer">
+              <option *ngFor="let d of deptOptions" [value]="d">{{ d }}</option>
+            </select>
+          </div>
+          <div><label class="modal-label">Posisi</label>
+            <select [(ngModel)]="editData.posisi" class="modal-input cursor-pointer">
+              <option *ngFor="let p of posisiOptions" [value]="p">{{ p }}</option>
+            </select>
+          </div>
           <div><label class="modal-label">Tanggal Masuk</label><input type="date" [(ngModel)]="editData.tanggal_diterima" class="modal-input"></div>
+          
+          <div class="md:col-span-2 pt-2">
+            <label class="flex items-center gap-2 cursor-pointer bg-gray-50 p-3 rounded-lg border border-gray-200 w-fit">
+              <input type="checkbox" [(ngModel)]="editData.is_active" class="w-4 h-4 text-blue-500 rounded focus:ring-blue-400">
+              <span class="text-sm font-bold text-gray-700">Karyawan Aktif Bekerja</span>
+            </label>
+          </div>
         </div>
 
-                <!-- Section Payroll -->
         <h4 class="text-sm font-bold text-emerald-500 uppercase tracking-wider border-b border-emerald-100 pb-1 mb-4 pt-4">Payroll & Legalitas</h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           
-          <!-- TAMBAHAN: BANK & REKENING (WAJIB ADA) -->
           <div>
             <label class="modal-label">Nama Bank</label>
             <select [(ngModel)]="editData.nama_bank" class="modal-input cursor-pointer font-bold text-emerald-700">
-               <!-- Opsi Bank Manual atau Loop dari TS -->
-               <option value="MANDIRI">MESTIKA</option>
+               <option *ngFor="let b of bankOptions" [value]="b">{{ b }}</option>
             </select>
           </div>
 
@@ -204,35 +213,27 @@
           <div class="md:col-span-2">
             <label class="modal-label">Pemilik Rekening (Atas Nama)</label>
             <input type="text" [(ngModel)]="editData.pemilik_rekening" class="modal-input font-semibold uppercase" placeholder="Nama di buku tabungan">
-            <p class="text-[10px] text-gray-400 mt-1">*Wajib diisi. Jika kosong, isi dengan Nama Lengkap.</p>
+            <p class="text-[10px] text-gray-400 mt-1">*Wajib diisi. Jika kosong, sistem otomatis memakai Nama Lengkap.</p>
           </div>
 
-          <!-- FIELD LAMA -->
           <div>
             <label class="modal-label">NPWP</label>
             <input type="text" [(ngModel)]="editData.npwp" class="modal-input font-mono">
           </div>
+          
           <div>
             <label class="modal-label">Status Pajak</label>
             <select [(ngModel)]="editData.status_pajak" class="modal-input cursor-pointer">
-              <option value="TK/0">TK/0</option>
-              <option value="TK/1">TK/1</option>
-              <option value="TK/2">TK/2</option>
-              <option value="TK/3">TK/3</option>
-              <option value="K/0">K/0</option>
-              <option value="K/1">K/1</option>
-              <option value="K/2">K/2</option>
-              <option value="K/3">K/3</option>
+              <option *ngFor="let p of statusPajakOptions" [value]="p">{{ p }}</option>
             </select>
           </div>
+          
           <div class="md:col-span-2">
             <label class="modal-label">BPJS TK</label>
             <input type="text" [(ngModel)]="editData.bpjs_ketenagakerjaan" class="modal-input font-mono">
           </div>
         </div>
-
-      <!-- Footer -->
-      <div class="px-8 py-5 bg-gray-50 rounded-b-3xl border-t border-gray-100 flex justify-end gap-3">
+      </div> <div class="px-8 py-5 bg-gray-50 rounded-b-3xl border-t border-gray-100 flex justify-end gap-3 shrink-0">
         <button (click)="closeEditModal()" class="px-5 py-2.5 text-sm font-bold text-gray-500 hover:bg-gray-200 rounded-xl transition">Batal</button>
         <button (click)="updateEmployee()" [disabled]="isProcessing" class="px-6 py-2.5 text-sm font-bold text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 rounded-xl shadow-lg shadow-orange-200 transition disabled:opacity-50">
           {{ isProcessing ? 'Menyimpan...' : 'Simpan Perubahan' }}
@@ -241,8 +242,7 @@
     </div>
   </div>
 
-  <!-- === MODAL DELETE === -->
-  <div *ngIf="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+  <div *ngIf="showDeleteModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center animate-scale-in">
       <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6">
         <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -251,7 +251,13 @@
       <p class="text-sm text-gray-500 mt-2">Data <strong class="text-gray-800">{{ employee.nama_lengkap }}</strong> tidak bisa dikembalikan setelah dihapus.</p>
       <div class="flex gap-3 mt-8">
         <button (click)="closeDeleteModal()" class="flex-1 py-3 bg-gray-100 text-gray-600 font-bold rounded-xl hover:bg-gray-200 transition">Batal</button>
-        <button (click)="deleteEmployee()" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200 transition">Hapus</button>
+        <button (click)="deleteEmployee()" class="flex-1 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 shadow-lg shadow-red-200 transition flex items-center justify-center gap-2">
+          <svg *ngIf="isProcessing" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          {{ isProcessing ? 'Menghapus...' : 'Hapus' }}
+        </button>
       </div>
     </div>
   </div>

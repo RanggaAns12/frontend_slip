@@ -6,7 +6,6 @@ import { EmployeeApiService } from '../services/employee-api.service';
   selector: 'app-employee-detail',
   templateUrl: './employee-detail.component.html',
   styles: [`
-    /* Animasi Halus */
     .animate-slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
     .animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
     .animate-fade-in { animation: fadeIn 0.3s ease-out; }
@@ -18,15 +17,15 @@ import { EmployeeApiService } from '../services/employee-api.service';
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
-    /* Input Style di Modal */
+    /* Input Style untuk Form Modal */
     .modal-input {
-      @apply w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none transition-all;
+      @apply w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg outline-none transition-all text-sm;
     }
     .modal-input:focus {
       @apply bg-white border-orange-400 ring-2 ring-orange-100;
     }
     .modal-label {
-      @apply block text-xs font-bold text-gray-500 mb-1 ml-1;
+      @apply block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1;
     }
   `]
 })
@@ -49,7 +48,7 @@ export class EmployeeDetailComponent implements OnInit {
   toastType: 'success' | 'error' = 'success';
   toastTimeout: any;
 
-  // 👇 MASTER DATA DEPARTEMEN & POSISI (Sesuai Struktur Baru)
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI (Sesuai Struktur Excel)
   departemenData = [
     { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
     { nama: "Purchasing", posisi: ["Purchasing Staff"] },
@@ -74,7 +73,7 @@ export class EmployeeDetailComponent implements OnInit {
   ];
 
   deptOptions = this.departemenData.map(d => d.nama);
-  posisiOptions: string[] = []; // Dikosongkan, diisi dinamis oleh fungsi onDeptChange()
+  posisiOptions: string[] = []; 
 
   statusKaryawanOptions = ['PKWTT', 'PKWT', 'Harian Lepas', 'Magang'];
   agamaOptions = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha'];
@@ -106,33 +105,36 @@ export class EmployeeDetailComponent implements OnInit {
     this.employeeApi.getById(id).subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        this.employee = res.data;
-        this.editData = { ...res.data };
+        // Ambil dari res.data jika API membungkusnya dalam 'data'
+        this.employee = res.data || res; 
+        this.editData = { ...this.employee };
       },
       error: () => {
         this.isLoading = false;
-        this.errorMessage = 'Data tidak ditemukan.';
+        this.errorMessage = 'Data karyawan tidak ditemukan.';
       }
     });
   }
 
-  // === ACTIONS ===
-  setTab(tab: any) { this.activeTab = tab; }
+  // === UI ACTIONS ===
+  setTab(tab: 'overview' | 'personal' | 'payroll') { 
+    this.activeTab = tab; 
+  }
 
   openEditModal() {
-    this.editData = { ...this.employee }; // Reset form dengan data terbaru
-    this.onDeptChange(); // 👇 Panggil fungsi ini agar pilihan posisi langsung ter-load sesuai departemen
+    this.editData = { ...this.employee }; 
+    this.onDeptChange(); 
     this.showEditModal = true;
   }
   
   closeEditModal() { this.showEditModal = false; }
 
-  // 👇 Event Cascading Dropdown (Dipanggil dari HTML Modal Edit saat Departemen diganti)
+  // 🚀 LOGIKA CASCADING DROPDOWN
   onDeptChange() {
     const selected = this.departemenData.find(d => d.nama === this.editData.dept);
     this.posisiOptions = selected ? selected.posisi : [];
 
-    // Jika posisi yang sebelumnya dipilih ternyata tidak ada di departemen yang baru, kosongkan posisinya
+    // Reset posisi jika tidak ada di departemen yang baru dipilih
     if (!this.posisiOptions.includes(this.editData.posisi)) {
       this.editData.posisi = '';
     }
@@ -142,7 +144,7 @@ export class EmployeeDetailComponent implements OnInit {
     if (!this.employeeId) return;
     this.isProcessing = true;
 
-    // VALIDASI MANUAL SEBELUM KIRIM
+    // Validasi & Defaulting
     if (!this.editData.pemilik_rekening) {
         this.editData.pemilik_rekening = this.editData.nama_lengkap; 
     }
@@ -150,13 +152,13 @@ export class EmployeeDetailComponent implements OnInit {
         this.editData.no_rekening = '';
     }
     if (!this.editData.nama_bank) {
-        this.editData.nama_bank = 'MESTIKA'; // Sesuai standar bank perusahaan
+        this.editData.nama_bank = 'MESTIKA';
     }
 
     this.employeeApi.update(this.employeeId, this.editData).subscribe({
       next: (res: any) => {
         this.isProcessing = false;
-        this.employee = res.data; 
+        this.employee = res.data || this.editData; // Update UI langsung
         this.closeEditModal();
         this.showToast('Data berhasil diperbarui!', 'success');
       },
@@ -182,7 +184,7 @@ export class EmployeeDetailComponent implements OnInit {
     this.employeeApi.delete(this.employeeId).subscribe({
       next: () => {
         this.showToast('Karyawan dihapus.', 'success');
-        setTimeout(() => this.router.navigate(['/superadmin/employees']), 1000);
+        setTimeout(() => this.router.navigate(['/superadmin/employees']), 1500);
       },
       error: () => {
         this.isProcessing = false;
@@ -193,6 +195,14 @@ export class EmployeeDetailComponent implements OnInit {
   }
 
   goBack() { this.router.navigate(['/superadmin/employees']); }
+
+  // === HELPER ===
+  formatDate(dateString: string | null): string {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('id-ID', {
+      day: 'numeric', month: 'long', year: 'numeric'
+    });
+  }
 
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMessage = msg;
