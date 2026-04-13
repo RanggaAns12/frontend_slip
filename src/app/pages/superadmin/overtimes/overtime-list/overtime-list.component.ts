@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service'; // Sesuaikan path jika perlu
+import { OvertimeApiService } from '../services/overtime-api.service' // Sesuaikan path ini dengan struktur folder SuperAdmin Mas ya
 
 @Component({
-  selector: 'app-manager-overtime-list',
+  selector: 'app-superadmin-overtime-list', // <-- Sudah diganti ke SuperAdmin
   standalone: false,
   templateUrl: './overtime-list.component.html',
   styleUrls: ['./overtime-list.component.scss']
@@ -11,6 +11,7 @@ import { OvertimeApiService } from '../../../superadmin/overtimes/services/overt
 export class OvertimeListComponent implements OnInit {
   items: any[] = [];
   isLoading = false;
+  isUploading = false; // <-- Variabel baru untuk state upload
 
   // Pagination & Filter
   currentPage = 1;
@@ -48,6 +49,40 @@ export class OvertimeListComponent implements OnInit {
       if (params['month']) this.filterMonth = +params['month'];
       if (params['year']) this.filterYear = +params['year'];
       this.loadData();
+    });
+  }
+
+  // ===== Import Excel Logic =====
+  triggerFileInput(fileInput: HTMLInputElement): void {
+    fileInput.click();
+  }
+
+  onFileSelected(event: any): void {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    this.isUploading = true;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    // Kirim filter bulan & tahun agar backend (OvertimesImport.php) bisa mengunci tanggal cut-off
+    if (this.filterMonth) formData.append('month', this.filterMonth.toString());
+    if (this.filterYear) formData.append('year', this.filterYear.toString());
+
+    this.overtimeApi.importExcel(formData).subscribe({
+      next: (res: any) => {
+        this.isUploading = false;
+        this.showToast('Data lembur berhasil diimpor!', 'success');
+        this.loadData();
+        event.target.value = ''; // Reset input
+      },
+      error: (err: any) => {
+        console.error('Error import:', err);
+        this.isUploading = false;
+        this.showToast(err.error?.message || 'Gagal mengimpor data lembur.', 'error');
+        event.target.value = ''; // Reset input
+      }
     });
   }
 
@@ -155,9 +190,10 @@ export class OvertimeListComponent implements OnInit {
     return pages;
   }
 
-  // ===== RUTE DETAIL MANAGER =====
+  // ===== RUTE DETAIL SUPERADMIN =====
   goToDetail(nama: string): void {
-    this.router.navigate(['/manager/overtimes/show', nama], {
+    // <-- Sudah diubah menjadi rute superadmin
+    this.router.navigate(['/superadmin/overtimes/show', nama], {
       queryParams: {
         month: this.filterMonth,
         year: this.filterYear

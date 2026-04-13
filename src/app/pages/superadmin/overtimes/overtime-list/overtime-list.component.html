@@ -27,13 +27,24 @@
     </div>
 
     <div class="flex flex-nowrap overflow-x-auto pb-2 w-full xl:w-auto gap-2 md:gap-3 hide-scrollbar">
-      <div class="shrink-0 px-4 py-2 bg-orange-50/50 border border-orange-100 text-orange-600 text-sm font-semibold rounded-lg flex items-center gap-2 shadow-sm">
-        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+      
+      <input type="file" #fileInput class="hidden" accept=".xlsx, .xls, .csv" (change)="onFileSelected($event)">
+
+      <button (click)="triggerFileInput(fileInput)" [disabled]="isUploading"
+              class="shrink-0 px-4 py-2 bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white border border-emerald-200 text-sm font-bold rounded-lg flex items-center gap-2 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+        
+        <svg *ngIf="isUploading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
         </svg>
-        <span>Mode Read-Only</span>
-      </div>
+
+        <svg *ngIf="!isUploading" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        </svg>
+        
+        <span>{{ isUploading ? 'Mengunggah...' : 'Import Excel' }}</span>
+      </button>
+
     </div>
   </div>
 
@@ -170,7 +181,7 @@
             </td>
 
             <td class="px-6 py-3 text-right">
-              <span class="text-sm font-mono font-extrabold text-emerald-700">{{ formatRupiah(item?.total_bersih_diterima || 0) }}</span>
+              <span class="text-sm font-mono font-extrabold text-emerald-700">{{ formatRupiah(item?.total_bersih_diterima || item?.total_bersih || 0) }}</span>
             </td>
 
             <td class="px-6 py-3 text-center">
@@ -237,7 +248,7 @@
         </div>
         <div class="text-right">
           <span class="block text-[10px] uppercase text-gray-400">Bersih</span>
-          <span class="font-bold text-emerald-700">{{ formatRupiah(item?.total_bersih_diterima || 0) }}</span>
+          <span class="font-bold text-emerald-700">{{ formatRupiah(item?.total_bersih_diterima || item?.total_bersih || 0) }}</span>
         </div>
       </div>
       
