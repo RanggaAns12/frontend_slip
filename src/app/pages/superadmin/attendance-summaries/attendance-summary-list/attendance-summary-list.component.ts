@@ -51,7 +51,8 @@ export class AttendanceSummaryListComponent implements OnInit {
     { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
     { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
     { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
-    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] },
+    { nama: "Umum", posisi: ["Driver"] }
   ];
 
   departments = this.departemenData.map(d => d.nama);
