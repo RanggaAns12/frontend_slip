@@ -27,7 +27,7 @@ export class HrdAttendanceListComponent implements OnInit {
 
   private searchTimeout: any;
 
-  // ── Modal State (Import Excel & Edit Manual) ──────────────
+  // ── Modal State (Import HTML & Edit Manual) ──────────────
   showImportModal = false;
   selectedFile: File | null = null;
   isProcessing = false;
@@ -133,7 +133,7 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
-  // ── Feature: Import Excel ─────────────────────────────────
+  // ── Feature: Import HTML Mesin ────────────────────────────
   openImportModal(): void {
     this.showImportModal = true;
     this.selectedFile = null;
@@ -152,7 +152,8 @@ export class HrdAttendanceListComponent implements OnInit {
 
   uploadFile(): void {
     if (!this.selectedFile || this.filterMonth === '') {
-      this.showToast('Pastikan file Excel dan Bulan sudah dipilih.', 'error');
+      // Disesuaikan menjadi 'file HTML' agar cocok dengan instruksi import
+      this.showToast('Pastikan file HTML dan Bulan sudah dipilih.', 'error');
       return;
     }
 
@@ -177,7 +178,6 @@ export class HrdAttendanceListComponent implements OnInit {
   }
 
   // ── Feature: Edit Manual (Modal HRD) ──────────────────────
-  // Di HRD kita ganti navigasi Detail menjadi Modal Edit
   openEditModal(item: AttendanceSummary): void {
     this.isEditing = true;
     this.api.getById(item.id).subscribe({
