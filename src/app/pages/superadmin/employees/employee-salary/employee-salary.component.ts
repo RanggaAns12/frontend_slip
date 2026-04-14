@@ -35,20 +35,21 @@ export class EmployeeSalaryComponent implements OnInit {
     { nama: "Legal", posisi: ["Legal Staff"] },
     { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
     { nama: "PPIC", posisi: ["PPIC Staff"] },
-    { nama: "HRD & HSE & Civil", posisi: ["HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
     { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
     { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
     { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
     { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
-    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP"] },
-    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
     { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
     { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
     { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
     { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
     { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
-    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift"] },
-    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] }
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] },
+    { nama: "Umum", posisi: ["Driver"] }
   ];
 
   departments = this.departemenData.map(d => d.nama);
