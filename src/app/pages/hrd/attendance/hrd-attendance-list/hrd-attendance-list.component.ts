@@ -35,13 +35,10 @@ export class HrdAttendanceListComponent implements OnInit {
   selectedAttendance: Partial<AttendanceSummaryDetail> | null = null;
   isEditing = false;
 
-  // ── Custom Multi-Select Calendar State ────────────────────
-  activeCalendar: 'tanggal_izin' | 'tanggal_sakit' | 'tanggal_alpa' | null = null;
-  calMonth = 0;
-  calYear = 2024;
-  calDays: { date: number, isCurrentMonth: boolean, isSelected: boolean }[] = [];
-  tempSelectedDates: number[] = [];
-  weekDays = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  // ── Dynamic Date Rows State ──────────────────────────────
+  izinDates : { val: string }[] = [];
+  sakitDates: { val: string }[] = [];
+  alpaDates : { val: string }[] = [];
 
   // ── Options Mapping ───────────────────────────────────────
   months = [
@@ -185,6 +182,12 @@ export class HrdAttendanceListComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           this.selectedAttendance = { ...res.data };
+          
+          // Uraikan teks dari database (misal: "2024-10-12, 2024-10-13") menjadi Array
+          this.izinDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_izin);
+          this.sakitDates = this.parseDatesString((this.selectedAttendance as any).tanggal_sakit);
+          this.alpaDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_alpa);
+
           this.showEditModal = true;
         }
         this.isEditing = false;
@@ -199,11 +202,52 @@ export class HrdAttendanceListComponent implements OnInit {
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedAttendance = null;
-    this.activeCalendar = null; // Tutup kalender jika edit modal ditutup
+    this.izinDates = [];
+    this.sakitDates = [];
+    this.alpaDates = [];
+  }
+
+  // Helper untuk mengubah Teks "Tgl1, Tgl2" menjadi Array Input
+  parseDatesString(dateStr?: string | null): { val: string }[] {
+    if (!dateStr) return [];
+    return dateStr.split(',').map(s => ({ val: s.trim() })).filter(item => item.val !== '');
+  }
+
+  // Fungsi Tambah Baris Tanggal
+  addDateRow(type: 'izin' | 'sakit' | 'alpa'): void {
+    if (type === 'izin') {
+      this.izinDates.push({ val: '' });
+      if (this.selectedAttendance) (this.selectedAttendance as any).cuti_pribadi = this.izinDates.length;
+    } else if (type === 'sakit') {
+      this.sakitDates.push({ val: '' });
+      if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_dokter = this.sakitDates.length;
+    } else if (type === 'alpa') {
+      this.alpaDates.push({ val: '' });
+      if (this.selectedAttendance) (this.selectedAttendance as any).absent_no_permission = this.alpaDates.length;
+    }
+  }
+
+  // Fungsi Hapus Baris Tanggal
+  removeDateRow(type: 'izin' | 'sakit' | 'alpa', index: number): void {
+    if (type === 'izin') {
+      this.izinDates.splice(index, 1);
+      if (this.selectedAttendance) (this.selectedAttendance as any).cuti_pribadi = this.izinDates.length;
+    } else if (type === 'sakit') {
+      this.sakitDates.splice(index, 1);
+      if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_dokter = this.sakitDates.length;
+    } else if (type === 'alpa') {
+      this.alpaDates.splice(index, 1);
+      if (this.selectedAttendance) (this.selectedAttendance as any).absent_no_permission = this.alpaDates.length;
+    }
   }
 
   saveAttendance(): void {
     if (!this.selectedAttendance || !this.selectedAttendance.id) return;
+
+    // Gabungkan kembali Array Tanggal menjadi Teks dipisah koma untuk API Backend
+    (this.selectedAttendance as any).tanggal_izin  = this.izinDates.map(d => d.val).filter(v => v).join(', ');
+    (this.selectedAttendance as any).tanggal_sakit = this.sakitDates.map(d => d.val).filter(v => v).join(', ');
+    (this.selectedAttendance as any).tanggal_alpa  = this.alpaDates.map(d => d.val).filter(v => v).join(', ');
 
     this.isProcessing = true;
     this.api.update(this.selectedAttendance.id, this.selectedAttendance).subscribe({
@@ -222,69 +266,6 @@ export class HrdAttendanceListComponent implements OnInit {
     });
   }
 
-  // ── Custom Multi-Select Calendar Logic ────────────────────
-  openCalendar(field: 'tanggal_izin' | 'tanggal_sakit' | 'tanggal_alpa'): void {
-    this.activeCalendar = field;
-    this.calMonth = this.filterMonth ? Number(this.filterMonth) - 1 : new Date().getMonth();
-    this.calYear = this.filterYear || new Date().getFullYear();
-
-    const existingData = (this.selectedAttendance as any)[field];
-    this.tempSelectedDates = existingData 
-        ? existingData.toString().split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n)) 
-        : [];
-
-    this.generateCalendar();
-  }
-
-  closeCalendar(): void {
-    this.activeCalendar = null;
-  }
-
-  generateCalendar(): void {
-    const firstDay = new Date(this.calYear, this.calMonth, 1).getDay();
-    const daysInMonth = new Date(this.calYear, this.calMonth + 1, 0).getDate();
-    this.calDays = [];
-
-    // Slot kosong untuk hari sebelum tanggal 1
-    for (let i = 0; i < firstDay; i++) {
-      this.calDays.push({ date: 0, isCurrentMonth: false, isSelected: false });
-    }
-
-    // Hari dalam bulan tersebut
-    for (let i = 1; i <= daysInMonth; i++) {
-      this.calDays.push({
-        date: i,
-        isCurrentMonth: true,
-        isSelected: this.tempSelectedDates.includes(i)
-      });
-    }
-  }
-
-  toggleDate(day: number): void {
-    if (day === 0) return; // Mengabaikan slot kosong
-    const idx = this.tempSelectedDates.indexOf(day);
-    if (idx > -1) {
-      this.tempSelectedDates.splice(idx, 1); // Un-select
-    } else {
-      this.tempSelectedDates.push(day); // Select
-    }
-    this.tempSelectedDates.sort((a, b) => a - b); // Urutkan angka
-    this.generateCalendar(); // Render ulang kalender agar UI update
-  }
-
-  applyCalendarDates(): void {
-    if (this.activeCalendar && this.selectedAttendance) {
-      const resultString = this.tempSelectedDates.length > 0 ? this.tempSelectedDates.join(', ') : null;
-      (this.selectedAttendance as any)[this.activeCalendar] = resultString;
-      
-      // DISESUAIKAN DENGAN NAMA KOLOM DATABASE
-      if (this.activeCalendar === 'tanggal_izin') (this.selectedAttendance as any)['cuti_pribadi'] = this.tempSelectedDates.length;
-      if (this.activeCalendar === 'tanggal_sakit') (this.selectedAttendance as any)['sakit_dengan_surat_dokter'] = this.tempSelectedDates.length;
-      if (this.activeCalendar === 'tanggal_alpa') (this.selectedAttendance as any)['tanpa_izin'] = this.tempSelectedDates.length;
-    }
-    this.closeCalendar();
-  }
-
   // ── Helpers ──────────────────────────────────────────────
   get pageNumbers(): number[] {
     const pages = [];
@@ -297,10 +278,6 @@ export class HrdAttendanceListComponent implements OnInit {
   getMonthName(m: number): string {
     if (!m) return '-';
     return new Date(2000, m - 1).toLocaleString('id-ID', { month: 'long' });
-  }
-
-  getCalendarMonthName(): string {
-    return this.months.find(m => m.value === this.calMonth + 1)?.label || '';
   }
 
   private showToast(msg: string, type: 'success' | 'error'): void {
