@@ -1,1 +1,121 @@
-<p>slip-detail works!</p>
+<div class="mb-6 flex gap-3 print:hidden px-4 pt-6 max-w-4xl mx-auto">
+  <button (click)="goBack()" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2 shadow-sm">
+    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    Kembali
+  </button>
+  
+  <button (click)="printSlip()" class="px-5 py-2 bg-slate-800 text-white font-bold rounded-xl shadow-lg hover:bg-slate-700 transition-all flex items-center gap-2">
+    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+    Cetak Slip Gaji
+  </button>
+</div>
+
+<div *ngIf="slipData" class="max-w-4xl mx-auto bg-white p-8 md:p-12 shadow-md md:rounded-2xl border border-slate-100 print:shadow-none print:border-none print:p-0 print:w-full font-sans text-slate-800">
+  
+  <div class="border-b-2 border-slate-800 pb-6 mb-6 flex justify-between items-center">
+    <div>
+      <h1 class="text-2xl font-black uppercase tracking-widest text-slate-900">PT. Agro Deli Serdang</h1>
+      <p class="text-xs text-slate-500 mt-1">Sistem Penggajian & HRIS Terpadu</p>
+    </div>
+    <div class="text-right">
+      <h2 class="text-3xl font-black text-orange-500 uppercase">Slip Gaji</h2>
+      <p class="text-sm font-bold text-slate-600 mt-1 bg-slate-100 inline-block px-3 py-1 rounded-lg">
+        Periode: {{ slipData.period_label || '-' }}
+      </p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 bg-slate-50 p-6 rounded-xl border border-slate-100 print:bg-transparent print:p-0 print:border-none">
+    
+    <div>
+      <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Informasi Karyawan</h3>
+      <table class="text-sm w-full">
+        <tbody>
+          <tr><td class="py-1.5 text-slate-500 w-32 font-medium">ID / NIK</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.nik }}</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-32 font-medium">Nama Lengkap</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.name }}</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-32 font-medium">Departemen</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.department }}</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-32 font-medium">Jabatan</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.position }}</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-32 font-medium">Status Pajak</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.status_pajak }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <h3 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-200 pb-2">Rekap Kehadiran</h3>
+      <table class="text-sm w-full">
+        <tbody>
+          <tr><td class="py-1.5 text-slate-500 w-36 font-medium">Hari Kerja Efektif</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.effective_working_days || 0 }} Hari</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-36 font-medium">Total Hadir</td><td class="py-1.5 font-bold text-emerald-600">: {{ slipData.total_present }} Hari</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-36 font-medium">Tanpa Izin (Alpa)</td><td class="py-1.5 font-bold text-rose-600">: {{ slipData.total_absent }} Hari</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-36 font-medium">Total Terlambat</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.total_late }} Kali</td></tr>
+          <tr><td class="py-1.5 text-slate-500 w-36 font-medium">Total Lembur</td><td class="py-1.5 font-bold text-slate-800">: {{ slipData.overtime_hours }} Jam</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 border border-slate-200 rounded-xl overflow-hidden print:border-none print:gap-12">
+    
+    <div class="p-6 print:p-0">
+      <h3 class="text-sm font-black text-emerald-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+        Penerimaan
+      </h3>
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">Gaji Pokok</span><span class="font-bold">{{ formatRupiah(slipData.base_salary) }}</span></div>
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">Uang Lembur</span><span class="font-bold">{{ formatRupiah(slipData.overtime_pay) }}</span></div>
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">Bonus / Tunjangan</span><span class="font-bold">{{ formatRupiah(slipData.bonus) }}</span></div>
+      </div>
+      <div class="mt-6 pt-4 border-t-2 border-emerald-100 flex justify-between items-center">
+        <span class="font-black text-slate-800">Total Penerimaan (A)</span>
+        <span class="font-black text-emerald-600">{{ formatRupiah(slipData.total_income) }}</span>
+      </div>
+    </div>
+
+    <div class="p-6 bg-slate-50 print:bg-transparent print:p-0">
+      <h3 class="text-sm font-black text-rose-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+        Potongan
+      </h3>
+      <div class="space-y-3 text-sm">
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">Potongan Absensi</span><span class="font-bold text-rose-600">{{ formatRupiah(slipData.absence_deduction) }}</span></div>
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">BPJS Kesehatan</span><span class="font-bold text-rose-600">{{ formatRupiah(slipData.bpjs_kesehatan) }}</span></div>
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">BPJS Ketenagakerjaan</span><span class="font-bold text-rose-600">{{ formatRupiah(slipData.bpjs_ketenagakerjaan) }}</span></div>
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">PPh 21</span><span class="font-bold text-rose-600">{{ formatRupiah(slipData.pph21_deduction) }}</span></div>
+        <div class="flex justify-between items-center"><span class="text-slate-600 font-medium">Potongan Lainnya</span><span class="font-bold text-rose-600">{{ formatRupiah(slipData.other_deduction) }}</span></div>
+      </div>
+      <div class="mt-6 pt-4 border-t-2 border-rose-100 flex justify-between items-center">
+        <span class="font-black text-slate-800">Total Potongan (B)</span>
+        <span class="font-black text-rose-600">{{ formatRupiah(slipData.total_deduction) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-slate-800 text-white p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center shadow-lg print:border-2 print:border-slate-800 print:text-slate-900 print:bg-white print:shadow-none">
+    <div>
+      <h3 class="text-lg font-black uppercase tracking-wide opacity-90 print:opacity-100">Gaji Bersih Diterima (A - B)</h3>
+      <p class="text-sm opacity-70 print:text-slate-500 mt-1">Take Home Pay (THP)</p>
+    </div>
+    <div class="text-3xl md:text-4xl font-black mt-4 md:mt-0 tracking-tight text-orange-400 print:text-slate-900">
+      {{ formatRupiah(slipData.net_salary) }}
+    </div>
+  </div>
+
+  <div class="mt-16 grid grid-cols-2 text-center text-sm print:mt-20">
+    <div>
+      <p class="text-slate-500 mb-20">Penerima,</p>
+      <p class="font-black text-slate-800 border-b border-slate-300 inline-block pb-1 min-w-[160px]">{{ slipData.name }}</p>
+      <p class="text-slate-400 text-xs mt-1">Karyawan</p>
+    </div>
+    <div>
+      <p class="text-slate-500 mb-20">Disetujui Oleh,</p>
+      <p class="font-black text-slate-800 border-b border-slate-300 inline-block pb-1 min-w-[160px]">HR Manager</p>
+      <p class="text-slate-400 text-xs mt-1">PT. Agro Deli Serdang</p>
+    </div>
+  </div>
+
+  <div class="mt-12 pt-6 border-t border-dashed border-slate-200 text-center text-[10px] text-slate-400 print:mt-16">
+    <p>Dokumen ini di-generate secara otomatis oleh Sistem HRIS & Payroll PT Agro Deli Serdang dan sah tanpa stempel perusahaan.</p>
+  </div>
+
+</div>

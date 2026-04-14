@@ -22,6 +22,12 @@ interface SlipGajiItem {
   net_salary: number;
   status: string;
   
+  // Periode dari Backend
+  period_month?: number;
+  period_year?: number;
+  period_label?: string;
+  effective_working_days?: number;
+
   bpjs_kesehatan?: number;
   bpjs_ketenagakerjaan?: number;
   pph21_deduction?: number;
@@ -124,9 +130,11 @@ export class SlipListComponent implements OnInit {
             position: posVal,
             bonus: item.bonus || 0,
             allowances: mappedAllowances,
-            total_present: item.total_present !== undefined ? Number(item.total_present) : 25,
+            total_present: item.total_present !== undefined ? Number(item.total_present) : 0,
             total_absent: item.total_absent !== undefined ? Number(item.total_absent) : 0,
             total_late: item.total_late !== undefined ? Number(item.total_late) : 0,
+            effective_working_days: item.effective_working_days || 0,
+            period_label: item.period_label || res.period?.label || ''
           };
         });
 
@@ -244,8 +252,11 @@ export class SlipListComponent implements OnInit {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
     if (!item) return;
 
-    const hariKerja = item.total_present !== undefined ? item.total_present : 25;
-    const alpaLainnya = (item.total_absent || 0) + (item.total_late || 0);
+    // 🔥 PERBAIKAN: Mengambil Hari Kerja Efektif dari Backend
+    const hariKerjaEfektif = item.effective_working_days || 0;
+    const hadir = item.total_present || 0;
+    const alpaLainnya = item.total_absent || 0;
+    
     const formatPts = this.formatPoin(item.overtime_hours);
 
     let pph21Value = Number(item.pph21_deduction) || 0;
@@ -268,7 +279,7 @@ export class SlipListComponent implements OnInit {
         lemburHtml = `<div class="flex justify-between"><span class="text-gray-600">Upah Lembur</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.overtime_pay)}</span></div>`;
     }
 
-    // 👇 LOGIKA PERIODE MUNDUR & HURUF MIRING
+    // 燥 LOGIKA PERIODE MUNDUR
     let textNote = '-';
     if (item.overtime_pay > 0 || item.overtime_hours > 0) {
         const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -279,7 +290,6 @@ export class SlipListComponent implements OnInit {
         let prevMonthValue = currentMonthValue - 1;
         let prevYearValue = currentYearValue;
         
-        // Logika jika potong tahun (Misal Slip Januari, berarti lemburnya dari Desember tahun lalu)
         if (prevMonthValue < 1) {
             prevMonthValue = 12;
             prevYearValue -= 1;
@@ -287,8 +297,6 @@ export class SlipListComponent implements OnInit {
 
         const prevMonthStr = monthNames[prevMonthValue];
         const currentMonthStr = monthNames[currentMonthValue];
-        
-        // Tampilkan tahun sebelumnya jika melewati pergantian tahun
         const tahunLaluTeks = (prevMonthValue === 12) ? ` ${prevYearValue}` : '';
 
         textNote = `Lembur periode tanggal 21 ${prevMonthStr}${tahunLaluTeks} sampai 20 ${currentMonthStr} ${currentYearValue}`;
@@ -306,7 +314,7 @@ export class SlipListComponent implements OnInit {
               <img src="assets/images/logo.png" alt="Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none'">
               <div>
                 <h2 class="text-base font-extrabold text-gray-900 tracking-tight leading-none mb-1">PT. AGRO DELI SERDANG</h2>
-                <p class="text-xs text-gray-500 font-medium">Slip Gaji • ${this.periodLabel}</p>
+                <p class="text-xs text-gray-500 font-medium">Slip Gaji 窶｢ ${item.period_label || this.periodLabel}</p>
               </div>
             </div>
           </div>
@@ -327,14 +335,18 @@ export class SlipListComponent implements OnInit {
 
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-100 flex justify-between text-xs">
               <div class="text-center">
-                <span class="block text-gray-500 font-medium mb-1">Hadir</span>
-                <span class="font-bold text-gray-900">${hariKerja} <span class="font-normal text-gray-500">Hari</span></span>
+                <span class="block text-gray-500 font-medium mb-1">H.K Efektif</span>
+                <span class="font-bold text-gray-900">${hariKerjaEfektif} <span class="font-normal text-gray-500">Hari</span></span>
               </div>
               <div class="text-center">
-                <span class="block text-gray-500 font-medium mb-1">Alpa/Telat</span>
+                <span class="block text-gray-500 font-medium mb-1">Total Hadir</span>
+                <span class="font-bold text-emerald-600">${hadir} <span class="font-normal text-gray-500">Hari</span></span>
+              </div>
+              <div class="text-center">
+                <span class="block text-gray-500 font-medium mb-1">Alpa (T. Izin)</span>
                 <span class="font-bold text-red-600">${alpaLainnya} <span class="font-normal text-gray-500">Hari</span></span>
               </div>
-              <div class="text-center">
+              <div class="text-center border-l pl-3 ml-1">
                 <span class="block text-gray-500 font-medium mb-1">Lembur</span>
                 <span class="font-bold text-indigo-600">${formatPts} <span class="font-normal text-gray-500">Pts</span></span>
               </div>
@@ -395,8 +407,11 @@ export class SlipListComponent implements OnInit {
     
     doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
     doc.text('SLIP GAJI KARYAWAN', 105, startY + 19, { align: 'center' });
+    
+    // 🔥 PERBAIKAN: Label Periode PDF (Mengambil dari backend)
+    const cetakPeriode = item.period_label ? item.period_label.toUpperCase() : `${bulanLabel} ${tahunLabel}`;
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-    doc.text(`PERIODE: ${bulanLabel} ${tahunLabel}`, 105, startY + 23, { align: 'center' });
+    doc.text(`PERIODE: ${cetakPeriode}`, 105, startY + 23, { align: 'center' });
 
     doc.setFontSize(7);
     doc.text('NIK', 12, startY + 30);              doc.text(`: ${item.nik}`, 28, startY + 30);
@@ -404,16 +419,19 @@ export class SlipListComponent implements OnInit {
     doc.text('Jabatan', 12, startY + 38);          doc.text(`: ${item.position}`, 28, startY + 38);
     doc.text('Departemen', 12, startY + 42);       doc.text(`: ${item.department}`, 28, startY + 42);
 
-    const hariKerja = item.total_present !== undefined ? item.total_present : 25;
-    const alphaLainnya = (item.total_absent || 0) + (item.total_late || 0);
+    // 🔥 PERBAIKAN: Hari Kerja Efektif PDF
+    const hariKerjaEfektif = item.effective_working_days || 0;
+    const hadir = item.total_present || 0;
+    const alphaLainnya = item.total_absent || 0;
     const formatPts = this.formatPoin(item.overtime_hours);
     const formatJam = this.convertPoinToJam(item.overtime_hours);
 
     doc.text('DETAIL KEHADIRAN', 115, startY + 30); doc.line(115, startY + 31, 150, startY + 31);
-    doc.text('Hari Kerja Efektif', 115, startY + 35); doc.text(`: ${hariKerja} Hari`, 150, startY + 35);
-    doc.text('Tidak Hadir (Alpa)', 115, startY + 38); doc.text(`: ${alphaLainnya} Hari`, 150, startY + 38);
-    doc.text('Total Lembur', 115, startY + 41);        
-    doc.text(`: ${formatPts} Poin (~${formatJam} Jam)`, 150, startY + 41);
+    doc.text('Hari Kerja Efektif', 115, startY + 35);  doc.text(`: ${hariKerjaEfektif} Hari`, 150, startY + 35);
+    doc.text('Total Hadir', 115, startY + 38);         doc.text(`: ${hadir} Hari`, 150, startY + 38);
+    doc.text('Tidak Hadir (Alpa)', 115, startY + 41);  doc.text(`: ${alphaLainnya} Hari`, 150, startY + 41);
+    doc.text('Total Lembur', 115, startY + 44);        
+    doc.text(`: ${formatPts} Poin (~${formatJam} Jam)`, 150, startY + 44);
 
     // PENGHASILAN
     const arrPenghasilan: { desc: string; val: string }[] = [
@@ -465,7 +483,7 @@ export class SlipListComponent implements OnInit {
     ]);
 
     autoTable(doc, {
-      startY: startY + 46, theme: 'grid',
+      startY: startY + 49, theme: 'grid', // Turunkan sedikit startY agar tidak nabrak teks Detail Kehadiran
       styles: { fontSize: 6.5, cellPadding: 2.5, lineColor: [200, 200, 200], lineWidth: 0.1, textColor: [40, 40, 40] },
       headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', fontSize: 7 },
       columnStyles: { 0: { cellWidth: 56 }, 1: { cellWidth: 38, halign: 'right' }, 2: { cellWidth: 56 }, 3: { cellWidth: 38, halign: 'right' } },
@@ -484,7 +502,6 @@ export class SlipListComponent implements OnInit {
     const splitTerbilang = doc.splitTextToSize(terbilangText, 180 - doc.getTextWidth(textTHP) - 10);
     if (splitTerbilang[0]) doc.text(splitTerbilang[0], 198, thpY + 3.5, { align: 'right' });
 
-    // 👇 LOGIKA UNTUK NOTE PERIODE LEMBUR MUNDUR DI PDF
     let textNotePDF = '-';
     if (item.overtime_pay > 0 || item.overtime_hours > 0) {
         const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -507,7 +524,6 @@ export class SlipListComponent implements OnInit {
         textNotePDF = `Lembur periode tanggal 21 ${prevMonthStr}${tahunLaluTeks} sampai 20 ${currentMonthStr} ${currentYearValue}`;
     }
 
-    // 👇 MENGGUNAKAN HURUF MIRING (ITALIC) DI PDF
     doc.setFontSize(8); doc.setFont('helvetica', 'italic'); doc.setTextColor(0, 0, 0);
     doc.text(`Note : ${textNotePDF}`, 12, thpY + 9);
   }
