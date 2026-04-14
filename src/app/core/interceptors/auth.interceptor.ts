@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 import {
   HttpRequest,
   HttpHandler,
@@ -13,12 +13,16 @@ import { Router } from '@angular/router';
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
 
-  constructor(private router: Router) {}
+  // Menggunakan Injector untuk mencegah error "Circular Dependency" (NG0200)
+  constructor(private injector: Injector) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     
-    // 1. Ambil Token dari LocalStorage
-    const token = localStorage.getItem('auth_token');
+    // 1. Ambil Token dari LocalStorage dengan AMAN (Mencegah error SSR di Angular 17)
+    let token = null;
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('auth_token'); // Pastikan key-nya benar 'auth_token' ya Mas
+    }
 
     // 2. Jika Token Ada, Clone Request & Tambah Header Authorization
     if (token) {
@@ -32,12 +36,20 @@ export class AuthInterceptor implements HttpInterceptor {
     // 3. Lanjutkan Request ke Backend
     return next.handle(request).pipe(
       
-      // 4. Global Error Handling (Opsional tapi berguna)
+      // 4. Global Error Handling
       catchError((error: HttpErrorResponse) => {
         if (error.status === 401) {
-          // Jika Token Expired / Tidak Valid -> Logout & Redirect Login
-          localStorage.clear();
-          this.router.navigate(['/auth/login']);
+          
+          // Ambil router melalui injector hanya saat error terjadi
+          const router = this.injector.get(Router);
+          
+          // Hapus token dengan aman
+          if (typeof window !== 'undefined') {
+            localStorage.clear();
+          }
+          
+          // Redirect ke halaman login
+          router.navigate(['/auth/login']);
         }
         return throwError(() => error);
       })

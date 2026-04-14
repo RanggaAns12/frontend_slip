@@ -151,6 +151,7 @@
                     {{ getMonthName(item.month) }} {{ item.year }}
                   </span>
                 </td>
+                
                 <td class="px-6 py-4 text-center">
                   <span [class.text-purple-500]="$any(item).cuti_pribadi > 0"
                         [class.bg-purple-50]="$any(item).cuti_pribadi > 0"
@@ -160,19 +161,19 @@
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-blue-500]="$any(item).sakit_dengan_dokter > 0"
-                        [class.bg-blue-50]="$any(item).sakit_dengan_dokter > 0"
-                        [class.text-slate-300]="!$any(item).sakit_dengan_dokter"
+                  <span [class.text-blue-500]="$any(item).sakit_dengan_surat_dokter > 0"
+                        [class.bg-blue-50]="$any(item).sakit_dengan_surat_dokter > 0"
+                        [class.text-slate-300]="!$any(item).sakit_dengan_surat_dokter"
                         class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).sakit_dengan_dokter || 0 }}
+                    {{ $any(item).sakit_dengan_surat_dokter || 0 }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-rose-500]="$any(item).absent_no_permission > 0"
-                        [class.bg-rose-50]="$any(item).absent_no_permission > 0"
-                        [class.text-slate-300]="!$any(item).absent_no_permission"
+                  <span [class.text-rose-500]="$any(item).tanpa_izin > 0"
+                        [class.bg-rose-50]="$any(item).tanpa_izin > 0"
+                        [class.text-slate-300]="!$any(item).tanpa_izin"
                          class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).absent_no_permission || 0 }}
+                    {{ $any(item).tanpa_izin || 0 }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
@@ -223,11 +224,11 @@
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span>
-               <span class="text-sm font-black" [class.text-blue-500]="$any(item).sakit_dengan_dokter > 0" [class.text-slate-300]="!$any(item).sakit_dengan_dokter">{{ $any(item).sakit_dengan_dokter || 0 }}</span>
+               <span class="text-sm font-black" [class.text-blue-500]="$any(item).sakit_dengan_surat_dokter > 0" [class.text-slate-300]="!$any(item).sakit_dengan_surat_dokter">{{ $any(item).sakit_dengan_surat_dokter || 0 }}</span>
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpa</span>
-               <span class="text-sm font-black" [class.text-rose-500]="$any(item).absent_no_permission > 0" [class.text-slate-300]="!$any(item).absent_no_permission">{{ $any(item).absent_no_permission || 0 }}</span>
+               <span class="text-sm font-black" [class.text-rose-500]="$any(item).tanpa_izin > 0" [class.text-slate-300]="!$any(item).tanpa_izin">{{ $any(item).tanpa_izin || 0 }}</span>
              </div>
           </div>
 
@@ -297,17 +298,17 @@
         <div class="space-y-4">
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
             <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Hari Hadir</label>
-            <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).attendance_count" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+            <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).kehadiran_jml" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
           </div>
 
           <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex gap-3">
             <div class="flex-1">
               <label class="block text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Lembur (Jam)</label>
-              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).overtime_hours" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).lembur_jam" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
             </div>
             <div class="flex-1">
               <label class="block text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Lembur (Menit)</label>
-              <input type="number" min="0" max="59" [(ngModel)]="$any(selectedAttendance).overtime_minutes" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+              <input type="number" min="0" max="59" [(ngModel)]="$any(selectedAttendance).lembur_menit" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
             </div>
           </div>
         </div>
@@ -330,7 +331,7 @@
           <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 transition-all hover:shadow-md hover:border-blue-200">
             <div class="flex items-center justify-between mb-2">
               <label class="text-xs font-bold text-blue-800 uppercase tracking-wide">Sakit (Surat Dokter)</label>
-              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).sakit_dengan_dokter" class="w-16 px-2 py-1 bg-white border border-blue-200 rounded-lg text-sm font-bold text-blue-700 outline-none text-center">
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).sakit_dengan_surat_dokter" class="w-16 px-2 py-1 bg-white border border-blue-200 rounded-lg text-sm font-bold text-blue-700 outline-none text-center">
             </div>
             <div class="relative cursor-pointer group" (click)="openCalendar('tanggal_sakit')">
               <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -343,7 +344,7 @@
           <div class="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 transition-all hover:shadow-md hover:border-rose-200">
             <div class="flex items-center justify-between mb-2">
               <label class="text-xs font-bold text-rose-800 uppercase tracking-wide">Tanpa Izin (Alpa)</label>
-              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).absent_no_permission" class="w-16 px-2 py-1 bg-white border border-rose-200 rounded-lg text-sm font-bold text-rose-700 outline-none text-center">
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).tanpa_izin" class="w-16 px-2 py-1 bg-white border border-rose-200 rounded-lg text-sm font-bold text-rose-700 outline-none text-center">
             </div>
             <div class="relative cursor-pointer group" (click)="openCalendar('tanggal_alpa')">
               <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">

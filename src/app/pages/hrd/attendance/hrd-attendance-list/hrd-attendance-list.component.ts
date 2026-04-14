@@ -274,14 +274,13 @@ export class HrdAttendanceListComponent implements OnInit {
 
   applyCalendarDates(): void {
     if (this.activeCalendar && this.selectedAttendance) {
-      // Gabungkan menjadi teks (Cth: "12, 14, 15")
       const resultString = this.tempSelectedDates.length > 0 ? this.tempSelectedDates.join(', ') : null;
       (this.selectedAttendance as any)[this.activeCalendar] = resultString;
       
-      // Auto-update jumlah hari jika HRD menggunakan kalender ini
+      // DISESUAIKAN DENGAN NAMA KOLOM DATABASE
       if (this.activeCalendar === 'tanggal_izin') (this.selectedAttendance as any)['cuti_pribadi'] = this.tempSelectedDates.length;
-      if (this.activeCalendar === 'tanggal_sakit') (this.selectedAttendance as any)['sakit_dengan_dokter'] = this.tempSelectedDates.length;
-      if (this.activeCalendar === 'tanggal_alpa') (this.selectedAttendance as any)['absent_no_permission'] = this.tempSelectedDates.length;
+      if (this.activeCalendar === 'tanggal_sakit') (this.selectedAttendance as any)['sakit_dengan_surat_dokter'] = this.tempSelectedDates.length;
+      if (this.activeCalendar === 'tanggal_alpa') (this.selectedAttendance as any)['tanpa_izin'] = this.tempSelectedDates.length;
     }
     this.closeCalendar();
   }
