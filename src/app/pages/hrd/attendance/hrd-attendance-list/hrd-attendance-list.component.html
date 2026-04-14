@@ -49,56 +49,40 @@
               <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
             </svg>
           </div>
-          <input type="text" 
-                 [(ngModel)]="filterSearch" 
-                 (ngModelChange)="onSearchDebounce()"
-                 class="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 border-0 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:bg-white text-slate-700 placeholder-slate-400 transition-all shadow-sm"
-                 placeholder="Cari Nama, NIP, atau Jabatan...">
+          <input type="text" [(ngModel)]="filterSearch" (ngModelChange)="onSearchDebounce()" class="w-full pl-11 pr-4 py-3 text-sm bg-slate-50 border-0 rounded-xl ring-1 ring-slate-200 focus:ring-2 focus:ring-orange-500/20 focus:bg-white text-slate-700 placeholder-slate-400 transition-all shadow-sm" placeholder="Cari Nama, NIP, atau Jabatan...">
         </div>
 
         <div class="h-8 w-px bg-slate-200 hidden xl:block mx-2"></div>
 
         <div class="flex flex-wrap gap-3 w-full xl:w-auto items-center flex-1">
-          
           <div class="relative flex-1 min-w-[140px]">
-            <select [(ngModel)]="filterDept" (change)="onSearch()"
-                    class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
+            <select [(ngModel)]="filterDept" (change)="onSearch()" class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
               <option value="">Semua Dept</option>
               <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
             </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
           </div>
 
           <div class="relative flex-1 min-w-[140px]">
-             <select [(ngModel)]="filterPosisi" (change)="onSearch()"
-                    class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
+             <select [(ngModel)]="filterPosisi" (change)="onSearch()" class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
               <option value="">Semua Posisi</option>
               <option *ngFor="let p of positions" [value]="p">{{ p }}</option>
             </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg></div>
           </div>
 
           <div class="relative w-36 sm:w-40">
-            <select [(ngModel)]="filterMonth" (change)="onSearch()"
-                    class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-bold text-orange-600 bg-orange-50/50 border border-orange-100 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-orange-50">
+            <select [(ngModel)]="filterMonth" (change)="onSearch()" class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-bold text-orange-600 bg-orange-50/50 border border-orange-100 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-orange-50">
               <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
             </select>
-            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-orange-500">
-              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-            </div>
+            <div class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-orange-500"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
           </div>
 
           <div class="relative w-28">
-            <input type="number" [(ngModel)]="filterYear" (ngModelChange)="onSearchDebounce()"
-                   class="w-full pl-4 pr-2 py-2.5 text-sm font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all text-center placeholder-slate-400" placeholder="YYYY">
+            <input type="number" [(ngModel)]="filterYear" (ngModelChange)="onSearchDebounce()" class="w-full pl-4 pr-2 py-2.5 text-sm font-bold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all text-center placeholder-slate-400" placeholder="YYYY">
           </div>
 
-          <button (click)="resetFilter()" title="Reset Filter"
-                  class="p-2.5 bg-slate-100 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-colors shadow-sm">
+          <button (click)="resetFilter()" title="Reset Filter" class="p-2.5 bg-slate-100 text-slate-400 rounded-xl hover:bg-slate-200 hover:text-slate-600 transition-colors shadow-sm">
             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
           </button>
         </div>
@@ -158,18 +142,15 @@
                     </div>
                   </div>
                 </td>
-
                 <td class="px-6 py-4">
                   <p class="text-sm font-semibold text-slate-700">{{ item.jabatan || '-' }}</p>
                   <p class="text-xs text-slate-400 mt-0.5">{{ item.departemen || '-' }}</p>
                 </td>
-
                 <td class="px-6 py-4 text-center">
                   <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-blue-600 border border-blue-100">
                     {{ getMonthName(item.month) }} {{ item.year }}
                   </span>
                 </td>
-
                 <td class="px-6 py-4 text-center">
                   <span [class.text-purple-500]="$any(item).cuti_pribadi > 0"
                         [class.bg-purple-50]="$any(item).cuti_pribadi > 0"
@@ -178,25 +159,22 @@
                     {{ $any(item).cuti_pribadi || 0 }}
                   </span>
                 </td>
-
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-blue-500]="$any(item).sakit_dengan_surat_dokter > 0"
-                        [class.bg-blue-50]="$any(item).sakit_dengan_surat_dokter > 0"
-                        [class.text-slate-300]="!$any(item).sakit_dengan_surat_dokter"
+                  <span [class.text-blue-500]="$any(item).sakit_dengan_dokter > 0"
+                        [class.bg-blue-50]="$any(item).sakit_dengan_dokter > 0"
+                        [class.text-slate-300]="!$any(item).sakit_dengan_dokter"
                         class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).sakit_dengan_surat_dokter || 0 }}
+                    {{ $any(item).sakit_dengan_dokter || 0 }}
                   </span>
                 </td>
-
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-rose-500]="$any(item).tanpa_izin > 0"
-                        [class.bg-rose-50]="$any(item).tanpa_izin > 0"
-                        [class.text-slate-300]="!$any(item).tanpa_izin"
+                  <span [class.text-rose-500]="$any(item).absent_no_permission > 0"
+                        [class.bg-rose-50]="$any(item).absent_no_permission > 0"
+                        [class.text-slate-300]="!$any(item).absent_no_permission"
                          class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).tanpa_izin || 0 }}
+                    {{ $any(item).absent_no_permission || 0 }}
                   </span>
                 </td>
-
                 <td class="px-6 py-4 text-center">
                   <button (click)="openEditModal(item)" [disabled]="isEditing"
                           class="w-10 h-10 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white border border-orange-100 hover:border-transparent transition-all shadow-sm mx-auto disabled:opacity-50" title="Edit Manual">
@@ -245,11 +223,11 @@
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span>
-               <span class="text-sm font-black" [class.text-blue-500]="$any(item).sakit_dengan_surat_dokter > 0" [class.text-slate-300]="!$any(item).sakit_dengan_surat_dokter">{{ $any(item).sakit_dengan_surat_dokter || 0 }}</span>
+               <span class="text-sm font-black" [class.text-blue-500]="$any(item).sakit_dengan_dokter > 0" [class.text-slate-300]="!$any(item).sakit_dengan_dokter">{{ $any(item).sakit_dengan_dokter || 0 }}</span>
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpa</span>
-               <span class="text-sm font-black" [class.text-rose-500]="$any(item).tanpa_izin > 0" [class.text-slate-300]="!$any(item).tanpa_izin">{{ $any(item).tanpa_izin || 0 }}</span>
+               <span class="text-sm font-black" [class.text-rose-500]="$any(item).absent_no_permission > 0" [class.text-slate-300]="!$any(item).absent_no_permission">{{ $any(item).absent_no_permission || 0 }}</span>
              </div>
           </div>
 
@@ -273,9 +251,7 @@
       <div class="border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center cursor-pointer transition-colors relative mb-6"
            [class.border-orange-300]="selectedFile" [class.bg-orange-50]="selectedFile"
            [class.border-slate-200]="!selectedFile" [class.hover:bg-slate-50]="!selectedFile">
-        
         <input type="file" (change)="onFileSelected($event)" accept=".html" class="absolute inset-0 opacity-0 cursor-pointer">
-        
         <svg class="h-10 w-10 mb-3" [class.text-orange-500]="selectedFile" [class.text-slate-300]="!selectedFile" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
         </svg>
@@ -292,14 +268,14 @@
     </div>
   </div>
 
-  <div *ngIf="showEditModal && selectedAttendance" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+  <div *ngIf="showEditModal && selectedAttendance" class="fixed inset-0 z-[90] flex items-center justify-center p-4">
     <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeEditModal()"></div>
-    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-xl p-6 transform transition-all animate-bounce-in overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
+    <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-2xl p-6 transform transition-all animate-bounce-in overflow-hidden max-h-[90vh] overflow-y-auto custom-scrollbar">
       
       <div class="flex justify-between items-center mb-6">
         <div>
           <h3 class="text-xl font-bold text-slate-800">Edit Absensi Manual</h3>
-          <p class="text-sm text-slate-500">Sesuaikan data kehadiran jika ada kesalahan mesin.</p>
+          <p class="text-sm text-slate-500">Pilih tanggal cuti/sakit untuk update total hari otomatis.</p>
         </div>
         <button (click)="closeEditModal()" class="text-slate-400 hover:text-rose-500 transition-colors p-1">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
@@ -316,32 +292,67 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Hari Hadir</label>
-          <input type="number" min="0" [(ngModel)]="selectedAttendance!.kehadiran_jml" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Tanpa Izin (Alpa)</label>
-          <input type="number" min="0" [(ngModel)]="selectedAttendance!.tanpa_izin" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-rose-600 outline-none focus:border-rose-400 focus:ring-2 focus:ring-rose-100">
-        </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
         
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Sakit (Surat)</label>
-          <input type="number" min="0" [(ngModel)]="selectedAttendance!.sakit_dengan_surat_dokter" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-blue-600 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Cuti Pribadi</label>
-          <input type="number" min="0" [(ngModel)]="selectedAttendance!.cuti_pribadi" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-purple-600 outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100">
+        <div class="space-y-4">
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <label class="block text-xs font-bold text-slate-600 mb-2 uppercase tracking-wide">Hari Hadir</label>
+            <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).attendance_count" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100">
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex gap-3">
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Lembur (Jam)</label>
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).overtime_hours" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+            </div>
+            <div class="flex-1">
+              <label class="block text-[10px] font-bold text-slate-500 mb-2 uppercase tracking-wide">Lembur (Menit)</label>
+              <input type="number" min="0" max="59" [(ngModel)]="$any(selectedAttendance).overtime_minutes" class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+            </div>
+          </div>
         </div>
 
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Lembur Jam</label>
-          <input type="number" min="0" [(ngModel)]="selectedAttendance!.lembur_jam" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-        </div>
-        <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">Lembur Menit</label>
-          <input type="number" min="0" max="59" [(ngModel)]="selectedAttendance!.lembur_menit" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+        <div class="space-y-3">
+          
+          <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100 transition-all hover:shadow-md hover:border-purple-200">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-bold text-purple-800 uppercase tracking-wide">Cuti / Izin Pribadi</label>
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).cuti_pribadi" class="w-16 px-2 py-1 bg-white border border-purple-200 rounded-lg text-sm font-bold text-purple-700 outline-none text-center">
+            </div>
+            <div class="relative cursor-pointer group" (click)="openCalendar('tanggal_izin')">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              <input type="text" readonly [value]="$any(selectedAttendance).tanggal_izin || ''" placeholder="Klik untuk pilih tanggal..." class="w-full pl-9 pr-3 py-2 bg-white border border-purple-200 group-hover:border-purple-400 rounded-xl text-xs font-medium text-slate-700 outline-none cursor-pointer truncate shadow-sm transition-colors">
+            </div>
+          </div>
+
+          <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 transition-all hover:shadow-md hover:border-blue-200">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-bold text-blue-800 uppercase tracking-wide">Sakit (Surat Dokter)</label>
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).sakit_dengan_dokter" class="w-16 px-2 py-1 bg-white border border-blue-200 rounded-lg text-sm font-bold text-blue-700 outline-none text-center">
+            </div>
+            <div class="relative cursor-pointer group" (click)="openCalendar('tanggal_sakit')">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              <input type="text" readonly [value]="$any(selectedAttendance).tanggal_sakit || ''" placeholder="Klik untuk pilih tanggal..." class="w-full pl-9 pr-3 py-2 bg-white border border-blue-200 group-hover:border-blue-400 rounded-xl text-xs font-medium text-slate-700 outline-none cursor-pointer truncate shadow-sm transition-colors">
+            </div>
+          </div>
+
+          <div class="bg-rose-50/50 p-4 rounded-2xl border border-rose-100 transition-all hover:shadow-md hover:border-rose-200">
+            <div class="flex items-center justify-between mb-2">
+              <label class="text-xs font-bold text-rose-800 uppercase tracking-wide">Tanpa Izin (Alpa)</label>
+              <input type="number" min="0" [(ngModel)]="$any(selectedAttendance).absent_no_permission" class="w-16 px-2 py-1 bg-white border border-rose-200 rounded-lg text-sm font-bold text-rose-700 outline-none text-center">
+            </div>
+            <div class="relative cursor-pointer group" (click)="openCalendar('tanggal_alpa')">
+              <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              </div>
+              <input type="text" readonly [value]="$any(selectedAttendance).tanggal_alpa || ''" placeholder="Klik untuk pilih tanggal..." class="w-full pl-9 pr-3 py-2 bg-white border border-rose-200 group-hover:border-rose-400 rounded-xl text-xs font-medium text-slate-700 outline-none cursor-pointer truncate shadow-sm transition-colors">
+            </div>
+          </div>
+
         </div>
       </div>
 
@@ -349,6 +360,45 @@
         <button (click)="closeEditModal()" class="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-colors">Batal</button>
         <button (click)="saveAttendance()" [disabled]="isProcessing" class="flex-1 py-3.5 bg-slate-800 text-white font-bold rounded-xl shadow-lg hover:bg-slate-700 disabled:opacity-50 transition-all">
           {{ isProcessing ? 'Menyimpan...' : 'Simpan Perubahan' }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="activeCalendar" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" (click)="closeCalendar()"></div>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-[320px] p-5 transform transition-all animate-bounce-in">
+      
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+        <h4 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+          <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+          {{ getCalendarMonthName() }} {{ calYear }}
+        </h4>
+        <span class="text-xs font-bold text-white bg-slate-800 px-2.5 py-1 rounded-full">{{ tempSelectedDates.length }} Terpilih</span>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1 text-center mb-2">
+        <span *ngFor="let d of weekDays" class="text-[10px] font-black text-slate-400 uppercase tracking-wide">{{ d }}</span>
+      </div>
+
+      <div class="grid grid-cols-7 gap-1 text-center mb-6">
+        <button *ngFor="let item of calDays" 
+                (click)="toggleDate(item.date)"
+                [disabled]="!item.isCurrentMonth"
+                [ngClass]="{
+                  'opacity-0 cursor-default': !item.isCurrentMonth,
+                  'bg-orange-500 text-white font-bold shadow-md shadow-orange-500/30 scale-105': item.isCurrentMonth && item.isSelected,
+                  'hover:bg-slate-100 text-slate-700 font-medium': item.isCurrentMonth && !item.isSelected
+                }"
+                class="w-8 h-8 mx-auto rounded-lg flex items-center justify-center text-sm transition-all focus:outline-none">
+          {{ item.date > 0 ? item.date : '' }}
+        </button>
+      </div>
+
+      <div class="flex gap-2">
+        <button (click)="closeCalendar()" class="w-1/3 py-2.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors">Batal</button>
+        <button (click)="applyCalendarDates()" class="w-2/3 py-2.5 bg-orange-500 text-white text-sm font-bold rounded-xl shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-colors">
+          Terapkan ({{ tempSelectedDates.length }})
         </button>
       </div>
 

@@ -16,7 +16,7 @@ export class HrdAttendanceListComponent implements OnInit {
   currentPage = 1;
   lastPage    = 1;
   total       = 0;
-  Math        = Math; // Agar bisa dipakai di HTML
+  Math        = Math; 
 
   // ── Filter ─────────────────────────────────────────────────
   filterMonth : number | '' = new Date().getMonth() + 1; 
@@ -24,7 +24,6 @@ export class HrdAttendanceListComponent implements OnInit {
   filterSearch= '';
   filterDept  = '';
   filterPosisi= '';
-
   private searchTimeout: any;
 
   // ── Modal State (Import HTML & Edit Manual) ──────────────
@@ -35,6 +34,14 @@ export class HrdAttendanceListComponent implements OnInit {
   showEditModal = false;
   selectedAttendance: Partial<AttendanceSummaryDetail> | null = null;
   isEditing = false;
+
+  // ── Custom Multi-Select Calendar State ────────────────────
+  activeCalendar: 'tanggal_izin' | 'tanggal_sakit' | 'tanggal_alpa' | null = null;
+  calMonth = 0;
+  calYear = 2024;
+  calDays: { date: number, isCurrentMonth: boolean, isSelected: boolean }[] = [];
+  tempSelectedDates: number[] = [];
+  weekDays = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
 
   // ── Options Mapping ───────────────────────────────────────
   months = [
@@ -101,11 +108,8 @@ export class HrdAttendanceListComponent implements OnInit {
     });
   }
 
-  // ── Event Handlers: Search & Filter ───────────────────────
   onSearchDebounce(): void {
-    if (this.searchTimeout) {
-      clearTimeout(this.searchTimeout);
-    }
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
       this.currentPage = 1;
       this.load();
@@ -145,14 +149,11 @@ export class HrdAttendanceListComponent implements OnInit {
 
   onFileSelected(event: any): void {
     const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-    }
+    if (file) this.selectedFile = file;
   }
 
   uploadFile(): void {
     if (!this.selectedFile || this.filterMonth === '') {
-      // Disesuaikan menjadi 'file HTML' agar cocok dengan instruksi import
       this.showToast('Pastikan file HTML dan Bulan sudah dipilih.', 'error');
       return;
     }
@@ -198,6 +199,7 @@ export class HrdAttendanceListComponent implements OnInit {
   closeEditModal(): void {
     this.showEditModal = false;
     this.selectedAttendance = null;
+    this.activeCalendar = null; // Tutup kalender jika edit modal ditutup
   }
 
   saveAttendance(): void {
@@ -220,20 +222,86 @@ export class HrdAttendanceListComponent implements OnInit {
     });
   }
 
+  // ── Custom Multi-Select Calendar Logic ────────────────────
+  openCalendar(field: 'tanggal_izin' | 'tanggal_sakit' | 'tanggal_alpa'): void {
+    this.activeCalendar = field;
+    this.calMonth = this.filterMonth ? Number(this.filterMonth) - 1 : new Date().getMonth();
+    this.calYear = this.filterYear || new Date().getFullYear();
+
+    const existingData = (this.selectedAttendance as any)[field];
+    this.tempSelectedDates = existingData 
+        ? existingData.toString().split(',').map((s: string) => parseInt(s.trim())).filter((n: number) => !isNaN(n)) 
+        : [];
+
+    this.generateCalendar();
+  }
+
+  closeCalendar(): void {
+    this.activeCalendar = null;
+  }
+
+  generateCalendar(): void {
+    const firstDay = new Date(this.calYear, this.calMonth, 1).getDay();
+    const daysInMonth = new Date(this.calYear, this.calMonth + 1, 0).getDate();
+    this.calDays = [];
+
+    // Slot kosong untuk hari sebelum tanggal 1
+    for (let i = 0; i < firstDay; i++) {
+      this.calDays.push({ date: 0, isCurrentMonth: false, isSelected: false });
+    }
+
+    // Hari dalam bulan tersebut
+    for (let i = 1; i <= daysInMonth; i++) {
+      this.calDays.push({
+        date: i,
+        isCurrentMonth: true,
+        isSelected: this.tempSelectedDates.includes(i)
+      });
+    }
+  }
+
+  toggleDate(day: number): void {
+    if (day === 0) return; // Mengabaikan slot kosong
+    const idx = this.tempSelectedDates.indexOf(day);
+    if (idx > -1) {
+      this.tempSelectedDates.splice(idx, 1); // Un-select
+    } else {
+      this.tempSelectedDates.push(day); // Select
+    }
+    this.tempSelectedDates.sort((a, b) => a - b); // Urutkan angka
+    this.generateCalendar(); // Render ulang kalender agar UI update
+  }
+
+  applyCalendarDates(): void {
+    if (this.activeCalendar && this.selectedAttendance) {
+      // Gabungkan menjadi teks (Cth: "12, 14, 15")
+      const resultString = this.tempSelectedDates.length > 0 ? this.tempSelectedDates.join(', ') : null;
+      (this.selectedAttendance as any)[this.activeCalendar] = resultString;
+      
+      // Auto-update jumlah hari jika HRD menggunakan kalender ini
+      if (this.activeCalendar === 'tanggal_izin') (this.selectedAttendance as any)['cuti_pribadi'] = this.tempSelectedDates.length;
+      if (this.activeCalendar === 'tanggal_sakit') (this.selectedAttendance as any)['sakit_dengan_dokter'] = this.tempSelectedDates.length;
+      if (this.activeCalendar === 'tanggal_alpa') (this.selectedAttendance as any)['absent_no_permission'] = this.tempSelectedDates.length;
+    }
+    this.closeCalendar();
+  }
+
   // ── Helpers ──────────────────────────────────────────────
   get pageNumbers(): number[] {
     const pages = [];
     const start = Math.max(1, this.currentPage - 2);
     const end   = Math.min(this.lastPage, start + 4);
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
+    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }
 
   getMonthName(m: number): string {
     if (!m) return '-';
     return new Date(2000, m - 1).toLocaleString('id-ID', { month: 'long' });
+  }
+
+  getCalendarMonthName(): string {
+    return this.months.find(m => m.value === this.calMonth + 1)?.label || '';
   }
 
   private showToast(msg: string, type: 'success' | 'error'): void {
