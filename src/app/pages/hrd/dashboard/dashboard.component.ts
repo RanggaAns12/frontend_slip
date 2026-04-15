@@ -3,6 +3,9 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment'; 
 import { Chart, registerables } from 'chart.js';
 
+// 👇 Import Service Karyawan agar sinkron 100% dengan data tabel
+import { EmployeeApiService } from '../../superadmin/employees/services/employee-api.service';
+
 Chart.register(...registerables);
 
 @Component({
@@ -19,7 +22,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   userName: string = 'HRD'; 
   isLoading: boolean = true; 
 
-  // Variabel Data Murni (Diambil dari API)
+  // Variabel Data Murni
   totalEmployees = 0;
   totalUsers = 0;
   activeEmployees = 0;
@@ -28,7 +31,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   barChart: any;
   doughnutChart: any;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private employeeApi: EmployeeApiService // 👈 Daftarkan service di sini
+  ) {}
 
   ngOnInit(): void {
     this.loadUserData();
@@ -51,71 +57,89 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     }
   }
 
-  // 🔴 MENGAMBIL DATA MURNI DARI DATABASE
+  // 🔴 MENGAMBIL DATA DAN MENSINKRONKAN GRAFIK
   fetchDashboardData() {
     this.isLoading = true;
-    // API Endpoint disesuaikan ke HRD
-    const apiUrl = `${environment.apiUrl}/hrd/dashboard`; 
 
+    // 1. Ambil data User & Statistik Absensi dari API Dashboard Backend
+    const apiUrl = `${environment.apiUrl}/hrd/dashboard`; 
     this.http.get<any>(apiUrl).subscribe({
       next: (res) => {
         const data = res.data || res; 
-        
-        // Membaca data yang dikirim Laravel
-        this.totalEmployees    = Number(data?.total_employees || data?.totalEmployees || 0);
-        this.totalUsers        = Number(data?.total_users || data?.totalUsers || 0);
-        this.activeEmployees   = Number(data?.active_employees || data?.activeEmployees || 0);
-        this.inactiveEmployees = Number(data?.inactive_employees || data?.inactiveEmployees || 0);
-
-        this.isLoading = false;
+        this.totalUsers = Number(data?.total_users || data?.totalUsers || 0);
 
         setTimeout(() => {
           this.renderBarChart(data?.weekly_stats);
-          
-          const statusKaryawan = [this.activeEmployees, this.inactiveEmployees];
-          this.renderDoughnutChart(statusKaryawan);
         }, 200);
       },
       error: (err) => {
-        console.error('Gagal mengambil data dari database:', err);
-        
-        this.totalEmployees = 0;
+        console.error('Gagal mengambil data dashboard backend:', err);
         this.totalUsers = 0;
+        setTimeout(() => {
+          this.renderBarChart(null); 
+        }, 200);
+      }
+    });
+
+    // 2. Ambil data Karyawan SECARA LANGSUNG dari tabel Karyawan (SINKRON 100%)
+    this.employeeApi.getAll().subscribe({
+      next: (res: any) => {
+        const employees = res.data || res || [];
+        
+        // SINKRONISASI MUTLAK: Jika ada yang dihapus, length akan otomatis berkurang
+        this.totalEmployees = employees.length;
+
+        // Hitung Rasio Aktif vs Non-Aktif secara dinamis
+        this.activeEmployees = employees.filter((e: any) => {
+           // Sesuaikan dengan nama field status di database (status / status_karyawan)
+           const status = String(e.status || e.status_karyawan || 'Aktif').toLowerCase();
+           
+           // Kita anggap Non-Aktif jika di dalam teksnya ada kata 'non', 'resign', atau 'keluar'
+           return !status.includes('non') && !status.includes('resign') && !status.includes('keluar');
+        }).length;
+
+        this.inactiveEmployees = this.totalEmployees - this.activeEmployees;
+        this.isLoading = false;
+
+        // Render ulang grafik donat dengan data yang paling fresh!
+        setTimeout(() => {
+          this.renderDoughnutChart([this.activeEmployees, this.inactiveEmployees]);
+        }, 200);
+      },
+      error: (err) => {
+        console.error('Gagal mengambil sinkronisasi data karyawan:', err);
+        this.totalEmployees = 0;
         this.activeEmployees = 0;
         this.inactiveEmployees = 0;
         this.isLoading = false;
-        
+
         setTimeout(() => {
-          this.renderBarChart(null); 
           this.renderDoughnutChart([0, 0]); 
         }, 200);
       }
     });
   }
 
-  // 🔴 RENDER BAR CHART (Disesuaikan dengan status absensi HRIS kita)
+  // 🔴 RENDER BAR CHART (Ditambahkan "Alpa" dan warna disesuaikan UI)
   renderBarChart(weeklyStats: any) {
     if (!this.attendanceChartRef) return;
     if (this.barChart) this.barChart.destroy();
 
-    // Default label hari kerja
     const labels = weeklyStats?.labels || ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    
-    // Data Default jika API kosong
     const dataHadir = weeklyStats?.hadir || [0, 0, 0, 0, 0, 0];
     const dataIzin  = weeklyStats?.izin  || [0, 0, 0, 0, 0, 0];
     const dataSakit = weeklyStats?.sakit || [0, 0, 0, 0, 0, 0];
-    const dataAlpa  = weeklyStats?.alpa  || [0, 0, 0, 0, 0, 0]; // Tambahan Alpa
+    const dataAlpa  = weeklyStats?.alpa  || [0, 0, 0, 0, 0, 0];
 
     this.barChart = new Chart(this.attendanceChartRef.nativeElement, {
       type: 'bar',
       data: {
         labels: labels,
         datasets: [
-          { label: 'Hadir', data: dataHadir, backgroundColor: '#10b981', borderRadius: 4, barThickness: 14 }, // Emerald
-          { label: 'Izin',  data: dataIzin,  backgroundColor: '#6366f1', borderRadius: 4, barThickness: 14 }, // Indigo
-          { label: 'Sakit', data: dataSakit, backgroundColor: '#14b8a6', borderRadius: 4, barThickness: 14 }, // Teal
-          { label: 'Alpa',  data: dataAlpa,  backgroundColor: '#f43f5e', borderRadius: 4, barThickness: 14 }  // Rose
+          { label: 'Hadir', data: dataHadir, backgroundColor: '#10b981', borderRadius: 4, barThickness: 14 },
+          { label: 'Izin',  data: dataIzin,  backgroundColor: '#6366f1', borderRadius: 4, barThickness: 14 },
+          { label: 'Sakit', data: dataSakit, backgroundColor: '#14b8a6', borderRadius: 4, barThickness: 14 },
+          { label: 'Alpa',  data: dataAlpa,  backgroundColor: '#f43f5e', borderRadius: 4, barThickness: 14 }
         ]
       },
       options: {
@@ -123,7 +147,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         maintainAspectRatio: false,
         plugins: { 
           legend: { 
-            display: true, // Diaktifkan agar HRD bisa melihat warna kategori
+            display: true, 
             position: 'top',
             labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
           } 
