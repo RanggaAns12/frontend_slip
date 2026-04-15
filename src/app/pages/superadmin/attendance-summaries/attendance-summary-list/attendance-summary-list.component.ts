@@ -219,14 +219,14 @@ export class AttendanceSummaryListComponent implements OnInit {
   // =====================================================================
   getTotalIzin(item: any): number {
     return (
-      (item.izin_tidak_masuk_pribadi || 0) +
-      (item.izin_pulang_awal_pribadi || 0) +
-      (item.izin_datang_terlambat_pribadi || 0) +
-      (item.izin_meninggalkan_tempat_kerja || 0) +
-      (item.izin_dinas || 0) +
-      (item.izin_datang_terlambat_kantor || 0) +
-      (item.izin_pulang_awal_kantor || 0) +
-      (item.izin_lain_lain || 0)
+      (item.izin_tidak_masuk_pribadi || 0) 
+      // (item.izin_pulang_awal_pribadi || 0) +
+      // (item.izin_datang_terlambat_pribadi || 0) +
+      // (item.izin_meninggalkan_tempat_kerja || 0) +
+      // (item.izin_dinas || 0) +
+      // (item.izin_datang_terlambat_kantor || 0) +
+      // (item.izin_pulang_awal_kantor || 0) +
+      // (item.izin_lain_lain || 0)
     );
   }
 
