@@ -248,9 +248,21 @@ export class HrdAttendanceListComponent implements OnInit {
         if (res.success) {
           this.selectedAttendance = { ...res.data };
           
+          // 1. Tarik data tanggal yang sudah ada di database
           this.izinDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_izin);
           this.sakitDates = this.parseDatesString((this.selectedAttendance as any).tanggal_sakit);
           this.alpaDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_alpa);
+
+          // 2. SINKRONISASI ANGKA MESIN vs BARIS TANGGAL
+          // Jika mesin baca Izin = 2, tapi tanggal belum diisi, buat 2 baris kosong agar tidak keriset 0!
+          const machineIzin = (this.selectedAttendance as any).izin_tidak_masuk_pribadi || 0;
+          while (this.izinDates.length < machineIzin) this.izinDates.push({ val: '' });
+
+          const machineSakit = (this.selectedAttendance as any).sakit_dengan_surat_dokter || 0;
+          while (this.sakitDates.length < machineSakit) this.sakitDates.push({ val: '' });
+
+          const machineAlpa = (this.selectedAttendance as any).tanpa_izin || 0;
+          while (this.alpaDates.length < machineAlpa) this.alpaDates.push({ val: '' });
 
           this.showEditModal = true;
         }
