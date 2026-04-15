@@ -167,12 +167,6 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
-  // ── Navigation ────────────────────────────────────────────
-  goToDetail(id: number): void {
-    // Akan mengarahkan ke halaman /hrd/attendance/show/:id
-    this.router.navigate(['../show', id], { relativeTo: this.route });
-  }
-
   // ── Kalkulasi Kolom Dinamis ───────────────────────────────
   getTotalIzin(item: any): number {
     return (
