@@ -151,11 +151,11 @@
                 </td>
                 
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-purple-500]="$any(item).cuti_pribadi > 0"
-                        [class.bg-purple-50]="$any(item).cuti_pribadi > 0"
-                        [class.text-slate-300]="!$any(item).cuti_pribadi"
+                  <span [class.text-purple-500]="$any(item).izin_tidak_masuk_pribadi > 0"
+                        [class.bg-purple-50]="$any(item).izin_tidak_masuk_pribadi > 0"
+                        [class.text-slate-300]="!$any(item).izin_tidak_masuk_pribadi"
                         class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).cuti_pribadi || 0 }}
+                    {{ $any(item).izin_tidak_masuk_pribadi || 0 }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
@@ -218,7 +218,7 @@
           <div class="grid grid-cols-3 gap-2 text-center py-3 bg-slate-50/50 rounded-xl mb-4">
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Izin</span>
-               <span class="text-sm font-black" [class.text-purple-500]="$any(item).cuti_pribadi > 0" [class.text-slate-300]="!$any(item).cuti_pribadi">{{ $any(item).cuti_pribadi || 0 }}</span>
+               <span class="text-sm font-black" [class.text-purple-500]="$any(item).izin_tidak_masuk_pribadi > 0" [class.text-slate-300]="!$any(item).izin_tidak_masuk_pribadi">{{ $any(item).izin_tidak_masuk_pribadi || 0 }}</span>
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span>
@@ -315,7 +315,7 @@
           
           <div class="bg-purple-50/50 p-4 rounded-2xl border border-purple-100 transition-all shadow-sm">
             <div class="flex items-center justify-between mb-3 border-b border-purple-100 pb-2">
-              <label class="text-[11px] font-bold text-purple-800 uppercase tracking-wide">Cuti Pribadi</label>
+              <label class="text-[11px] font-bold text-purple-800 uppercase tracking-wide">Izin (Tidak Masuk)</label>
               <div class="flex items-center gap-2">
                 <span class="text-[10px] font-bold text-purple-600 bg-purple-100 px-2 py-0.5 rounded">{{ izinDates.length }} Hari</span>
                 <button (click)="addDateRow('izin')" class="p-1 bg-purple-200 text-purple-700 rounded hover:bg-purple-300 transition" title="Tambah Baris">

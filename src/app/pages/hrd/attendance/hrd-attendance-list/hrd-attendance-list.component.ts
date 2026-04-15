@@ -217,7 +217,7 @@ export class HrdAttendanceListComponent implements OnInit {
   addDateRow(type: 'izin' | 'sakit' | 'alpa'): void {
     if (type === 'izin') {
       this.izinDates.push({ val: '' });
-      if (this.selectedAttendance) (this.selectedAttendance as any).cuti_pribadi = this.izinDates.length;
+      if (this.selectedAttendance) (this.selectedAttendance as any).izin_tidak_masuk_pribadi = this.izinDates.length;
     } else if (type === 'sakit') {
       this.sakitDates.push({ val: '' });
       if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_dokter = this.sakitDates.length;
@@ -231,7 +231,7 @@ export class HrdAttendanceListComponent implements OnInit {
   removeDateRow(type: 'izin' | 'sakit' | 'alpa', index: number): void {
     if (type === 'izin') {
       this.izinDates.splice(index, 1);
-      if (this.selectedAttendance) (this.selectedAttendance as any).cuti_pribadi = this.izinDates.length;
+      if (this.selectedAttendance) (this.selectedAttendance as any).izin_tidak_masuk_pribadi = this.izinDates.length;
     } else if (type === 'sakit') {
       this.sakitDates.splice(index, 1);
       if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_dokter = this.sakitDates.length;
