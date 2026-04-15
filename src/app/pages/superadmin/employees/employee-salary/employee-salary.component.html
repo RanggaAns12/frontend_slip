@@ -215,7 +215,7 @@
       <div class="p-4 sm:p-6 overflow-y-auto flex-1 bg-white">
         
         <div class="flex flex-row justify-between items-center mb-4 gap-2">
-          <p class="text-xs sm:text-sm font-bold text-gray-600">Daftar Tunjangan</p>
+          <p class="text-xs sm:text-sm font-bold text-gray-600">Daftar Tunjangan / Potongan</p>
           <button (click)="addComponentRow()" class="text-[11px] sm:text-sm font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg flex items-center gap-1 sm:gap-2 transition-colors shrink-0">
             <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
             Tambah Baris
@@ -231,7 +231,7 @@
             <thead class="bg-gray-50 border-b border-gray-100">
               <tr>
                 <th class="px-3 sm:px-4 py-3 text-[10px] sm:text-xs font-bold text-gray-500 uppercase w-1/2">Nama Komponen</th>
-                <th class="px-3 sm:px-4 py-3 text-[10px] sm:text-xs font-bold text-gray-500 uppercase w-[40%]">Nominal (Otomatis)</th>
+                <th class="px-3 sm:px-4 py-3 text-[10px] sm:text-xs font-bold text-gray-500 uppercase w-[40%]">Nominal (Rp)</th>
                 <th class="px-2 sm:px-4 py-3 text-center text-[10px] sm:text-xs font-bold text-gray-500 uppercase w-[10%]">Hapus</th>
               </tr>
             </thead>
@@ -244,14 +244,16 @@
                     <option *ngFor="let master of masterComponents" [value]="master.id">{{ master.nama_komponen }}</option>
                   </select>
                 </td>
+                
                 <td class="p-2 sm:p-3">
-                  <div class="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg shadow-inner flex items-center justify-between">
-                    <span class="text-gray-400 font-bold text-xs">Rp</span>
-                    <span class="text-gray-700 font-bold text-xs tracking-wide">
-                      {{ formatRupiah(item.custom_amount) }}
-                    </span>
+                  <div class="relative w-full">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">Rp</span>
+                    <input type="number" min="0" [(ngModel)]="item.custom_amount"
+                           class="w-full px-3 py-2.5 pl-8 bg-white border border-gray-200 rounded-lg text-gray-800 font-bold text-xs outline-none transition-all focus:ring-2 focus:ring-orange-200 focus:border-orange-500 shadow-sm text-right"
+                           placeholder="0">
                   </div>
                 </td>
+
                 <td class="p-2 sm:p-3 text-center">
                   <button (click)="removeComponentRow(i)" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors">
                     <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>

@@ -22,7 +22,7 @@ export class EmployeeSalaryComponent implements OnInit {
   toastTimeout: any;
 
   // =========================================================================
-  // STATE FILTER & MASTER DATA (BARU)
+  // STATE FILTER & MASTER DATA
   // =========================================================================
   searchKeyword = '';
   filterDept = '';
@@ -103,7 +103,7 @@ export class EmployeeSalaryComponent implements OnInit {
   }
 
   // =====================================================================
-  // LOGIKA FILTERING (BARU)
+  // LOGIKA FILTERING
   // =====================================================================
   onSearch(keyword: string) {
     this.searchKeyword = keyword;
@@ -190,7 +190,7 @@ export class EmployeeSalaryComponent implements OnInit {
   }
 
   // =====================================================================
-  // LOGIKA KOMPONEN GAJI (TETAP SAMA)
+  // LOGIKA KOMPONEN GAJI
   // =====================================================================
   loadMasterSalaryComponents() {
     this.employeeApi.getSalaryComponents().subscribe({
@@ -249,14 +249,21 @@ export class EmployeeSalaryComponent implements OnInit {
     const selectedComp: any = this.masterComponents.find(c => c.id === id);
     if (selectedComp) {
       this.employeeComponents[index].salary_component_id = id;
-      this.employeeComponents[index].component = selectedComp;
+      // Berikan nilai default dari master saat pertama kali dipilih
       this.employeeComponents[index].custom_amount = selectedComp.nominal ? Math.round(Number(selectedComp.nominal)) : 0;
     }
   }
 
   saveEmployeeComponents(): void {
     if (!this.selectedEmployeeForComponent) return;
-    const validComponents = this.employeeComponents.filter(c => c.salary_component_id > 0);
+    
+    // PERBAIKAN: Mapping ulang validComponents agar tipe datanya terjamin murni angka (Number)
+    const validComponents = this.employeeComponents
+      .filter(c => c.salary_component_id > 0)
+      .map(c => ({
+        salary_component_id: Number(c.salary_component_id),
+        custom_amount: Number(c.custom_amount) || 0 // Jaring pengaman
+      }));
     
     this.isSavingComponents = true;
     this.employeeApi.syncEmployeeSalaryComponents(this.selectedEmployeeForComponent.id, validComponents).subscribe({
@@ -275,12 +282,15 @@ export class EmployeeSalaryComponent implements OnInit {
 
   // === UTILS ===
   goBack() { this.router.navigate(['/superadmin/employees']); }
+  
   showToast(msg: string, type: 'success' | 'error') {
     this.toastMessage = msg;
     this.toastType = type;
     if (this.toastTimeout) clearTimeout(this.toastTimeout);
     this.toastTimeout = setTimeout(() => { this.toastMessage = ''; }, 3000);
   }
+  
   closeToast() { this.toastMessage = ''; }
+  
   trackByIndex(index: number, obj: any): any { return index; }
 }
