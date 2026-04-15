@@ -53,8 +53,9 @@
         <div class="h-8 w-px bg-slate-200 hidden xl:block mx-2"></div>
 
         <div class="flex flex-wrap gap-3 w-full xl:w-auto items-center flex-1">
+          
           <div class="relative flex-1 min-w-[140px]">
-            <select [(ngModel)]="filterDept" (change)="onSearch()" class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
+            <select [(ngModel)]="filterDept" (change)="onDeptChange()" class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
               <option value="">Semua Dept</option>
               <option *ngFor="let d of departments" [value]="d">{{ d }}</option>
             </select>
@@ -151,36 +152,42 @@
                 </td>
                 
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-purple-500]="$any(item).izin_tidak_masuk_pribadi > 0"
-                        [class.bg-purple-50]="$any(item).izin_tidak_masuk_pribadi > 0"
-                        [class.text-slate-300]="!$any(item).izin_tidak_masuk_pribadi"
+                  <span [class.text-indigo-500]="getTotalIzin(item) > 0"
+                        [class.bg-indigo-50]="getTotalIzin(item) > 0"
+                        [class.text-slate-300]="getTotalIzin(item) === 0"
                         class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).izin_tidak_masuk_pribadi || 0 }}
+                    {{ getTotalIzin(item) }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-blue-500]="$any(item).sakit_dengan_dokter > 0"
-                        [class.bg-blue-50]="$any(item).sakit_dengan_dokter > 0"
-                        [class.text-slate-300]="!$any(item).sakit_dengan_dokter"
+                  <span [class.text-teal-500]="getTotalSakit(item) > 0"
+                        [class.bg-teal-50]="getTotalSakit(item) > 0"
+                        [class.text-slate-300]="getTotalSakit(item) === 0"
                         class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).sakit_dengan_dokter || 0 }}
+                    {{ getTotalSakit(item) }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <span [class.text-rose-500]="$any(item).absent_no_permission > 0"
-                        [class.bg-rose-50]="$any(item).absent_no_permission > 0"
-                        [class.text-slate-300]="!$any(item).absent_no_permission"
+                  <span [class.text-rose-500]="$any(item).tanpa_izin > 0"
+                        [class.bg-rose-50]="$any(item).tanpa_izin > 0"
+                        [class.text-slate-300]="!$any(item).tanpa_izin"
                          class="px-2 py-1 rounded-md font-bold text-sm inline-block min-w-[30px]">
-                    {{ $any(item).absent_no_permission || 0 }}
+                    {{ $any(item).tanpa_izin || 0 }}
                   </span>
                 </td>
                 <td class="px-6 py-4 text-center">
-                  <button (click)="openEditModal(item)" [disabled]="isEditing"
-                          class="w-10 h-10 flex items-center justify-center rounded-xl bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white border border-orange-100 hover:border-transparent transition-all shadow-sm mx-auto disabled:opacity-50" title="Edit Manual">
-                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
+                  <div class="flex justify-center items-center gap-2">
+                    <button (click)="goToDetail(item.id)" 
+                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 hover:bg-indigo-500 hover:text-white border border-indigo-100 hover:border-transparent transition-all shadow-sm" title="Lihat Detail">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    </button>
+                    <button (click)="openEditModal(item)" [disabled]="isEditing"
+                            class="w-8 h-8 flex items-center justify-center rounded-lg bg-orange-50 text-orange-600 hover:bg-orange-500 hover:text-white border border-orange-100 hover:border-transparent transition-all shadow-sm disabled:opacity-50" title="Edit Manual">
+                      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                      </svg>
+                    </button>
+                  </div>
                 </td>
               </tr>
             </ng-container>
@@ -218,22 +225,26 @@
           <div class="grid grid-cols-3 gap-2 text-center py-3 bg-slate-50/50 rounded-xl mb-4">
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Izin</span>
-               <span class="text-sm font-black" [class.text-purple-500]="$any(item).izin_tidak_masuk_pribadi > 0" [class.text-slate-300]="!$any(item).izin_tidak_masuk_pribadi">{{ $any(item).izin_tidak_masuk_pribadi || 0 }}</span>
+               <span class="text-sm font-black" [class.text-indigo-500]="getTotalIzin(item) > 0" [class.text-slate-300]="getTotalIzin(item) === 0">{{ getTotalIzin(item) }}</span>
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span>
-               <span class="text-sm font-black" [class.text-blue-500]="$any(item).sakit_dengan_dokter > 0" [class.text-slate-300]="!$any(item).sakit_dengan_dokter">{{ $any(item).sakit_dengan_dokter || 0 }}</span>
+               <span class="text-sm font-black" [class.text-teal-500]="getTotalSakit(item) > 0" [class.text-slate-300]="getTotalSakit(item) === 0">{{ getTotalSakit(item) }}</span>
              </div>
              <div>
                <span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpa</span>
-               <span class="text-sm font-black" [class.text-rose-500]="$any(item).absent_no_permission > 0" [class.text-slate-300]="!$any(item).absent_no_permission">{{ $any(item).absent_no_permission || 0 }}</span>
+               <span class="text-sm font-black" [class.text-rose-500]="$any(item).tanpa_izin > 0" [class.text-slate-300]="!$any(item).tanpa_izin">{{ $any(item).tanpa_izin || 0 }}</span>
              </div>
           </div>
 
           <div class="flex gap-2">
+            <button (click)="goToDetail(item.id)" class="flex-1 py-3 text-xs font-bold text-indigo-600 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+              Detail
+            </button>
             <button (click)="openEditModal(item)" class="flex-1 py-3 text-xs font-bold text-white bg-slate-800 rounded-xl hover:bg-slate-700 transition flex items-center justify-center gap-2">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-              Edit Absensi
+              Edit
             </button>
           </div>
         </div>

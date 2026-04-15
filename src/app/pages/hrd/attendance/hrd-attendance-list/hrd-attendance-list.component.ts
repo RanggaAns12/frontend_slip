@@ -40,7 +40,35 @@ export class HrdAttendanceListComponent implements OnInit {
   sakitDates: { val: string }[] = [];
   alpaDates : { val: string }[] = [];
 
-  // ── Options Mapping ───────────────────────────────────────
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI (Cascading Dropdown)
+  departemenData = [
+    { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
+    { nama: "Purchasing", posisi: ["Purchasing Staff"] },
+    { nama: "Finance & Accounting", posisi: ["Finance Staff", "Accounting Staff"] },
+    { nama: "Legal", posisi: ["Legal Staff"] },
+    { nama: "Auditor / ISO", posisi: ["Auditor / ISO Staff"] },
+    { nama: "PPIC", posisi: ["PPIC Staff"] },
+    { nama: "HRD & HSE & Civil", posisi: ["HRD", "HRD Staff", "HSE", "Civil", "Supervisor"] },
+    { nama: "Kepala Pabrik", posisi: ["Kepala Pabrik", "Wakil Kepala Pabrik", "Adm Pabrik"] },
+    { nama: "Security & Kebersihan", posisi: ["Kepala Regu Security", "Security", "Cleaning Service & Taman"] },
+    { nama: "Timbangan, Bahan Baku & Chemical", posisi: ["SPV Timbangan, B. Baku & Chemical", "Ang. Timbangan", "Ang. Bahan Baku", "Ang. Chemical", "Ang. Ballpress"] },
+    { nama: "Sparepart, Barang Jadi & Forklift", posisi: ["SPV Sparepart, B. Jadi & Forklift", "Gudang Sparepart", "Op. Forklift B. Baku & B.", "Gudang Barang Jadi"] },
+    { nama: "WTP & WWTP", posisi: ["SPV WTP & WWTP", "WTP", "WWTP", "Operator RO"] },
+    { nama: "Engineering", posisi: ["Engineering SPV", "Engineer Planner", "IT", "Drafter", "Karu Elektrik", "Instrument"] },
+    { nama: "Mekanik", posisi: ["Karu Mekanik", "Mekanik General & Alat Berat", "Fabrikasi", "Oil & Greases"] },
+    { nama: "Elektrikal & A/I", posisi: ["Kepala Regu Elektrikal & A/I", "Elektrik Shift", "A/I Shift", "Elektrik Preventif", "A/I Preventif", "Elektrik Repair", "A/I Repair"] },
+    { nama: "Boiler & Turbine", posisi: ["Karu Boiler & Turbine", "Boiler & Turbine"] },
+    { nama: "PM & Winder", posisi: ["Karu PM & Winder", "PM", "Winder"] },
+    { nama: "SP & Starch", posisi: ["Karu SP & Starch", "SP", "Starch", "Operator Pulper"] },
+    { nama: "Produksi", posisi: ["Kepala Shift Produksi", "Mekanik Shift", "Operator Wire Press", "Operator Coarse Screen", "Operator Size Press"] },
+    { nama: "QC & R&D", posisi: ["SPV QC / R&D", "QC", "R&D"] },
+    { nama: "Umum", posisi: ["Driver"] }
+  ];
+
+  departments = this.departemenData.map(d => d.nama);
+  positions: string[] = [];
+
+  // ── Options Mapping (Bulan) ───────────────────────────────
   months = [
     { value: 1,  label: 'Januari' }, { value: 2,  label: 'Februari' },
     { value: 3,  label: 'Maret'   }, { value: 4,  label: 'April'    },
@@ -48,16 +76,6 @@ export class HrdAttendanceListComponent implements OnInit {
     { value: 7,  label: 'Juli'    }, { value: 8,  label: 'Agustus'  },
     { value: 9,  label: 'September'},{ value: 10, label: 'Oktober'  },
     { value: 11, label: 'November' }, { value: 12, label: 'Desember' },
-  ];
-
-  departments = [
-    'Umum', 'HRD', 'Keuangan', 'Operasional', 
-    'IT', 'Produksi', 'Lapangan', 'Logistik', 'Pemasaran'
-  ];
-
-  positions = [
-    'Manager', 'Supervisor', 'Staff', 'Admin', 
-    'Operator', 'Mandor', 'Buruh Harian', 'Security', 'Driver'
   ];
 
   // ── Toast ─────────────────────────────────────────────────
@@ -72,6 +90,7 @@ export class HrdAttendanceListComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     this.load();
   }
 
@@ -105,6 +124,7 @@ export class HrdAttendanceListComponent implements OnInit {
     });
   }
 
+  // ── Event Handlers: Search & Filter ───────────────────────
   onSearchDebounce(): void {
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
@@ -118,12 +138,25 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
+  onDeptChange(): void {
+    if (this.filterDept) {
+      const selected = this.departemenData.find(d => d.nama === this.filterDept);
+      this.positions = selected ? selected.posisi : [];
+    } else {
+      this.positions = this.departemenData.flatMap(d => d.posisi).sort();
+    }
+    this.filterPosisi = ''; 
+    this.currentPage = 1;
+    this.load(); 
+  }
+
   resetFilter(): void {
     this.filterSearch = '';
     this.filterMonth  = new Date().getMonth() + 1; 
     this.filterYear   = new Date().getFullYear();
     this.filterDept   = '';
     this.filterPosisi = '';
+    this.positions = this.departemenData.flatMap(d => d.posisi).sort();
     this.currentPage  = 1;
     this.load();
   }
@@ -132,6 +165,35 @@ export class HrdAttendanceListComponent implements OnInit {
     if (page < 1 || page > this.lastPage) return;
     this.currentPage = page;
     this.load();
+  }
+
+  // ── Navigation ────────────────────────────────────────────
+  goToDetail(id: number): void {
+    // Akan mengarahkan ke halaman /hrd/attendance/show/:id
+    this.router.navigate(['../show', id], { relativeTo: this.route });
+  }
+
+  // ── Kalkulasi Kolom Dinamis ───────────────────────────────
+  getTotalIzin(item: any): number {
+    return (
+      (item.izin_tidak_masuk_pribadi || 0) +
+      (item.izin_pulang_awal_pribadi || 0) +
+      (item.izin_datang_terlambat_pribadi || 0) +
+      (item.izin_meninggalkan_tempat_kerja || 0) +
+      (item.izin_dinas || 0) +
+      (item.izin_datang_terlambat_kantor || 0) +
+      (item.izin_pulang_awal_kantor || 0) +
+      (item.cuti_normatif || 0) +
+      (item.cuti_pribadi || 0) +
+      (item.izin_lain_lain || 0)
+    );
+  }
+
+  getTotalSakit(item: any): number {
+    return (
+      (item.sakit_dengan_surat_dokter || 0) +
+      (item.sakit_tanpa_surat_dokter || 0)
+    );
   }
 
   // ── Feature: Import HTML Mesin ────────────────────────────
@@ -147,6 +209,7 @@ export class HrdAttendanceListComponent implements OnInit {
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     if (file) this.selectedFile = file;
+    event.target.value = '';
   }
 
   uploadFile(): void {
@@ -183,7 +246,6 @@ export class HrdAttendanceListComponent implements OnInit {
         if (res.success) {
           this.selectedAttendance = { ...res.data };
           
-          // Uraikan teks dari database (misal: "2024-10-12, 2024-10-13") menjadi Array
           this.izinDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_izin);
           this.sakitDates = this.parseDatesString((this.selectedAttendance as any).tanggal_sakit);
           this.alpaDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_alpa);
@@ -207,44 +269,40 @@ export class HrdAttendanceListComponent implements OnInit {
     this.alpaDates = [];
   }
 
-  // Helper untuk mengubah Teks "Tgl1, Tgl2" menjadi Array Input
   parseDatesString(dateStr?: string | null): { val: string }[] {
     if (!dateStr) return [];
     return dateStr.split(',').map(s => ({ val: s.trim() })).filter(item => item.val !== '');
   }
 
-  // Fungsi Tambah Baris Tanggal
   addDateRow(type: 'izin' | 'sakit' | 'alpa'): void {
     if (type === 'izin') {
       this.izinDates.push({ val: '' });
       if (this.selectedAttendance) (this.selectedAttendance as any).izin_tidak_masuk_pribadi = this.izinDates.length;
     } else if (type === 'sakit') {
       this.sakitDates.push({ val: '' });
-      if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_dokter = this.sakitDates.length;
+      if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_surat_dokter = this.sakitDates.length;
     } else if (type === 'alpa') {
       this.alpaDates.push({ val: '' });
-      if (this.selectedAttendance) (this.selectedAttendance as any).absent_no_permission = this.alpaDates.length;
+      if (this.selectedAttendance) (this.selectedAttendance as any).tanpa_izin = this.alpaDates.length;
     }
   }
 
-  // Fungsi Hapus Baris Tanggal
   removeDateRow(type: 'izin' | 'sakit' | 'alpa', index: number): void {
     if (type === 'izin') {
       this.izinDates.splice(index, 1);
       if (this.selectedAttendance) (this.selectedAttendance as any).izin_tidak_masuk_pribadi = this.izinDates.length;
     } else if (type === 'sakit') {
       this.sakitDates.splice(index, 1);
-      if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_dokter = this.sakitDates.length;
+      if (this.selectedAttendance) (this.selectedAttendance as any).sakit_dengan_surat_dokter = this.sakitDates.length;
     } else if (type === 'alpa') {
       this.alpaDates.splice(index, 1);
-      if (this.selectedAttendance) (this.selectedAttendance as any).absent_no_permission = this.alpaDates.length;
+      if (this.selectedAttendance) (this.selectedAttendance as any).tanpa_izin = this.alpaDates.length;
     }
   }
 
   saveAttendance(): void {
     if (!this.selectedAttendance || !this.selectedAttendance.id) return;
 
-    // Gabungkan kembali Array Tanggal menjadi Teks dipisah koma untuk API Backend
     (this.selectedAttendance as any).tanggal_izin  = this.izinDates.map(d => d.val).filter(v => v).join(', ');
     (this.selectedAttendance as any).tanggal_sakit = this.sakitDates.map(d => d.val).filter(v => v).join(', ');
     (this.selectedAttendance as any).tanggal_alpa  = this.alpaDates.map(d => d.val).filter(v => v).join(', ');
