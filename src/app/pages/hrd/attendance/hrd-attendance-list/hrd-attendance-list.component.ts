@@ -40,7 +40,7 @@ export class HrdAttendanceListComponent implements OnInit {
   sakitDates: { val: string }[] = [];
   alpaDates : { val: string }[] = [];
 
-  // 🏢 MASTER DATA DEPARTEMEN & POSISI (Cascading Dropdown)
+  // 🏢 MASTER DATA DEPARTEMEN & POSISI
   departemenData = [
     { nama: "Marketing", posisi: ["Marketing Staff", "Export", "Import"] },
     { nama: "Purchasing", posisi: ["Purchasing Staff"] },
@@ -168,23 +168,25 @@ export class HrdAttendanceListComponent implements OnInit {
   }
 
   // =====================================================================
-  // ── 🔥 PERBAIKAN: Kalkulasi Kolom Dinamis 🔥 ─────────────────────────
-  // Cuti (normatif & pribadi) DIBUANG dari hitungan izin agar data 
-  // valid dan tidak terjadi salah baca saat direkap di UI.
+  // 🔥 PERBAIKAN NAVIGASI DETAIL 🔥
   // =====================================================================
+  goToDetail(id: number): void {
+    this.router.navigate(['../show', id], { relativeTo: this.route });
+  }
+
+  // ── Kalkulasi Kolom Dinamis ───────────────────────────────
   getTotalIzin(item: any): number {
     return (
-      (item.izin_tidak_masuk_pribadi || 0)
-      // (item.izin_pulang_awal_pribadi || 0) +
-      // (item.izin_datang_terlambat_pribadi || 0) +
-      // (item.izin_meninggalkan_tempat_kerja || 0) +
-      // (item.izin_dinas || 0) +
-      // (item.izin_datang_terlambat_kantor || 0) +
-      // (item.izin_pulang_awal_kantor || 0) +
-      // (item.izin_lain_lain || 0)
+      (item.izin_tidak_masuk_pribadi || 0) +
+      (item.izin_pulang_awal_pribadi || 0) +
+      (item.izin_datang_terlambat_pribadi || 0) +
+      (item.izin_meninggalkan_tempat_kerja || 0) +
+      (item.izin_dinas || 0) +
+      (item.izin_datang_terlambat_kantor || 0) +
+      (item.izin_pulang_awal_kantor || 0) +
+      (item.izin_lain_lain || 0)
     );
   }
-  // =====================================================================
 
   getTotalSakit(item: any): number {
     return (
