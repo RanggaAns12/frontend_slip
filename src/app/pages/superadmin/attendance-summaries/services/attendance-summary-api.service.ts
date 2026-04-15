@@ -115,6 +115,11 @@ export interface AttendanceSummary {
   lembur_menit                   : number;
   tanpa_izin                     : number;
   imported_at                    : string;
+
+  // Penambahan Opsional agar Component List tidak error
+  tanggal_izin?                  : string | null;
+  tanggal_sakit?                 : string | null;
+  tanggal_alpa?                  : string | null;
 }
 
 export interface AttendanceSummaryListResponse {
@@ -159,6 +164,11 @@ export interface AttendanceSummaryDetail extends AttendanceSummary {
   tidak_scan_mulai_lembur        : number;
   tidak_scan_selesai_lembur      : number;
   izin_lain_lain                 : number;
+  
+  // PENAMBAHAN WAJIB UNTUK DINAMIS TANGGAL
+  tanggal_izin?                  : string | null;
+  tanggal_sakit?                 : string | null;
+  tanggal_alpa?                  : string | null;
 }
 
 export interface AttendanceSummaryDetailResponse {
@@ -215,13 +225,15 @@ export class AttendanceSummaryApiService {
     year  ?: number;
     search?: string;
     page  ?: number;
+    departemen ?: string; // Tambahkan agar filter berjalan lancar
+    jabatan ?: string;    // Tambahkan agar filter berjalan lancar
   }): Observable<AttendanceSummaryListResponse> {
     return this.http.get<AttendanceSummaryListResponse>(
       `${this.baseUrl}`, { params: params as any }
     );
   }
 
-  // ─── Tambahan Method GET By ID & UPDATE ──────────────────────────
+  // ─── Method GET By ID & UPDATE & DELETE ──────────────────────────
 
   getById(id: number): Observable<AttendanceSummaryDetailResponse> {
     return this.http.get<AttendanceSummaryDetailResponse>(`${this.baseUrl}/${id}`);
@@ -234,9 +246,8 @@ export class AttendanceSummaryApiService {
     return this.http.put<AttendanceSummaryUpdateResponse>(`${this.baseUrl}/${id}`, data);
   }
 
-  delete(id: number) {
+  delete(id: number): Observable<any> {
     // Sesuaikan this.baseUrl dengan properti URL yang Mas gunakan di service ini
-    // Misalnya jika Mas menggunakan environment.apiUrl + '/superadmin/attendance-summaries'
     return this.http.delete<any>(`${this.baseUrl}/${id}`);
   }
 }

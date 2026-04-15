@@ -248,9 +248,9 @@
 
           <div class="grid grid-cols-4 gap-2 text-center py-3 bg-slate-50/50 rounded-xl mb-4">
              <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Telat</span><span class="text-sm font-black" [class.text-amber-500]="item.terlambat_jml > 0" [class.text-slate-300]="!item.terlambat_jml">{{ item.terlambat_jml || 0 }}</span></div>
-             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Izin</span><span class="text-sm font-black text-indigo-500">{{ getTotalIzin(item) }}</span></div>
-             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span><span class="text-sm font-black text-teal-500">{{ getTotalSakit(item) }}</span></div>
-             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpha</span><span class="text-sm font-black text-rose-500">{{ item.tanpa_izin || 0 }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Izin</span><span class="text-sm font-black" [class.text-indigo-500]="getTotalIzin(item) > 0" [class.text-slate-300]="getTotalIzin(item) === 0">{{ getTotalIzin(item) }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span><span class="text-sm font-black" [class.text-teal-500]="getTotalSakit(item) > 0" [class.text-slate-300]="getTotalSakit(item) === 0">{{ getTotalSakit(item) }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpha</span><span class="text-sm font-black" [class.text-rose-500]="item.tanpa_izin > 0" [class.text-slate-300]="!item.tanpa_izin">{{ item.tanpa_izin || 0 }}</span></div>
           </div>
 
           <div class="flex gap-2">

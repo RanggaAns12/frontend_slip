@@ -9,6 +9,7 @@ import {
 
 @Component({
   selector: 'app-attendance-summary-list',
+  standalone: false, // Pastikan Mas menggunakan environment Angular yang sesuai, jika standalone true ubah di sini
   templateUrl: './attendance-summary-list.component.html',
   styleUrls: ['./attendance-summary-list.component.scss'],
 })
