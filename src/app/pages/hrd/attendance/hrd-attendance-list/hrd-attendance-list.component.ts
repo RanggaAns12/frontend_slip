@@ -167,7 +167,11 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
-  // ── Kalkulasi Kolom Dinamis ───────────────────────────────
+  // =====================================================================
+  // ── 🔥 PERBAIKAN: Kalkulasi Kolom Dinamis 🔥 ─────────────────────────
+  // Cuti (normatif & pribadi) DIBUANG dari hitungan izin agar data 
+  // valid dan tidak terjadi salah baca saat direkap di UI.
+  // =====================================================================
   getTotalIzin(item: any): number {
     return (
       (item.izin_tidak_masuk_pribadi || 0) +
@@ -177,11 +181,10 @@ export class HrdAttendanceListComponent implements OnInit {
       (item.izin_dinas || 0) +
       (item.izin_datang_terlambat_kantor || 0) +
       (item.izin_pulang_awal_kantor || 0) +
-      (item.cuti_normatif || 0) +
-      (item.cuti_pribadi || 0) +
       (item.izin_lain_lain || 0)
     );
   }
+  // =====================================================================
 
   getTotalSakit(item: any): number {
     return (
