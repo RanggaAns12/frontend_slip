@@ -9,6 +9,8 @@ import { HrdAttendanceListComponent } from './attendance/hrd-attendance-list/hrd
 import { HrdOvertimeListComponent } from './overtimes/hrd-overtime-list/hrd-overtime-list.component';
 import { HrdProfileComponent } from './profile/hrd-profile/hrd-profile.component';
 import { HrdOvertimeShowComponent } from './overtimes/hrd-overtime-show/hrd-overtime-show.component';
+import { HrdAttendanceShowComponent } from './attendance/hrd-attendance-show/hrd-attendance-show.component';
+
 
 const routes: Routes = [
   {
@@ -27,6 +29,8 @@ const routes: Routes = [
         path: 'attendance', 
         component: HrdAttendanceListComponent 
       },
+      { path: 'attendance/show/:id', 
+        component: HrdAttendanceShowComponent },
       { 
         path: 'overtimes', 
         component: HrdOvertimeListComponent 

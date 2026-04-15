@@ -14,6 +14,7 @@ import { HrdProfileComponent } from './profile/hrd-profile/hrd-profile.component
 import { HrdEmployeeFormComponent } from './employees/hrd-employee-form/hrd-employee-form.component';
 import { HrdEmployeeDetailComponent } from './employees/hrd-employee-detail/hrd-employee-detail.component';
 import { HrdOvertimeShowComponent } from './overtimes/hrd-overtime-show/hrd-overtime-show.component';
+import { HrdAttendanceShowComponent } from './attendance/hrd-attendance-show/hrd-attendance-show.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { HrdOvertimeShowComponent } from './overtimes/hrd-overtime-show/hrd-over
     HrdProfileComponent,
     HrdEmployeeFormComponent,
     HrdEmployeeDetailComponent,
-    HrdOvertimeShowComponent
+    HrdOvertimeShowComponent,
+    HrdAttendanceShowComponent
   ],
   imports: [
     CommonModule,
