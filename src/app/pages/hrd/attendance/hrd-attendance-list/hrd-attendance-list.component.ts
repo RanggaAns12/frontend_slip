@@ -168,23 +168,26 @@ export class HrdAttendanceListComponent implements OnInit {
   }
 
   // =====================================================================
-  // 🔥 PERBAIKAN NAVIGASI DETAIL 🔥
+  // 🔥 PERBAIKAN NAVIGASI ABSOLUTE UNTUK HRD 🔥
   // =====================================================================
   goToDetail(id: number): void {
-    this.router.navigate(['../show', id], { relativeTo: this.route });
+    // Kita paksa pakai absolute path agar Angular tidak bingung
+    // Sesuaikan path '/hrd/attendance-summaries/show' ini jika di router Mas ada perbedaan nama folder.
+    this.router.navigate(['/hrd/attendance-summaries/show', id]);
   }
+  // =====================================================================
 
   // ── Kalkulasi Kolom Dinamis ───────────────────────────────
   getTotalIzin(item: any): number {
     return (
-      (item.izin_tidak_masuk_pribadi || 0) +
-      (item.izin_pulang_awal_pribadi || 0) +
-      (item.izin_datang_terlambat_pribadi || 0) +
-      (item.izin_meninggalkan_tempat_kerja || 0) +
-      (item.izin_dinas || 0) +
-      (item.izin_datang_terlambat_kantor || 0) +
-      (item.izin_pulang_awal_kantor || 0) +
-      (item.izin_lain_lain || 0)
+      (item.izin_tidak_masuk_pribadi || 0) 
+      // + (item.izin_pulang_awal_pribadi || 0)
+      // + (item.izin_datang_terlambat_pribadi || 0)
+      // + (item.izin_meninggalkan_tempat_kerja || 0)
+      // + (item.izin_dinas || 0)
+      // + (item.izin_datang_terlambat_kantor || 0)
+      // + (item.izin_pulang_awal_kantor || 0)
+      // + (item.izin_lain_lain || 0)
     );
   }
 
