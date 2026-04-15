@@ -213,7 +213,10 @@ export class AttendanceSummaryListComponent implements OnInit {
     });
   }
 
-  // ── Kalkulasi Kolom Dinamis (Perbaikan Bug Izin & Sakit) ──
+  // =====================================================================
+  // ── 🔥 PERBAIKAN: Kalkulasi Kolom Dinamis 🔥 ─────────────────────────
+  // Cuti DIBUANG dari hitungan izin agar data valid.
+  // =====================================================================
   getTotalIzin(item: any): number {
     return (
       (item.izin_tidak_masuk_pribadi || 0) +
@@ -223,8 +226,6 @@ export class AttendanceSummaryListComponent implements OnInit {
       (item.izin_dinas || 0) +
       (item.izin_datang_terlambat_kantor || 0) +
       (item.izin_pulang_awal_kantor || 0) +
-      (item.cuti_normatif || 0) +
-      (item.cuti_pribadi || 0) +
       (item.izin_lain_lain || 0)
     );
   }

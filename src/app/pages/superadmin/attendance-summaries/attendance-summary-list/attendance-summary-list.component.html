@@ -107,9 +107,9 @@
               <th class="px-6 py-5">Jabatan</th>
               <th class="px-6 py-5 text-center">Periode</th>
               <th class="px-6 py-5 text-center">Telat</th>
-              <th class="px-6 py-5 text-center">Izin / Cuti</th>
+              <th class="px-6 py-5 text-center">Izin</th>
               <th class="px-6 py-5 text-center">Sakit</th>
-              <th class="px-6 py-5 text-center">Absen</th>
+              <th class="px-6 py-5 text-center">Alpa</th>
               <th class="px-6 py-5 text-center w-[140px]">Aksi</th>
             </tr>
           </thead>
@@ -250,7 +250,7 @@
              <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Telat</span><span class="text-sm font-black" [class.text-amber-500]="item.terlambat_jml > 0" [class.text-slate-300]="!item.terlambat_jml">{{ item.terlambat_jml || 0 }}</span></div>
              <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Izin</span><span class="text-sm font-black" [class.text-indigo-500]="getTotalIzin(item) > 0" [class.text-slate-300]="getTotalIzin(item) === 0">{{ getTotalIzin(item) }}</span></div>
              <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Sakit</span><span class="text-sm font-black" [class.text-teal-500]="getTotalSakit(item) > 0" [class.text-slate-300]="getTotalSakit(item) === 0">{{ getTotalSakit(item) }}</span></div>
-             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpha</span><span class="text-sm font-black" [class.text-rose-500]="item.tanpa_izin > 0" [class.text-slate-300]="!item.tanpa_izin">{{ item.tanpa_izin || 0 }}</span></div>
+             <div><span class="block text-[9px] text-slate-400 uppercase font-bold mb-1">Alpa</span><span class="text-sm font-black" [class.text-rose-500]="item.tanpa_izin > 0" [class.text-slate-300]="!item.tanpa_izin">{{ item.tanpa_izin || 0 }}</span></div>
           </div>
 
           <div class="flex gap-2">
