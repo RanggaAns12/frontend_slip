@@ -54,7 +54,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   // 🔴 MENGAMBIL DATA MURNI DARI DATABASE
   fetchDashboardData() {
     this.isLoading = true;
-    // 👇 API Endpoint disesuaikan ke HRD
+    // API Endpoint disesuaikan ke HRD
     const apiUrl = `${environment.apiUrl}/hrd/dashboard`; 
 
     this.http.get<any>(apiUrl).subscribe({
@@ -93,32 +93,43 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     });
   }
 
-  // 🔴 RENDER BAR CHART 
+  // 🔴 RENDER BAR CHART (Disesuaikan dengan status absensi HRIS kita)
   renderBarChart(weeklyStats: any) {
     if (!this.attendanceChartRef) return;
     if (this.barChart) this.barChart.destroy();
 
-    const labels = weeklyStats?.labels || ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+    // Default label hari kerja
+    const labels = weeklyStats?.labels || ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    
+    // Data Default jika API kosong
     const dataHadir = weeklyStats?.hadir || [0, 0, 0, 0, 0, 0];
-    const dataIzin = weeklyStats?.izin || [0, 0, 0, 0, 0, 0];
+    const dataIzin  = weeklyStats?.izin  || [0, 0, 0, 0, 0, 0];
     const dataSakit = weeklyStats?.sakit || [0, 0, 0, 0, 0, 0];
+    const dataAlpa  = weeklyStats?.alpa  || [0, 0, 0, 0, 0, 0]; // Tambahan Alpa
 
     this.barChart = new Chart(this.attendanceChartRef.nativeElement, {
       type: 'bar',
       data: {
         labels: labels,
         datasets: [
-          { label: 'Hadir', data: dataHadir, backgroundColor: '#f97316', borderRadius: 6, barThickness: 16 },
-          { label: 'Izin', data: dataIzin, backgroundColor: '#fbbf24', borderRadius: 6, barThickness: 16 },
-          { label: 'Sakit', data: dataSakit, backgroundColor: '#f43f5e', borderRadius: 6, barThickness: 16 }
+          { label: 'Hadir', data: dataHadir, backgroundColor: '#10b981', borderRadius: 4, barThickness: 14 }, // Emerald
+          { label: 'Izin',  data: dataIzin,  backgroundColor: '#6366f1', borderRadius: 4, barThickness: 14 }, // Indigo
+          { label: 'Sakit', data: dataSakit, backgroundColor: '#14b8a6', borderRadius: 4, barThickness: 14 }, // Teal
+          { label: 'Alpa',  data: dataAlpa,  backgroundColor: '#f43f5e', borderRadius: 4, barThickness: 14 }  // Rose
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
+        plugins: { 
+          legend: { 
+            display: true, // Diaktifkan agar HRD bisa melihat warna kategori
+            position: 'top',
+            labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
+          } 
+        },
         scales: {
-          y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
           x: { grid: { display: false } }
         }
       }
