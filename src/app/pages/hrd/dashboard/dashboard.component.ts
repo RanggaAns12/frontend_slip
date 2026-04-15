@@ -2,9 +2,7 @@ import { Component, OnInit, ElementRef, ViewChild, AfterViewInit } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment'; 
 import { Chart, registerables } from 'chart.js';
-
-// 👇 Import Service Karyawan agar sinkron 100% dengan data tabel
-import { EmployeeApiService } from '../../superadmin/employees/services/employee-api.service';
+import { EmployeeApiService } from '../../superadmin/employees/services/employee-api.service'; 
 
 Chart.register(...registerables);
 
@@ -15,25 +13,24 @@ Chart.register(...registerables);
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
-  @ViewChild('attendanceChart') attendanceChartRef!: ElementRef;
+  @ViewChild('deptChart') deptChartRef!: ElementRef; // Ganti nama ref
   @ViewChild('statusChart') statusChartRef!: ElementRef;
 
   currentDate: Date = new Date();
   userName: string = 'HRD'; 
   isLoading: boolean = true; 
 
-  // Variabel Data Murni
   totalEmployees = 0;
   totalUsers = 0;
   activeEmployees = 0;
   inactiveEmployees = 0;
 
-  barChart: any;
+  deptChart: any;
   doughnutChart: any;
 
   constructor(
     private http: HttpClient,
-    private employeeApi: EmployeeApiService // 👈 Daftarkan service di sini
+    private employeeApi: EmployeeApiService 
   ) {}
 
   ngOnInit(): void {
@@ -48,119 +45,106 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     if (userDataStr) {
       try {
         const userObj = JSON.parse(userDataStr);
-        if (userObj && userObj.name) {
-          this.userName = userObj.name;
-        }
-      } catch (e) {
-        console.error('Gagal parsing data user', e);
-      }
+        if (userObj && userObj.name) this.userName = userObj.name;
+      } catch (e) { console.error('Gagal parsing data user', e); }
     }
   }
 
-  // 🔴 MENGAMBIL DATA DAN MENSINKRONKAN GRAFIK
   fetchDashboardData() {
     this.isLoading = true;
 
-    // 1. Ambil data User & Statistik Absensi dari API Dashboard Backend
+    // 1. Ambil data User dari API Dashboard
     const apiUrl = `${environment.apiUrl}/hrd/dashboard`; 
     this.http.get<any>(apiUrl).subscribe({
       next: (res) => {
         const data = res.data || res; 
         this.totalUsers = Number(data?.total_users || data?.totalUsers || 0);
-
-        setTimeout(() => {
-          this.renderBarChart(data?.weekly_stats);
-        }, 200);
       },
-      error: (err) => {
-        console.error('Gagal mengambil data dashboard backend:', err);
-        this.totalUsers = 0;
-        setTimeout(() => {
-          this.renderBarChart(null); 
-        }, 200);
-      }
+      error: () => this.totalUsers = 0
     });
 
-    // 2. Ambil data Karyawan SECARA LANGSUNG dari tabel Karyawan (SINKRON 100%)
+    // 2. SINKRONISASI DATA KARYAWAN & GRAFIK DEPARTEMEN
     this.employeeApi.getAll().subscribe({
       next: (res: any) => {
         const employees = res.data || res || [];
-        
-        // SINKRONISASI MUTLAK: Jika ada yang dihapus, length akan otomatis berkurang
         this.totalEmployees = employees.length;
 
-        // Hitung Rasio Aktif vs Non-Aktif secara dinamis
+        // Hitung Rasio Aktif
         this.activeEmployees = employees.filter((e: any) => {
-           // Sesuaikan dengan nama field status di database (status / status_karyawan)
            const status = String(e.status || e.status_karyawan || 'Aktif').toLowerCase();
-           
-           // Kita anggap Non-Aktif jika di dalam teksnya ada kata 'non', 'resign', atau 'keluar'
            return !status.includes('non') && !status.includes('resign') && !status.includes('keluar');
         }).length;
-
         this.inactiveEmployees = this.totalEmployees - this.activeEmployees;
+
+        // --- LOGIKA HITUNG PER DEPARTEMEN ---
+        const deptCounts: { [key: string]: number } = {};
+        employees.forEach((e: any) => {
+          const dName = e.dept || 'Lain-lain';
+          deptCounts[dName] = (deptCounts[dName] || 0) + 1;
+        });
+
+        // Ubah ke array dan urutkan dari yang terbanyak
+        const sortedDepts = Object.entries(deptCounts)
+          .map(([name, count]) => ({ name, count }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 7); // Ambil Top 7 Departemen saja agar tidak kepanjangan
+
         this.isLoading = false;
 
-        // Render ulang grafik donat dengan data yang paling fresh!
         setTimeout(() => {
+          this.renderDeptChart(sortedDepts);
           this.renderDoughnutChart([this.activeEmployees, this.inactiveEmployees]);
-        }, 200);
+        }, 300);
       },
       error: (err) => {
-        console.error('Gagal mengambil sinkronisasi data karyawan:', err);
-        this.totalEmployees = 0;
-        this.activeEmployees = 0;
-        this.inactiveEmployees = 0;
         this.isLoading = false;
-
-        setTimeout(() => {
-          this.renderDoughnutChart([0, 0]); 
-        }, 200);
+        console.error(err);
       }
     });
   }
 
-  // 🔴 RENDER BAR CHART (Ditambahkan "Alpa" dan warna disesuaikan UI)
-  renderBarChart(weeklyStats: any) {
-    if (!this.attendanceChartRef) return;
-    if (this.barChart) this.barChart.destroy();
+  // 🔴 RENDER HORIZONTAL BAR CHART (Headcount per Dept)
+  renderDeptChart(deptData: any[]) {
+    if (!this.deptChartRef) return;
+    if (this.deptChart) this.deptChart.destroy();
 
-    const labels = weeklyStats?.labels || ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-    const dataHadir = weeklyStats?.hadir || [0, 0, 0, 0, 0, 0];
-    const dataIzin  = weeklyStats?.izin  || [0, 0, 0, 0, 0, 0];
-    const dataSakit = weeklyStats?.sakit || [0, 0, 0, 0, 0, 0];
-    const dataAlpa  = weeklyStats?.alpa  || [0, 0, 0, 0, 0, 0];
+    const labels = deptData.map(d => d.name);
+    const counts = deptData.map(d => d.count);
 
-    this.barChart = new Chart(this.attendanceChartRef.nativeElement, {
+    this.deptChart = new Chart(this.deptChartRef.nativeElement, {
       type: 'bar',
       data: {
         labels: labels,
-        datasets: [
-          { label: 'Hadir', data: dataHadir, backgroundColor: '#10b981', borderRadius: 4, barThickness: 14 },
-          { label: 'Izin',  data: dataIzin,  backgroundColor: '#6366f1', borderRadius: 4, barThickness: 14 },
-          { label: 'Sakit', data: dataSakit, backgroundColor: '#14b8a6', borderRadius: 4, barThickness: 14 },
-          { label: 'Alpa',  data: dataAlpa,  backgroundColor: '#f43f5e', borderRadius: 4, barThickness: 14 }
-        ]
+        datasets: [{
+          label: 'Jumlah Karyawan',
+          data: counts,
+          backgroundColor: '#f97316', // Orange ADS
+          borderRadius: 6,
+          barThickness: 20
+        }]
       },
       options: {
+        indexAxis: 'y', // MEMBUAT JADI HORIZONTAL
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { 
-          legend: { 
-            display: true, 
-            position: 'top',
-            labels: { usePointStyle: true, boxWidth: 8, padding: 20 }
-          } 
+        plugins: {
+          legend: { display: false }
         },
         scales: {
-          y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { stepSize: 1 } },
-          x: { grid: { display: false } }
+          x: { 
+            beginAtZero: true, 
+            grid: { color: '#f1f5f9' },
+            ticks: { stepSize: 1, color: '#94a3b8', font: { size: 10 } }
+          },
+          y: { 
+            grid: { display: false },
+            ticks: { color: '#475569', font: { weight: 'bold', size: 11 } }
+          }
         }
       }
     });
   }
 
-  // 🔴 RENDER DOUGHNUT CHART 
   renderDoughnutChart(statusArray: any[]) {
     if (!this.statusChartRef) return;
     if (this.doughnutChart) this.doughnutChart.destroy();
@@ -168,7 +152,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.doughnutChart = new Chart(this.statusChartRef.nativeElement, {
       type: 'doughnut',
       data: {
-        labels: ['Karyawan Aktif', 'Non-Aktif / Resign'],
+        labels: ['Aktif', 'Non-Aktif'],
         datasets: [{
           data: statusArray,
           backgroundColor: ['#10b981', '#f43f5e'],
@@ -180,7 +164,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20 } }
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15, font: { size: 11 } } }
         },
         cutout: '75%'
       }
