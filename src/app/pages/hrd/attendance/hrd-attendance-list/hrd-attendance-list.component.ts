@@ -173,7 +173,7 @@ export class HrdAttendanceListComponent implements OnInit {
   goToDetail(id: number): void {
     // Kita paksa pakai absolute path agar Angular tidak bingung
     // Sesuaikan path '/hrd/attendance-summaries/show' ini jika di router Mas ada perbedaan nama folder.
-    this.router.navigate(['/hrd/attendance-summaries/show', id]);
+    this.router.navigate(['/hrd/attendance/show', id]);
   }
   // =====================================================================
 
