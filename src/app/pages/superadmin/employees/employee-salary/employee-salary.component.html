@@ -248,7 +248,9 @@
                 <td class="p-2 sm:p-3">
                   <div class="relative w-full">
                     <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs">Rp</span>
-                    <input type="number" min="0" [(ngModel)]="item.custom_amount"
+                    <input type="text"
+                           [value]="formatRupiah(item.custom_amount)"
+                           (input)="onComponentRupiahInput($event, item)"
                            class="w-full px-3 py-2.5 pl-8 bg-white border border-gray-200 rounded-lg text-gray-800 font-bold text-xs outline-none transition-all focus:ring-2 focus:ring-orange-200 focus:border-orange-500 shadow-sm text-right"
                            placeholder="0">
                   </div>

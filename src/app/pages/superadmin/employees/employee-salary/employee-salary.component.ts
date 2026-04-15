@@ -70,9 +70,7 @@ export class EmployeeSalaryComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Inisialisasi awal: tampilkan semua posisi jika belum ada departemen yang dipilih
     this.positions = this.departemenData.flatMap(d => d.posisi).sort();
-    
     this.loadEmployees();
     this.loadMasterSalaryComponents();
   }
@@ -249,20 +247,26 @@ export class EmployeeSalaryComponent implements OnInit {
     const selectedComp: any = this.masterComponents.find(c => c.id === id);
     if (selectedComp) {
       this.employeeComponents[index].salary_component_id = id;
-      // Berikan nilai default dari master saat pertama kali dipilih
       this.employeeComponents[index].custom_amount = selectedComp.nominal ? Math.round(Number(selectedComp.nominal)) : 0;
     }
+  }
+
+  // 👇 PERBAIKAN: Fungsi format angka khusus di modal komponen
+  onComponentRupiahInput(event: any, item: any) {
+    let inputVal = event.target.value;
+    let numericVal = inputVal.replace(/[^0-9]/g, '');
+    item.custom_amount = numericVal ? Number(numericVal) : 0;
+    event.target.value = this.formatRupiah(numericVal);
   }
 
   saveEmployeeComponents(): void {
     if (!this.selectedEmployeeForComponent) return;
     
-    // PERBAIKAN: Mapping ulang validComponents agar tipe datanya terjamin murni angka (Number)
     const validComponents = this.employeeComponents
       .filter(c => c.salary_component_id > 0)
       .map(c => ({
         salary_component_id: Number(c.salary_component_id),
-        custom_amount: Number(c.custom_amount) || 0 // Jaring pengaman
+        custom_amount: Number(c.custom_amount) || 0
       }));
     
     this.isSavingComponents = true;
