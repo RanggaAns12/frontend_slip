@@ -34,7 +34,7 @@
         </p>
       </div>
 
-      <div class="shrink-0 px-4 py-2.5 bg-orange-50/50 border border-orange-100 text-orange-600 text-sm font-semibold rounded-xl flex items-center gap-2">
+      <div class="shrink-0 px-4 py-2.5 bg-orange-50/50 border border-orange-100 text-orange-600 text-sm font-semibold rounded-xl flex items-center gap-2 shadow-sm">
         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
         <span>Mode Read-Only</span>
       </div>
@@ -57,7 +57,6 @@
         <div class="h-8 w-px bg-slate-200 hidden xl:block mx-2"></div>
 
         <div class="flex flex-wrap gap-3 w-full xl:w-auto items-center flex-1">
-          
           <div class="relative flex-1 min-w-[140px]">
             <select [(ngModel)]="filterDept" (change)="onSearch()"
                     class="w-full appearance-none pl-4 pr-10 py-2.5 text-sm font-medium text-slate-600 bg-slate-50 border border-slate-200 rounded-xl focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none cursor-pointer transition-all hover:bg-white">
@@ -143,11 +142,11 @@
             </tr>
 
             <ng-container *ngIf="!isLoading && items.length > 0">
-              <tr *ngFor="let item of items" (click)="goToDetail(item.id)" class="group hover:bg-orange-50/30 cursor-pointer transition-colors duration-200">
+              <tr *ngFor="let item of items" (click)="goToDetail(item.id || 0)" class="group hover:bg-orange-50/30 cursor-pointer transition-colors duration-200">
                 <td class="px-6 py-4">
                   <div class="flex items-center gap-4">
                     <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 text-slate-600 flex items-center justify-center text-sm font-black border border-white shadow-sm ring-2 ring-transparent group-hover:ring-orange-200 transition-all">
-                      {{ item.nama.charAt(0) }}
+                      {{ item.nama ? item.nama.charAt(0) : '-' }}
                     </div>
                     <div>
                       <p class="font-bold text-slate-700 text-sm group-hover:text-orange-600 transition-colors line-clamp-1">{{ item.nama }}</p>
@@ -219,20 +218,20 @@
 
     <div class="block md:hidden space-y-4 animate-fade-in-up delay-200">
       <ng-container *ngIf="!isLoading">
-        <div *ngFor="let item of items" (click)="goToDetail(item.id)" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform">
+        <div *ngFor="let item of items" (click)="goToDetail(item.id || 0)" class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform">
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-amber-400"></div>
 
           <div class="flex justify-between items-start mb-4">
             <div class="flex items-center gap-3">
               <div class="h-10 w-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-black">
-                 {{ item.nama.charAt(0) }}
+                  {{ item.nama ? item.nama.charAt(0) : '-' }}
               </div>
               <div>
-                <h3 class="font-bold text-slate-800 text-sm">{{ item.nama }}</h3>
+                <h3 class="font-bold text-slate-800 text-sm line-clamp-1">{{ item.nama }}</h3>
                 <p class="text-[10px] text-slate-400 font-mono">{{ item.nik_karyawan }}</p>
               </div>
             </div>
-            <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-50 text-slate-500 border border-slate-100">
+            <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-50 text-slate-500 border border-slate-100 whitespace-nowrap">
               {{ getMonthName(item.month) }}
             </span>
           </div>
@@ -253,7 +252,7 @@
           </div>
           
           <div class="text-center mt-2">
-            <span class="text-[10px] text-orange-500 font-bold">Ketuk untuk detail absen &rarr;</span>
+            <span class="text-[10px] text-orange-500 font-bold italic">Ketuk untuk detail absen &rarr;</span>
           </div>
         </div>
       </ng-container>

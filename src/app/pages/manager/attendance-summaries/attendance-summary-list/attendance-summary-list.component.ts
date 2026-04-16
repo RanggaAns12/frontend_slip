@@ -126,8 +126,8 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.load();
   }
 
-  // ── NAVIGASI (PERBAIKAN ROUTE KE MANAGER) ──────────────
-  goToDetail(id: number | null): void {
+  // ── NAVIGASI (PERBAIKAN TYPE KE ANY AGAR VERCEL LOLOS) ──────────────
+  goToDetail(id: any): void {
     if (!id) {
         // Tampilkan pesan atau alert jika datanya masih kosong (belum ada ID)
         if (this.showToast) {

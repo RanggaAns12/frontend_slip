@@ -178,15 +178,8 @@ export class AttendanceSummaryListComponent implements OnInit {
     this.load();
   }
 
-  goToDetail(id: number | null): void {
-    if (!id) {
-        // Tampilkan peringatan jika bos/manager klik detail karyawan yang datanya kosong
-        alert('Karyawan ini belum memiliki data absensi bulan ini.');
-        return;
-    }
-    
-    // Sesuaikan URL routing-nya dengan rute Manager Mas
-    this.router.navigate(['/manager/attendance-summaries/show', id]); 
+  goToDetail(id: number): void {
+    this.router.navigate(['../show', id], { relativeTo: this.route });
   }
 
   // ── Feature: Delete with Modal ────────────────────────────
