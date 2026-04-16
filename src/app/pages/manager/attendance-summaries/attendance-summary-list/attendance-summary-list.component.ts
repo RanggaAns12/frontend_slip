@@ -127,8 +127,19 @@ export class AttendanceSummaryListComponent implements OnInit {
   }
 
   // ── NAVIGASI (PERBAIKAN ROUTE KE MANAGER) ──────────────
-  goToDetail(id: number): void {
-    this.router.navigate(['/manager/attendance-summaries/detail', id]);
+  goToDetail(id: number | null): void {
+    if (!id) {
+        // Tampilkan pesan atau alert jika datanya masih kosong (belum ada ID)
+        if (this.showToast) {
+            this.showToast('Karyawan ini belum memiliki data absensi bulan ini.', 'error');
+        } else {
+            alert('Karyawan ini belum memiliki data absensi bulan ini.');
+        }
+        return;
+    }
+    
+    // Pastikan routing-nya sesuai dengan yang ada di file Mas sebelumnya
+    this.router.navigate(['/manager/attendance-summaries/show', id]); 
   }
 
   // ── Helpers ──────────────────────────────────────────────
