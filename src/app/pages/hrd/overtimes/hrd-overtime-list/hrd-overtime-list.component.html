@@ -109,7 +109,7 @@
         </tr>
 
         <ng-container *ngIf="!isLoading && items.length > 0">
-          <tr *ngFor="let item of items; let i = index" class="hover:bg-orange-50/30 transition-colors group">
+          <tr *ngFor="let item of items; let i = index" class="hover:bg-orange-50/30 transition-colors group" [ngClass]="{'opacity-75 bg-gray-50/50': item?.is_empty}">
             <td class="px-6 py-3 text-center text-sm font-medium text-gray-400">{{ (currentPage - 1) * itemsPerPage + i + 1 }}</td>
 
             <td class="px-6 py-3">
@@ -118,7 +118,12 @@
                   {{ getInitial(item?.nama_karyawan) }}
                 </div>
                 <div>
-                  <p class="font-bold text-gray-800 text-sm group-hover:text-orange-600 transition-colors">{{ item?.nama_karyawan || '-' }}</p>
+                  <div class="flex items-center gap-2">
+                    <p class="font-bold text-gray-800 text-sm group-hover:text-orange-600 transition-colors">{{ item?.nama_karyawan || '-' }}</p>
+                    <span *ngIf="item?.is_empty" class="text-[9px] px-1.5 py-0.5 bg-red-50 text-red-500 rounded border border-red-100 uppercase font-bold tracking-wider">
+                      0 Jam
+                    </span>
+                  </div>
                 </div>
               </div>
             </td>
@@ -126,18 +131,19 @@
             <td class="px-6 py-3 text-center text-sm text-gray-600">{{ item?.total_hari || 0 }} hari</td>
 
             <td class="px-6 py-3 text-center">
-              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border bg-orange-50 text-orange-600 border-orange-200">
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border transition-colors"
+                    [ngClass]="item?.is_empty ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-orange-50 text-orange-600 border-orange-200 group-hover:bg-orange-100'">
                 {{ (toNumber(item?.total_poin ?? item?.konversi_lembur) ) | number:'1.0-2' }} Poin
               </span>
             </td>
 
             <td class="px-6 py-3 text-center">
               <div class="flex justify-center gap-2">
-                <button (click)="goToDetail(item?.nama_karyawan)"
+                <button (click)="goToDetail(item)"
                         class="group px-3 py-1.5 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-100 transition-all shadow-sm text-xs font-bold"
                         title="Lihat Detail">
                   <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 0 1 6 0z" /></svg>
-                  Detail
+                  {{ item?.is_empty ? 'Input Data' : 'Detail' }}
                 </button>
               </div>
             </td>
@@ -157,9 +163,14 @@
       <p class="text-sm text-gray-500">Tidak ada data rekap lembur.</p>
     </div>
 
-    <div *ngFor="let item of items; let i = index" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative">
-      <span class="absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded border bg-orange-50 text-orange-600 border-orange-200">
+    <div *ngFor="let item of items; let i = index" class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 relative" [ngClass]="{'opacity-75 bg-gray-50/50': item?.is_empty}">
+      <span class="absolute top-4 right-4 text-[10px] font-bold px-2 py-0.5 rounded border transition-colors"
+            [ngClass]="item?.is_empty ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-orange-50 text-orange-600 border-orange-200'">
         {{ (toNumber(item?.total_poin ?? item?.konversi_lembur)) | number:'1.0-2' }} Poin
+      </span>
+
+      <span *ngIf="item?.is_empty" class="absolute top-4 right-20 text-[10px] font-bold px-2 py-0.5 rounded border bg-red-50 text-red-500 border-red-100 uppercase">
+        Kosong
       </span>
 
       <div class="flex items-center gap-3 mb-3">
@@ -173,10 +184,10 @@
       </div>
 
       <div class="flex gap-2 mt-3 border-t border-gray-50 pt-3">
-        <button (click)="goToDetail(item?.nama_karyawan)"
+        <button (click)="goToDetail(item)"
                 class="flex-1 py-2 text-xs font-bold text-blue-600 bg-blue-50 rounded-lg text-center hover:bg-blue-100 border border-blue-100 transition flex items-center justify-center gap-1">
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 0 1 6 0z" /></svg>
-          Lihat Rincian
+          {{ item?.is_empty ? 'Input Data' : 'Lihat Rincian' }}
         </button>
       </div>
     </div>

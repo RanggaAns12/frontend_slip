@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { OvertimeApiService } from '../services/overtime-api.service' // Sesuaikan path ini dengan struktur folder SuperAdmin Mas ya
+import { OvertimeApiService } from '../services/overtime-api.service'; // Sesuaikan path ini dengan struktur folder SuperAdmin Mas ya
 
 @Component({
   selector: 'app-superadmin-overtime-list', // <-- Sudah diganti ke SuperAdmin
@@ -113,7 +113,7 @@ export class OvertimeListComponent implements OnInit {
 
   get totalUpahKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const upah = this.toNumber(curr?.total_upah ?? curr?.hitungan_lembur);
+      const upah = this.toNumber(curr?.total_bayar ?? curr?.hitungan_lembur); // Diperbaiki sedikit ke total_bayar
       return acc + upah;
     }, 0);
   }
@@ -191,12 +191,14 @@ export class OvertimeListComponent implements OnInit {
   }
 
   // ===== RUTE DETAIL SUPERADMIN =====
-  goToDetail(nama: string): void {
-    // <-- Sudah diubah menjadi rute superadmin
-    this.router.navigate(['/superadmin/overtimes/show', nama], {
+  // [BARU] Ubah agar menerima parameter item seutuhnya dan mengirim is_empty
+  goToDetail(item: any): void {
+    this.router.navigate(['/superadmin/overtimes/show', item.nama_karyawan], {
       queryParams: {
         month: this.filterMonth,
-        year: this.filterYear
+        year: this.filterYear,
+        employee_id: item.employee_id, // <-- Dikirim ke halaman detail
+        is_empty: item.is_empty        // <-- Dikirim ke halaman detail
       }
     });
   }

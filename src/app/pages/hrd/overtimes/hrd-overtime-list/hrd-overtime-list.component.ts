@@ -53,6 +53,7 @@ export class HrdOvertimeListComponent implements OnInit {
     });
   }
 
+  // ===== Helpers =====
   toNumber(value: any): number {
     const n = Number(value);
     return Number.isFinite(n) ? n : 0;
@@ -63,6 +64,14 @@ export class HrdOvertimeListComponent implements OnInit {
     return s.length > 0 ? s.charAt(0).toUpperCase() : '?';
   }
 
+  // [BARU] Ditambahkan agar HTML tidak error saat memformat uang
+  formatRupiah(value: number | string): string {
+    const val = parseFloat(value as string || '0');
+    if (val === 0) return 'Rp 0';
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);
+  }
+
+  // ===== Rekap Header =====
   get totalPoinKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
       const poin = this.toNumber(curr?.total_poin ?? curr?.konversi_lembur);
@@ -70,6 +79,15 @@ export class HrdOvertimeListComponent implements OnInit {
     }, 0);
   }
 
+  // [BARU] Diselaraskan dengan backend (menggunakan total_bayar)
+  get totalUpahKeseluruhan(): number {
+    return this.items.reduce((acc, curr) => {
+      const upah = this.toNumber(curr?.total_bayar ?? curr?.hitungan_lembur);
+      return acc + upah;
+    }, 0);
+  }
+
+  // ===== Load Data =====
   loadData(): void {
     this.isLoading = true;
 
@@ -141,13 +159,23 @@ export class HrdOvertimeListComponent implements OnInit {
     return pages;
   }
 
-  goToDetail(nama: string): void {
-    this.router.navigate(['/hrd/overtimes/show', nama], {
+  // ===== RUTE DETAIL HRD =====
+  // [BARU] Ubah agar menerima parameter item dan mengirim is_empty & employee_id
+  goToDetail(item: any): void {
+    this.router.navigate(['/hrd/overtimes/show', item.nama_karyawan], {
       queryParams: {
         month: this.filterMonth,
-        year: this.filterYear
+        year: this.filterYear,
+        employee_id: item.employee_id, // <-- Dikirim ke halaman detail
+        is_empty: item.is_empty        // <-- Dikirim ke halaman detail
       }
     });
+  }
+
+  // ===== Import Excel Logic =====
+  // [BARU] Ditambahkan untuk tombol upload custom
+  triggerFileInput(fileInput: HTMLInputElement): void {
+    fileInput.click();
   }
 
   onFileSelected(event: any): void {
@@ -158,8 +186,8 @@ export class HrdOvertimeListComponent implements OnInit {
     formData.append('file', file);
     
     // SELARAS DENGAN SUPERADMIN: Kirim bulan & tahun agar tanggal Excel dikunci di backend
-    formData.append('month', this.filterMonth.toString());
-    formData.append('year', this.filterYear.toString());
+    if (this.filterMonth) formData.append('month', this.filterMonth.toString());
+    if (this.filterYear) formData.append('year', this.filterYear.toString());
 
     this.isImporting = true;
     this.overtimeApi.importExcel(formData).subscribe({

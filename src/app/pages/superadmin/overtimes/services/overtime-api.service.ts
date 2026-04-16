@@ -13,8 +13,9 @@ export interface Overtime {
   gaji_pokok: number;
   per_jam: number;
   hitungan_lembur: number;
-  potongan_pph_bpjs?: number; // <-- Tambahan
-  total_bersih?: number;      // <-- Tambahan
+  potongan_pph_bpjs?: number; 
+  total_bersih?: number;      
+  is_manually_edited?: boolean; // <-- [BARU] Penanda data diedit manual
 }
 
 
@@ -26,9 +27,10 @@ export interface OvertimeSummary {
   total_poin?: number;
   tarif_per_jam?: number;
   total_bayar: number;
-  total_potongan?: number;        // <-- Tambahan
-  total_bersih_diterima?: number; // <-- Tambahan
+  total_potongan?: number;        
+  total_bersih_diterima?: number; 
   total_hari: number;
+  is_empty?: boolean; // <-- [BARU] Penanda karyawan belum punya data lembur
 }
 
 
@@ -77,7 +79,7 @@ export class OvertimeApiService {
   }
 
 
-    // 1.C UPDATE POTONGAN PPh21 & BPJS PER KARYAWAN
+  // 1.C UPDATE POTONGAN PPh21 & BPJS PER KARYAWAN
   updatePotongan(namaKaryawan: string, payload: any): Observable<any> {
     let httpParams = new HttpParams();
     
@@ -96,7 +98,6 @@ export class OvertimeApiService {
       { params: httpParams }
     );
   }
-
 
 
   create(data: any): Observable<any> {
