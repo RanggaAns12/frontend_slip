@@ -13,7 +13,7 @@ Chart.register(...registerables);
   styleUrls: ['./dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
-  @ViewChild('deptChart') deptChartRef!: ElementRef; // Ganti nama ref
+  @ViewChild('deptChart') deptChartRef!: ElementRef; 
   @ViewChild('statusChart') statusChartRef!: ElementRef;
 
   currentDate: Date = new Date();
@@ -76,18 +76,54 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         }).length;
         this.inactiveEmployees = this.totalEmployees - this.activeEmployees;
 
-        // --- LOGIKA HITUNG PER DEPARTEMEN ---
-        const deptCounts: { [key: string]: number } = {};
+        // --- LOGIKA BARU: PENGELOMPOKAN DEPARTEMEN SESUAI REQUEST ATASAN ---
+        // Kita siapkan wadah dengan nilai awal 0
+        const targetDepts: { [key: string]: number } = {
+          'Produksi': 0,
+          'WTP/WWTP': 0,
+          'QA/QC': 0, // Mengasumsikan 'wa' yang Mas maksud adalah QA/QC
+          'Engineering': 0,
+          'HR': 0,
+          'Purchasing': 0,
+          'Marketing': 0,
+          'Logistic': 0,
+          'OCC': 0,
+          'Lain-lain': 0
+        };
+
         employees.forEach((e: any) => {
-          const dName = e.dept || 'Lain-lain';
-          deptCounts[dName] = (deptCounts[dName] || 0) + 1;
+          const rawDept = String(e.dept || '').toLowerCase().trim();
+
+          // Pengecekan kata kunci agar data yang salah ketik di DB tetap masuk kategori yang benar
+          if (rawDept.includes('produksi') || rawDept.includes('production')) {
+            targetDepts['Produksi']++;
+          } else if (rawDept.includes('wtp') || rawDept.includes('wwtp')) {
+            targetDepts['WTP/WWTP']++;
+          } else if (rawDept.includes('qa') || rawDept.includes('qc') || rawDept.includes('quality') || rawDept === 'wa') {
+            targetDepts['QA/QC']++;
+          } else if (rawDept.includes('engineer') || rawDept.includes('teknik') || rawDept.includes('engeenering')) {
+            targetDepts['Engineering']++;
+          } else if (rawDept.includes('hr') || rawDept.includes('human') || rawDept.includes('personalia')) {
+            targetDepts['HR']++;
+          } else if (rawDept.includes('purchas') || rawDept.includes('pembelian')) {
+            targetDepts['Purchasing']++;
+          } else if (rawDept.includes('market') || rawDept.includes('pemasaran')) {
+            targetDepts['Marketing']++;
+          } else if (rawDept.includes('logis') || rawDept.includes('gudang') || rawDept.includes('warehouse')) {
+            targetDepts['Logistic']++;
+          } else if (rawDept.includes('occ')) {
+            targetDepts['OCC']++;
+          } else {
+            targetDepts['Lain-lain']++; // Sisa departemen yang tidak ada di daftar masuk ke sini
+          }
         });
 
-        // Ubah ke array dan urutkan dari yang terbanyak
-        const sortedDepts = Object.entries(deptCounts)
+        // Ubah format Object ke Array, buang departemen yang nilainya 0 (opsional, agar grafik rapi), 
+        // LALU URUTKAN DARI YANG TERBESAR
+        const sortedDepts = Object.entries(targetDepts)
+          .filter(([name, count]) => count > 0) // Hilangkan baris ini jika ingin departemen bersaldo 0 tetap muncul
           .map(([name, count]) => ({ name, count }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 7); // Ambil Top 7 Departemen saja agar tidak kepanjangan
+          .sort((a, b) => b.count - a.count); // Logika sorting Descending (Terbesar ke Terkecil)
 
         this.isLoading = false;
 
