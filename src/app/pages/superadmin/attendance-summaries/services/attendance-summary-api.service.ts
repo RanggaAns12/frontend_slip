@@ -97,7 +97,7 @@ export interface AttendanceImportResponse {
 }
 
 export interface AttendanceSummary {
-  id                             : number;
+  id                             : number | null; // 🔥 Disesuaikan karena bisa null dari backend
   employee_id                    : number;
   month                          : number;
   year                           : number;
@@ -116,10 +116,10 @@ export interface AttendanceSummary {
   tanpa_izin                     : number;
   imported_at                    : string;
 
-  // Penambahan Opsional agar Component List tidak error
   tanggal_izin?                  : string | null;
   tanggal_sakit?                 : string | null;
   tanggal_alpa?                  : string | null;
+  is_empty?                      : boolean; // 🔥 Penanda data kosong dari backend
 }
 
 export interface AttendanceSummaryListResponse {
@@ -164,11 +164,6 @@ export interface AttendanceSummaryDetail extends AttendanceSummary {
   tidak_scan_mulai_lembur        : number;
   tidak_scan_selesai_lembur      : number;
   izin_lain_lain                 : number;
-  
-  // PENAMBAHAN WAJIB UNTUK DINAMIS TANGGAL
-  tanggal_izin?                  : string | null;
-  tanggal_sakit?                 : string | null;
-  tanggal_alpa?                  : string | null;
 }
 
 export interface AttendanceSummaryDetailResponse {
@@ -181,7 +176,6 @@ export interface AttendanceSummaryUpdateResponse {
   message : string;
   data    : AttendanceSummaryDetail;
 }
-
 
 // ─── Service ───────────────────────────────────────────────────────
 
@@ -225,18 +219,21 @@ export class AttendanceSummaryApiService {
     year  ?: number;
     search?: string;
     page  ?: number;
-    departemen ?: string; // Tambahkan agar filter berjalan lancar
-    jabatan ?: string;    // Tambahkan agar filter berjalan lancar
+    departemen ?: string; 
+    jabatan ?: string;    
   }): Observable<AttendanceSummaryListResponse> {
     return this.http.get<AttendanceSummaryListResponse>(
       `${this.baseUrl}`, { params: params as any }
     );
   }
 
-  // ─── Method GET By ID & UPDATE & DELETE ──────────────────────────
-
   getById(id: number): Observable<AttendanceSummaryDetailResponse> {
     return this.http.get<AttendanceSummaryDetailResponse>(`${this.baseUrl}/${id}`);
+  }
+
+  // 🔥 FUNGSI BARU UNTUK SAVE KARYAWAN YANG BELUM PUNYA RECORD ABSEN 🔥
+  create(data: any): Observable<AttendanceSummaryUpdateResponse> {
+    return this.http.post<AttendanceSummaryUpdateResponse>(this.baseUrl, data);
   }
 
   update(
@@ -247,7 +244,6 @@ export class AttendanceSummaryApiService {
   }
 
   delete(id: number): Observable<any> {
-    // Sesuaikan this.baseUrl dengan properti URL yang Mas gunakan di service ini
     return this.http.delete<any>(`${this.baseUrl}/${id}`);
   }
 }

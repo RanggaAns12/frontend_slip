@@ -4,12 +4,11 @@ import { AttendanceSummaryApiService, AttendanceSummary, AttendanceSummaryDetail
 
 @Component({
   selector: 'app-hrd-attendance-list',
-  standalone: false,
+  standalone: false, // 🔥 Kembali menjadi false (Module Based)
   templateUrl: './hrd-attendance-list.component.html',
   styleUrls: ['./hrd-attendance-list.component.scss'],
 })
 export class HrdAttendanceListComponent implements OnInit {
-
   // ── Data ─────────────────────────────────────────────────
   items       : AttendanceSummary[] = [];
   isLoading   = false;
@@ -68,7 +67,6 @@ export class HrdAttendanceListComponent implements OnInit {
   departments = this.departemenData.map(d => d.nama);
   positions: string[] = [];
 
-  // ── Options Mapping (Bulan) ───────────────────────────────
   months = [
     { value: 1,  label: 'Januari' }, { value: 2,  label: 'Februari' },
     { value: 3,  label: 'Maret'   }, { value: 4,  label: 'April'    },
@@ -78,7 +76,6 @@ export class HrdAttendanceListComponent implements OnInit {
     { value: 11, label: 'November' }, { value: 12, label: 'Desember' },
   ];
 
-  // ── Toast ─────────────────────────────────────────────────
   toastMessage = '';
   toastType    : 'success' | 'error' = 'success';
   private toastTimer: any;
@@ -94,14 +91,9 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
-  // ── Data Loading ──────────────────────────────────────────
   load(): void {
     this.isLoading = true;
-
-    const params: any = {
-      page: this.currentPage,
-      year: this.filterYear,
-    };
+    const params: any = { page: this.currentPage, year: this.filterYear };
     
     if (this.filterMonth !== '') params['month']      = this.filterMonth;
     if (this.filterSearch)       params['search']     = this.filterSearch;
@@ -124,7 +116,6 @@ export class HrdAttendanceListComponent implements OnInit {
     });
   }
 
-  // ── Event Handlers: Search & Filter ───────────────────────
   onSearchDebounce(): void {
     if (this.searchTimeout) clearTimeout(this.searchTimeout);
     this.searchTimeout = setTimeout(() => {
@@ -167,38 +158,22 @@ export class HrdAttendanceListComponent implements OnInit {
     this.load();
   }
 
-  // =====================================================================
-  // 🔥 PERBAIKAN NAVIGASI ABSOLUTE UNTUK HRD 🔥
-  // =====================================================================
-  goToDetail(id: number): void {
-    // Kita paksa pakai absolute path agar Angular tidak bingung
-    // Sesuaikan path '/hrd/attendance-summaries/show' ini jika di router Mas ada perbedaan nama folder.
+  goToDetail(id: number | null): void {
+    if (!id) {
+        this.showToast('Karyawan ini belum memiliki data absensi bulan ini. Silakan input edit manual terlebih dahulu.', 'error');
+        return;
+    }
     this.router.navigate(['/hrd/attendance/show', id]);
   }
-  // =====================================================================
 
-  // ── Kalkulasi Kolom Dinamis ───────────────────────────────
   getTotalIzin(item: any): number {
-    return (
-      (item.izin_tidak_masuk_pribadi || 0) 
-      // + (item.izin_pulang_awal_pribadi || 0)
-      // + (item.izin_datang_terlambat_pribadi || 0)
-      // + (item.izin_meninggalkan_tempat_kerja || 0)
-      // + (item.izin_dinas || 0)
-      // + (item.izin_datang_terlambat_kantor || 0)
-      // + (item.izin_pulang_awal_kantor || 0)
-      // + (item.izin_lain_lain || 0)
-    );
+    return (item.izin_tidak_masuk_pribadi || 0);
   }
 
   getTotalSakit(item: any): number {
-    return (
-      (item.sakit_dengan_surat_dokter || 0) +
-      (item.sakit_tanpa_surat_dokter || 0)
-    );
+    return (item.sakit_dengan_surat_dokter || 0) + (item.sakit_tanpa_surat_dokter || 0);
   }
 
-  // ── Feature: Import HTML Mesin ────────────────────────────
   openImportModal(): void {
     this.showImportModal = true;
     this.selectedFile = null;
@@ -240,39 +215,69 @@ export class HrdAttendanceListComponent implements OnInit {
     });
   }
 
-  // ── Feature: Edit Manual (Modal HRD) ──────────────────────
-  openEditModal(item: AttendanceSummary): void {
+  openEditModal(item: any): void {
     this.isEditing = true;
-    this.api.getById(item.id).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.selectedAttendance = { ...res.data };
-          
-          // 1. Tarik data tanggal yang sudah ada di database
-          this.izinDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_izin);
-          this.sakitDates = this.parseDatesString((this.selectedAttendance as any).tanggal_sakit);
-          this.alpaDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_alpa);
+    this.izinDates = [];
+    this.sakitDates = [];
+    this.alpaDates = [];
 
-          // 2. SINKRONISASI ANGKA MESIN vs BARIS TANGGAL
-          // Jika mesin baca Izin = 2, tapi tanggal belum diisi, buat 2 baris kosong agar tidak keriset 0!
-          const machineIzin = (this.selectedAttendance as any).izin_tidak_masuk_pribadi || 0;
-          while (this.izinDates.length < machineIzin) this.izinDates.push({ val: '' });
+    // JIKA DATA BELUM ADA DI DATABASE (IS_EMPTY === TRUE)
+    if (item.is_empty || !item.id) {
+        this.selectedAttendance = {
+            id: null as any,
+            employee_id: item.employee_id,
+            nama: item.nama,
+            nik_karyawan: item.nik_karyawan,
+            izin_tidak_masuk_pribadi: item.izin_tidak_masuk_pribadi || 0,
+            sakit_dengan_surat_dokter: item.sakit_dengan_surat_dokter || 0,
+            tanpa_izin: item.tanpa_izin || 0,
+            kehadiran_jml: 0,
+            lembur_jam: 0,
+            lembur_menit: 0
+        };
 
-          const machineSakit = (this.selectedAttendance as any).sakit_dengan_surat_dokter || 0;
-          while (this.sakitDates.length < machineSakit) this.sakitDates.push({ val: '' });
+        const machineIzin = this.selectedAttendance.izin_tidak_masuk_pribadi || 0;
+        while (this.izinDates.length < machineIzin) this.izinDates.push({ val: '' });
 
-          const machineAlpa = (this.selectedAttendance as any).tanpa_izin || 0;
-          while (this.alpaDates.length < machineAlpa) this.alpaDates.push({ val: '' });
+        const machineSakit = this.selectedAttendance.sakit_dengan_surat_dokter || 0;
+        while (this.sakitDates.length < machineSakit) this.sakitDates.push({ val: '' });
 
-          this.showEditModal = true;
-        }
+        const machineAlpa = this.selectedAttendance.tanpa_izin || 0;
+        while (this.alpaDates.length < machineAlpa) this.alpaDates.push({ val: '' });
+
+        this.showEditModal = true;
         this.isEditing = false;
-      },
-      error: () => {
-        this.showToast('Gagal memuat detail absensi.', 'error');
-        this.isEditing = false;
-      }
-    });
+
+    } else {
+        // JIKA DATA SUDAH ADA DI DATABASE
+        this.api.getById(item.id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.selectedAttendance = { ...res.data };
+              
+              this.izinDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_izin);
+              this.sakitDates = this.parseDatesString((this.selectedAttendance as any).tanggal_sakit);
+              this.alpaDates  = this.parseDatesString((this.selectedAttendance as any).tanggal_alpa);
+
+              const machineIzin = (this.selectedAttendance as any).izin_tidak_masuk_pribadi || 0;
+              while (this.izinDates.length < machineIzin) this.izinDates.push({ val: '' });
+
+              const machineSakit = (this.selectedAttendance as any).sakit_dengan_surat_dokter || 0;
+              while (this.sakitDates.length < machineSakit) this.sakitDates.push({ val: '' });
+
+              const machineAlpa = (this.selectedAttendance as any).tanpa_izin || 0;
+              while (this.alpaDates.length < machineAlpa) this.alpaDates.push({ val: '' });
+
+              this.showEditModal = true;
+            }
+            this.isEditing = false;
+          },
+          error: () => {
+            this.showToast('Gagal memuat detail absensi.', 'error');
+            this.isEditing = false;
+          }
+        });
+    }
   }
 
   closeEditModal(): void {
@@ -315,30 +320,52 @@ export class HrdAttendanceListComponent implements OnInit {
   }
 
   saveAttendance(): void {
-    if (!this.selectedAttendance || !this.selectedAttendance.id) return;
+    if (!this.selectedAttendance || !this.selectedAttendance.employee_id) return;
 
-    (this.selectedAttendance as any).tanggal_izin  = this.izinDates.map(d => d.val).filter(v => v).join(', ');
-    (this.selectedAttendance as any).tanggal_sakit = this.sakitDates.map(d => d.val).filter(v => v).join(', ');
-    (this.selectedAttendance as any).tanggal_alpa  = this.alpaDates.map(d => d.val).filter(v => v).join(', ');
+    const payload: any = {
+        ...this.selectedAttendance,
+        tanggal_izin  : this.izinDates.map(d => d.val).filter(v => v).join(', '),
+        tanggal_sakit : this.sakitDates.map(d => d.val).filter(v => v).join(', '),
+        tanggal_alpa  : this.alpaDates.map(d => d.val).filter(v => v).join(', '),
+        month         : Number(this.filterMonth),
+        year          : this.filterYear
+    };
 
     this.isProcessing = true;
-    this.api.update(this.selectedAttendance.id, this.selectedAttendance).subscribe({
-      next: (res) => {
-        if (res.success) {
-          this.showToast('Data absensi berhasil diperbarui.', 'success');
-          this.closeEditModal();
-          this.load(); 
-        }
-        this.isProcessing = false;
-      },
-      error: () => {
-        this.showToast('Gagal menyimpan perubahan absensi.', 'error');
-        this.isProcessing = false;
-      }
-    });
+
+    if (this.selectedAttendance.id) {
+        this.api.update(this.selectedAttendance.id, payload).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.showToast('Data absensi berhasil diperbarui.', 'success');
+              this.closeEditModal();
+              this.load(); 
+            }
+            this.isProcessing = false;
+          },
+          error: () => {
+            this.showToast('Gagal menyimpan perubahan absensi.', 'error');
+            this.isProcessing = false;
+          }
+        });
+    } else {
+        this.api.create(payload).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.showToast('Data absensi manual berhasil ditambahkan.', 'success');
+              this.closeEditModal();
+              this.load(); 
+            }
+            this.isProcessing = false;
+          },
+          error: () => {
+            this.showToast('Gagal menambahkan data absensi manual.', 'error');
+            this.isProcessing = false;
+          }
+        });
+    }
   }
 
-  // ── Helpers ──────────────────────────────────────────────
   get pageNumbers(): number[] {
     const pages = [];
     const start = Math.max(1, this.currentPage - 2);
