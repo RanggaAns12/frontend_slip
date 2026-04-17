@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service'; // Path aman bawaan mas
+import { OvertimeApiService } from '../../../superadmin/overtimes/services/overtime-api.service'; 
 
 @Component({
   selector: 'app-manager-overtime-list',
@@ -53,7 +53,7 @@ export class OvertimeListComponent implements OnInit {
     }).format(numValue);
   }
 
-  // ===== Rekap Header =====
+  // ===== Rekap Header (Sesuai dengan HTML baru) =====
   get totalPoinKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
       const poin = this.toNumber(curr?.total_poin ?? curr?.total_jam);
@@ -63,6 +63,7 @@ export class OvertimeListComponent implements OnInit {
 
   get totalUpahKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
+      // Fokus mengambil total_bayar (Total Upah Lembur) saja
       const bayar = this.toNumber(curr?.total_bayar);
       return acc + bayar;
     }, 0);
