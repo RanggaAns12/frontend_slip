@@ -116,15 +116,13 @@
           <th class="px-6 py-4 text-center">Poin Konversi</th>
           <th class="px-6 py-4 text-right">Tarif / Jam</th>
           <th class="px-6 py-4 text-right">Total Upah</th>
-          <th class="px-6 py-4 text-right">Total Potongan</th>
-          <th class="px-6 py-4 text-right">Total Bersih</th>
           <th class="px-6 py-4 text-center">Aksi</th>
         </tr>
       </thead>
 
       <tbody class="divide-y divide-gray-100">
         <tr *ngIf="isLoading">
-          <td colspan="9" class="px-6 py-12 text-center">
+          <td colspan="7" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center gap-3">
               <svg class="animate-spin h-8 w-8 text-[#F4A47B]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
               <span class="text-gray-400 font-medium animate-pulse">Sedang memuat data rekap lembur...</span>
@@ -133,7 +131,7 @@
         </tr>
 
         <tr *ngIf="!isLoading && items.length === 0">
-          <td colspan="9" class="px-6 py-12 text-center">
+          <td colspan="7" class="px-6 py-12 text-center">
             <div class="flex flex-col items-center justify-center">
               <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                 <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
@@ -182,17 +180,9 @@
               <span class="text-sm font-mono font-extrabold" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-green-600'">{{ formatRupiah(item?.total_bayar) }}</span>
             </td>
 
-            <td class="px-6 py-3 text-right">
-              <span class="text-sm font-mono font-extrabold" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-red-600'">{{ formatRupiah(item?.total_potongan || 0) }}</span>
-            </td>
-
-            <td class="px-6 py-3 text-right">
-              <span class="text-sm font-mono font-extrabold" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-emerald-700'">{{ formatRupiah(item?.total_bersih_diterima || item?.total_bersih || 0) }}</span>
-            </td>
-
             <td class="px-6 py-3 text-center">
               <button (click)="goToDetail(item)"
-                      class="group px-3 py-1.5 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-100 transition-all shadow-sm text-xs font-bold"
+                      class="group px-3 py-1.5 flex items-center justify-center rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-500 hover:text-white border border-blue-100 transition-all shadow-sm text-xs font-bold mx-auto"
                       title="Lihat Detail">
                 <svg class="w-3.5 h-3.5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 4 4 0 0 1 6 0z" />
@@ -243,23 +233,14 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 text-xs text-gray-500 mb-2 border-t border-gray-50 pt-2">
+      <div class="flex justify-between items-center text-xs text-gray-500 mb-2 border-t border-gray-50 pt-3">
         <div>
           <span class="block text-[10px] uppercase text-gray-400">Tarif / Jam</span>
           <span class="font-medium text-gray-700">{{ formatRupiah(item?.tarif_per_jam) }}</span>
         </div>
         <div class="text-right">
-          <span class="block text-[10px] uppercase text-gray-400">Total Upah</span>
-          <span class="font-bold" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-green-600'">{{ formatRupiah(item?.total_bayar) }}</span>
-        </div>
-
-        <div>
-          <span class="block text-[10px] uppercase text-gray-400">Potongan</span>
-          <span class="font-bold" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-red-600'">{{ formatRupiah(item?.total_potongan || 0) }}</span>
-        </div>
-        <div class="text-right">
-          <span class="block text-[10px] uppercase text-gray-400">Bersih</span>
-          <span class="font-bold" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-emerald-700'">{{ formatRupiah(item?.total_bersih_diterima || item?.total_bersih || 0) }}</span>
+          <span class="block text-[11px] uppercase text-gray-400 font-bold">Total Upah</span>
+          <span class="font-bold text-sm" [ngClass]="item?.is_empty ? 'text-gray-400' : 'text-green-600'">{{ formatRupiah(item?.total_bayar) }}</span>
         </div>
       </div>
       

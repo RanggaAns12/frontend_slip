@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { OvertimeApiService } from '../services/overtime-api.service'; // Sesuaikan path ini dengan struktur folder SuperAdmin Mas ya
+import { OvertimeApiService } from '../services/overtime-api.service'; 
 
 @Component({
-  selector: 'app-superadmin-overtime-list', // <-- Sudah diganti ke SuperAdmin
+  selector: 'app-superadmin-overtime-list', 
   standalone: false,
   templateUrl: './overtime-list.component.html',
   styleUrls: ['./overtime-list.component.scss']
@@ -11,7 +11,7 @@ import { OvertimeApiService } from '../services/overtime-api.service'; // Sesuai
 export class OvertimeListComponent implements OnInit {
   items: any[] = [];
   isLoading = false;
-  isUploading = false; // <-- Variabel baru untuk state upload
+  isUploading = false; 
 
   // Pagination & Filter
   currentPage = 1;
@@ -113,7 +113,8 @@ export class OvertimeListComponent implements OnInit {
 
   get totalUpahKeseluruhan(): number {
     return this.items.reduce((acc, curr) => {
-      const upah = this.toNumber(curr?.total_bayar ?? curr?.hitungan_lembur); // Diperbaiki sedikit ke total_bayar
+      // Fokus mengambil property upah lembur kotornya
+      const upah = this.toNumber(curr?.total_bayar ?? curr?.hitungan_lembur); 
       return acc + upah;
     }, 0);
   }
@@ -191,7 +192,6 @@ export class OvertimeListComponent implements OnInit {
   }
 
   // ===== RUTE DETAIL SUPERADMIN =====
-  // [BARU] Ubah agar menerima parameter item seutuhnya dan mengirim is_empty
   goToDetail(item: any): void {
     this.router.navigate(['/superadmin/overtimes/show', item.nama_karyawan], {
       queryParams: {
