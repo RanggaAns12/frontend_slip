@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-// 1. Tambahkan import environment ini (Sesuaikan path-nya jika folder environment kamu berbeda)
 import { environment } from '../../../../../environments/environment';
 
 @Injectable({
@@ -11,8 +10,6 @@ export class PayrollApiService {
   
   /**
    * Menggunakan environment.apiUrl agar dinamis.
-   * - Saat di lokal (ng serve), akan pakai URL localhost.
-   * - Saat di-build (ng build), akan pakai URL hosting.
    */
   private baseUrl = `${environment.apiUrl}/superadmin/payrolls`;
 
@@ -20,65 +17,68 @@ export class PayrollApiService {
 
   /**
    * 1. Cek Kesiapan Periode (Apakah sudah di-lock atau masih kosong)
+   * [PERBAIKAN] Menggunakan POST untuk menghindari error Method Not Allowed
    */
   checkStatus(month: number, year: number): Observable<any> {
-    return this.http.get(`${this.baseUrl}/check`, { 
-      params: { 
-        month: month.toString(), 
-        year: year.toString() 
-      } 
-    });
+    const body = { month, year };
+    // Pastikan endpoint di api.php Laravel Mas adalah '/check-status' (atau sesuaikan jika '/check')
+    return this.http.post(`${this.baseUrl}/check-status`, body);
   }
 
-  unlockPayroll(id: number) {
+  /**
+   * 2. Preview Kalkulasi Draft Gaji
+   * [PERBAIKAN] Menggunakan POST. month & year dikirim via Body.
+   * Parameter recalculate dikirim via Query URL (?recalculate=true)
+   */
+  previewPayroll(month: number, year: number, recalculate: boolean = false): Observable<any> {
+    const body = { month, year };
+    let params = new HttpParams();
+    
+    if (recalculate) {
+      params = params.append('recalculate', 'true');
+    }
+
+    return this.http.post(`${this.baseUrl}/preview`, body, { params });
+  }
+
+  /**
+   * 3. Buka Kunci (Unlock) Gaji
+   * Mengubah status dari 'locked' menjadi 'draft'
+   */
+  unlockPayroll(id: number): Observable<any> {
     return this.http.put(`${this.baseUrl}/${id}/unlock`, {});
   }
-  
 
   /**
-   * 2. Preview Kalkulasi Draft Gaji (Menerima 2 parameter month & year)
-   * Backend akan membalas dengan status_ptkp, pph21_deduction otomatis, dll.
-   */
- previewPayroll(month: number, year: number, recalculate: boolean = false) {
-    let params = `?month=${month}&year=${year}`;
-    if (recalculate) {
-      params += `&recalculate=true`;
-    }
-    return this.http.get(`${this.baseUrl}/preview${params}`);
-  }
-
-  /**
-   * 3. Generate & Kunci Data Gaji
-   * Menerima array `draft_data` yang mungkin sudah diedit nilai PPh21-nya oleh HRD
+   * 4. Generate & Kunci Data Gaji
+   * Menerima array `draft_data` yang mungkin sudah diedit nominalnya oleh HRD
    */
   generatePayroll(payload: { month: number, year: number, draft_data: any[] }): Observable<any> {
     return this.http.post(`${this.baseUrl}/generate`, payload);
   }
 
   /**
-   * 4. Dapatkan Daftar Slip Gaji yang sudah di-generate (Untuk List & PDF)
+   * 5. Dapatkan Daftar Slip Gaji yang sudah di-generate (Untuk List & PDF)
    */
   getPayslips(month: number, year: number): Observable<any> {
-    return this.http.get(`${this.baseUrl}/slips`, {
-      params: { 
-        month: month.toString(), 
-        year: year.toString() 
-      }
-    });
+    let params = new HttpParams()
+      .set('month', month.toString())
+      .set('year', year.toString());
+
+    return this.http.get(`${this.baseUrl}/slips`, { params });
   }
 
   /**
-   * 5. (Opsional) Update Potongan / Bonus secara satuan meskipun sudah di-generate
+   * 6. Update Potongan / Bonus secara satuan meskipun sudah di-generate
    */
   updatePayrollDetail(detailId: number, data: any): Observable<any> {
     return this.http.put(`${this.baseUrl}/details/${detailId}`, data);
   }
 
   /**
-   * 6. Membuka kunci periode gaji
+   * 7. Reset Periode Gaji (Hapus permanen data gaji bulan tersebut)
    */
-  resetPayrollPeriod(month: number, year: number) {
-    // Karena kita memakai DELETE request, kita kirimkan data melalui 'body'
+  resetPayrollPeriod(month: number, year: number): Observable<any> {
     return this.http.request('delete', `${this.baseUrl}/reset-period`, {
       body: { month, year }
     });
