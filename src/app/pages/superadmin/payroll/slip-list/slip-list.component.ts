@@ -22,7 +22,6 @@ interface SlipGajiItem {
   net_salary: number;
   status: string;
   
-  // Periode dari Backend
   period_month?: number;
   period_year?: number;
   period_label?: string;
@@ -76,6 +75,10 @@ export class SlipListComponent implements OnInit {
   isPosDropdownOpen = false;
   periodLabel: string = '';
 
+  // [BARU] State untuk Gembok Unlock
+  isLocked: boolean = true;
+  currentPayrollId: number | null = null;
+
   constructor(private payrollApiService: PayrollApiService) {
     const currentYear = new Date().getFullYear();
     for (let i = 0; i < 5; i++) {
@@ -92,7 +95,22 @@ export class SlipListComponent implements OnInit {
     }
 
     this.isLoading = true;
+
+    // [BARU] 1. Cek Status Gembok (Draft/Locked) dan dapatkan ID Payroll
+    this.payrollApiService.checkStatus(this.selectedMonth, this.selectedYear).subscribe({
+      next: (statusRes: any) => {
+        if (statusRes.is_generated) {
+          this.isLocked = statusRes.payroll_status === 'locked';
+          this.currentPayrollId = statusRes.payroll_id;
+        } else {
+          this.isLocked = false;
+          this.currentPayrollId = null;
+        }
+      },
+      error: (err) => console.error('Gagal mengecek status payroll', err)
+    });
     
+    // 2. Load Data Slip Gaji
     this.payrollApiService.getPayslips(this.selectedMonth, this.selectedYear).subscribe({
       next: (res: any) => {
         if (res.status === 'not_found' || !res.data) {
@@ -111,7 +129,6 @@ export class SlipListComponent implements OnInit {
           const nikVal = emp.nik_ktp || emp.nik || item.nik || '-';
           const nameVal = emp.name || item.name || '-';
 
-          // Membaca array dari allowances
           let rawComponents = item.allowances || item.salary_components || emp.salary_components || [];
           let mappedAllowances = rawComponents.map((comp: any) => {
               return {
@@ -163,6 +180,41 @@ export class SlipListComponent implements OnInit {
         console.error('Error load slips:', err);
         Swal.fire('Error', 'Gagal memuat data slip gaji.', 'error');
         this.isLoading = false;
+      }
+    });
+  }
+
+  // [BARU] Fungsi Buka Gembok
+  unlockPayroll() {
+    if (!this.currentPayrollId) {
+      Swal.fire('Error', 'ID Payroll tidak ditemukan.', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Buka Kunci Gaji?',
+      text: 'Dengan membuka kunci, Anda dapat kembali ke menu Generate Payroll untuk melakukan Kalkulasi Ulang (Recalculate) jika ada perubahan Gaji Pokok atau Absensi di Master Data.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f97316',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Ya, Buka Gembok (Unlock)',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isLoading = true;
+        this.payrollApiService.unlockPayroll(this.currentPayrollId!).subscribe({
+          next: (res: any) => {
+            this.isLoading = false;
+            this.isLocked = false;
+            Swal.fire('Terbuka!', res.message || 'Gaji berhasil di-Unlock. Silakan menuju menu Generate Payroll jika ingin menghitung ulang.', 'success');
+            this.onSearchSlips(); // Refresh State
+          },
+          error: (err: any) => {
+            this.isLoading = false;
+            Swal.fire('Error', 'Gagal membuka kunci.', 'error');
+          }
+        });
       }
     });
   }
@@ -252,7 +304,6 @@ export class SlipListComponent implements OnInit {
     const item = this.filteredDataSlip.find(s => s.id === slipId);
     if (!item) return;
 
-    // 🔥 PERBAIKAN: Mengambil Hari Kerja Efektif dari Backend
     const hariKerjaEfektif = item.effective_working_days || 0;
     const hadir = item.total_present || 0;
     const alpaLainnya = item.total_absent || 0;
@@ -279,7 +330,6 @@ export class SlipListComponent implements OnInit {
         lemburHtml = `<div class="flex justify-between"><span class="text-gray-600">Upah Lembur</span><span class="font-semibold text-gray-900">${this.formatRupiah(item.overtime_pay)}</span></div>`;
     }
 
-    // 燥 LOGIKA PERIODE MUNDUR
     let textNote = '-';
     if (item.overtime_pay > 0 || item.overtime_hours > 0) {
         const monthNames = ["", "Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -314,7 +364,7 @@ export class SlipListComponent implements OnInit {
               <img src="assets/images/logo.png" alt="Logo" class="w-12 h-12 object-contain" onerror="this.style.display='none'">
               <div>
                 <h2 class="text-base font-extrabold text-gray-900 tracking-tight leading-none mb-1">PT. AGRO DELI SERDANG</h2>
-                <p class="text-xs text-gray-500 font-medium">Slip Gaji 窶｢ ${item.period_label || this.periodLabel}</p>
+                <p class="text-xs text-gray-500 font-medium">Slip Gaji • ${item.period_label || this.periodLabel}</p>
               </div>
             </div>
           </div>
@@ -408,7 +458,6 @@ export class SlipListComponent implements OnInit {
     doc.setTextColor(0, 0, 0); doc.setFontSize(10); doc.setFont('helvetica', 'bold');
     doc.text('SLIP GAJI KARYAWAN', 105, startY + 19, { align: 'center' });
     
-    // 🔥 PERBAIKAN: Label Periode PDF (Mengambil dari backend)
     const cetakPeriode = item.period_label ? item.period_label.toUpperCase() : `${bulanLabel} ${tahunLabel}`;
     doc.setFontSize(8); doc.setFont('helvetica', 'normal');
     doc.text(`PERIODE: ${cetakPeriode}`, 105, startY + 23, { align: 'center' });
@@ -419,7 +468,6 @@ export class SlipListComponent implements OnInit {
     doc.text('Jabatan', 12, startY + 38);          doc.text(`: ${item.position}`, 28, startY + 38);
     doc.text('Departemen', 12, startY + 42);       doc.text(`: ${item.department}`, 28, startY + 42);
 
-    // 🔥 PERBAIKAN: Hari Kerja Efektif PDF
     const hariKerjaEfektif = item.effective_working_days || 0;
     const hadir = item.total_present || 0;
     const alphaLainnya = item.total_absent || 0;
@@ -433,7 +481,6 @@ export class SlipListComponent implements OnInit {
     doc.text('Total Lembur', 115, startY + 44);        
     doc.text(`: ${formatPts} Poin (~${formatJam} Jam)`, 150, startY + 44);
 
-    // PENGHASILAN
     const arrPenghasilan: { desc: string; val: string }[] = [
       { desc: 'Gaji Pokok', val: this.formatRupiah(item.base_salary) }
     ];
@@ -450,7 +497,6 @@ export class SlipListComponent implements OnInit {
       arrPenghasilan.push({ desc: 'Tunjangan Lainnya', val: this.formatRupiah(item.bonus) });
     }
 
-    // POTONGAN
     let pph21Value = Number(item.pph21_deduction) || 0;
     let bpjsKesValue = Number(item.bpjs_kesehatan) || 0;
     let bpjsTkValue = Number(item.bpjs_ketenagakerjaan) || 0;
@@ -483,7 +529,7 @@ export class SlipListComponent implements OnInit {
     ]);
 
     autoTable(doc, {
-      startY: startY + 49, theme: 'grid', // Turunkan sedikit startY agar tidak nabrak teks Detail Kehadiran
+      startY: startY + 49, theme: 'grid',
       styles: { fontSize: 6.5, cellPadding: 2.5, lineColor: [200, 200, 200], lineWidth: 0.1, textColor: [40, 40, 40] },
       headStyles: { fillColor: [230, 230, 230], textColor: [0, 0, 0], fontStyle: 'bold', halign: 'center', fontSize: 7 },
       columnStyles: { 0: { cellWidth: 56 }, 1: { cellWidth: 38, halign: 'right' }, 2: { cellWidth: 56 }, 3: { cellWidth: 38, halign: 'right' } },

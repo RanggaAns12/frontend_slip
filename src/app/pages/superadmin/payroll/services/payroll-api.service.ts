@@ -30,6 +30,10 @@ export class PayrollApiService {
     });
   }
 
+  unlockPayroll(id: number) {
+    return this.http.put(`${this.baseUrl}/${id}/unlock`, {});
+  }
+
   /**
    * 2. Preview Kalkulasi Draft Gaji (Menerima 2 parameter month & year)
    * Backend akan membalas dengan status_ptkp, pph21_deduction otomatis, dll.
