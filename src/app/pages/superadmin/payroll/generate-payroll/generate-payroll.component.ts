@@ -41,7 +41,7 @@ export class GeneratePayrollComponent implements OnInit {
   selectedDepartment: string = '';
   departments: string[] = [];
 
-  // [BARU] Status Gembok & Data
+  // Status Gembok & Data
   isLocked: boolean = false;
   currentPayrollId: number | null = null;
   dataSource: 'live_calculation' | 'database' = 'live_calculation';
@@ -112,14 +112,12 @@ export class GeneratePayrollComponent implements OnInit {
   }
 
   // ===== Main Logic =====
-  // [BARU] Ditambahkan parameter forceRecalculate
   onPreview(forceRecalculate: boolean = false) {
     if (!this.selectedMonth || !this.selectedYear) {
       Swal.fire('Peringatan', 'Pilih bulan dan tahun terlebih dahulu!', 'warning');
       return;
     }
 
-    // Jika sedang melihat preview tapi statusnya terkunci, tolak calculate ulang
     if (forceRecalculate && this.isLocked) {
         Swal.fire('Terkunci', 'Gaji bulan ini sudah dikunci. Silakan buka gembok (Unlock) di menu Daftar Slip Gaji terlebih dahulu.', 'error');
         return;
@@ -130,20 +128,18 @@ export class GeneratePayrollComponent implements OnInit {
     this.searchQuery = '';
     this.selectedDepartment = '';
     
-    // Cek status terlebih dahulu
     this.payrollApi.checkStatus(this.selectedMonth, this.selectedYear).subscribe({
       next: (statusRes: any) => {
         this.isLocked = statusRes.payroll_status === 'locked';
         this.currentPayrollId = statusRes.payroll_id || null;
 
-        // Panggil preview API dengan param recalculate jika diminta
         this.payrollApi.previewPayroll(this.selectedMonth, this.selectedYear, forceRecalculate).subscribe({
           next: (res: any) => {
             this.isLoading = false;
             this.periodLabel = res.period.label;
             this.draftData = res.data;
-            this.dataSource = res.source; // Menandakan apakah ini dari DB atau hitung ulang baru
-            this.isLocked = res.is_locked || this.isLocked; // Update ulang status kunci dari response preview
+            this.dataSource = res.source; 
+            this.isLocked = res.is_locked || this.isLocked; 
             
             const depts = this.draftData.map(d => d.department).filter(d => d);
             this.departments = [...new Set(depts)] as string[];
@@ -171,7 +167,6 @@ export class GeneratePayrollComponent implements OnInit {
     });
   }
 
-  // [BARU] Fungsi Buka Gembok (Sama seperti di Daftar Slip)
   unlockPayroll() {
     if (!this.currentPayrollId) {
       Swal.fire('Error', 'ID Payroll tidak ditemukan.', 'error');
@@ -195,7 +190,6 @@ export class GeneratePayrollComponent implements OnInit {
             this.isLoading = false;
             this.isLocked = false;
             Swal.fire('Terbuka!', res.message || 'Gaji berhasil di-Unlock. Sekarang Anda bisa melakukan Hitung Ulang (Recalculate) atau Generate ulang.', 'success');
-            // Refresh preview tanpa paksa calculate dulu agar aman
             this.onPreview(false); 
           },
           error: (err: any) => {
@@ -257,7 +251,7 @@ export class GeneratePayrollComponent implements OnInit {
     });
   }
 
-  // 👇 PERBAIKAN TOTAL: Pencarian 100% menggunakan NIK di kedua API
+  // 👇 PERBAIKAN TOTAL: Poin Lembur kini 100% Sinkron dengan Tabel
   showDetailAbsensi(item: any) {
     const empName = item.name || item.employee?.name || 'Karyawan';
     const empNik = item.nik || item.employee?.nik_karyawan || item.employee?.nik || '-';
@@ -269,50 +263,34 @@ export class GeneratePayrollComponent implements OnInit {
 
     Swal.fire({
       title: 'Memuat Data...',
-      text: `Mencari Absensi & Lembur untuk NIK: ${empNik}`,
+      text: `Mencari Absensi untuk NIK: ${empNik}`,
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
       }
     });
 
-    forkJoin({
-      absensi: this.attendanceApi.getList({
-        month: this.selectedMonth,
-        year: this.selectedYear,
-        search: empNik
-      }).pipe(catchError(() => of(null))), 
-      
-      lembur: this.overtimeApi.getList({
-        month: this.selectedMonth,
-        year: this.selectedYear,
-        search: empNik 
-      }).pipe(catchError(() => of(null)))
+    // Kita hanya perlu memanggil API Absensi, karena poin lembur sudah ada di `item.overtime_hours`
+    this.attendanceApi.getList({
+      month: this.selectedMonth,
+      year: this.selectedYear,
+      search: empNik
     }).subscribe({
       next: (res: any) => {
-        // --- 1. Ambil & Saring Data Absensi ---
-        const summaries = res.absensi?.data?.data || res.absensi?.data || [];
-        const att = summaries.find((s: any) => s.nik_karyawan === empNik || s.nik === empNik);
+        const summaries = res.data?.data || res.data || [];
+        // Cari data presensi yang cocok dengan NIK/NIP
+        const att = summaries.find((s: any) => s.nik_karyawan === empNik || s.nik === empNik || s.nip === empNik) || summaries[0];
 
-        // --- 2. Ambil & Saring Data Lembur ---
-        const overtimes = res.lembur?.data?.data || res.lembur?.data || [];
+        // Ekstrak Nilai Absensi Sesuai Struktur Database Baru
+        const izin = (att?.izin_lain_lain || 0) + (att?.cuti_pribadi || 0);
+        const sakit = (att?.sakit_dengan_dokter || 0) + (att?.sakit_tanpa_dokter || 0);
+        const alpha = att?.absent_no_permission || 0;
+        const telat = att?.late_count || 0;
         
-        // Coba cari kecocokan persis. Jika tidak ada, ambil index 0 (karena API sudah memfilter NIK)
-        const ovt = overtimes.find((o: any) => 
-          o.employee?.nik_karyawan === empNik || 
-          o.employee?.nik === empNik ||
-          o.employee_id == (item.employee_id || item.id)
-        ) || (overtimes.length > 0 ? overtimes[0] : null);
-
-        // Nilai Absensi (Fallback ke 0 jika data absensi tidak ada)
-        const izin = att?.izin ?? att?.izin_jml ?? 0;
-        const sakit = att?.sakit ?? att?.sakit_jml ?? 0;
-        const alpha = att?.tanpa_izin ?? 0;
-        const telat = att?.terlambat_jml ?? 0;
-        
-        // --- 3. AMBIL POIN LEMBUR ---
-        let lemburPoinRaw = ovt?.total_poin ?? ovt?.konversi_lembur ?? item?.overtime_hours ?? 0;
-        const lemburPoin = parseFloat(lemburPoinRaw) || 0;
+        // --- 3. AMBIL POIN LEMBUR (SINKRON DENGAN TABEL PAYROLL) ---
+        // Karena item.overtime_hours sudah dihitung totalnya oleh PayrollService,
+        // kita gunakan angka ini agar 100% cocok dengan UI Tabel di belakangnya.
+        const lemburPoin = parseFloat(item.overtime_hours || 0);
         const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
 
         Swal.fire({
@@ -330,7 +308,7 @@ export class GeneratePayrollComponent implements OnInit {
                   <span class="font-semibold text-gray-800">${telat} Hari</span>
                 </div>
                 <div>
-                  <span class="block text-gray-500 font-medium text-[11px] uppercase tracking-wider mb-1">Izin</span>
+                  <span class="block text-gray-500 font-medium text-[11px] uppercase tracking-wider mb-1">Izin / Cuti</span>
                   <span class="font-semibold text-indigo-600">${izin} Hari</span>
                 </div>
                 <div>
@@ -357,7 +335,7 @@ export class GeneratePayrollComponent implements OnInit {
       },
       error: (err: any) => {
         console.error(err);
-        Swal.fire('Gagal', 'Tidak dapat terhubung ke server. Pastikan koneksi stabil.', 'error');
+        Swal.fire('Gagal', 'Tidak dapat terhubung ke server untuk mengecek presensi. Pastikan koneksi stabil.', 'error');
       }
     });
   }
