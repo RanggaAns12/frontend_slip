@@ -271,7 +271,6 @@ export class GeneratePayrollComponent implements OnInit {
       }
     });
 
-    // 💡 PENAMBAHAN 'as any' AGAR TYPESCRIPT TIDAK PROTES SOAL 'employee_id'
     this.attendanceApi.getList({
       month: this.selectedMonth,
       year: this.selectedYear,
@@ -279,18 +278,16 @@ export class GeneratePayrollComponent implements OnInit {
     } as any).subscribe({
       next: (res: any) => {
         const summaries = res.data?.data || res.data || [];
-        
-        // Ambil data pertama yang didapat (karena sudah difilter by ID, pasti ini orang yang benar)
         const att = summaries.length > 0 ? summaries[0] : null;
 
-        // Ekstrak Nilai Absensi (Jika kosong/null, anggap 0)
         const izin = (att?.izin_lain_lain || 0) + (att?.cuti_pribadi || 0);
         const sakit = (att?.sakit_dengan_dokter || 0) + (att?.sakit_tanpa_dokter || 0);
         const alpha = att?.absent_no_permission || 0;
         const telat = att?.late_count || 0;
         
-        // --- 3. AMBIL POIN LEMBUR (SINKRON DENGAN TABEL PAYROLL) ---
-        const lemburPoin = parseFloat(item.overtime_hours || 0);
+        // 💡 [PERBAIKAN] AMBIL POIN LEMBUR LANGSUNG DARI PAYLOAD ABSENSI (YANG 137)
+        // Jika att.overtime_hours ada nilainya, pakai itu. Jika tidak, pakai bawaan tabel (item).
+        const lemburPoin = att?.overtime_hours !== undefined ? parseFloat(att.overtime_hours) : parseFloat(item.overtime_hours || 0);
         const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
 
         Swal.fire({
