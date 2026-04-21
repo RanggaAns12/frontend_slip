@@ -251,45 +251,45 @@ export class GeneratePayrollComponent implements OnInit {
     });
   }
 
-  // 👇 PERBAIKAN TOTAL: Poin Lembur kini 100% Sinkron dengan Tabel
+  // 👇 PERBAIKAN: Poin Lembur kini 100% Sinkron dan Error TypeScript sudah dibypass
   showDetailAbsensi(item: any) {
     const empName = item.name || item.employee?.name || 'Karyawan';
     const empNik = item.nik || item.employee?.nik_karyawan || item.employee?.nik || '-';
+    const empId = item.user_id || item.employee_id || item.employee?.id; 
 
-    if (empNik === '-') {
-      Swal.fire('Peringatan', 'NIK karyawan tidak ditemukan. Tidak dapat mengecek presensi.', 'warning');
+    if (!empId) {
+      Swal.fire('Peringatan', 'ID karyawan tidak ditemukan. Tidak dapat mengecek presensi.', 'warning');
       return;
     }
 
     Swal.fire({
       title: 'Memuat Data...',
-      text: `Mencari Absensi untuk NIK: ${empNik}`,
+      text: `Mencari Absensi untuk ${empName}`,
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
       }
     });
 
-    // Kita hanya perlu memanggil API Absensi, karena poin lembur sudah ada di `item.overtime_hours`
+    // 💡 PENAMBAHAN 'as any' AGAR TYPESCRIPT TIDAK PROTES SOAL 'employee_id'
     this.attendanceApi.getList({
       month: this.selectedMonth,
       year: this.selectedYear,
-      search: empNik
-    }).subscribe({
+      employee_id: empId 
+    } as any).subscribe({
       next: (res: any) => {
         const summaries = res.data?.data || res.data || [];
-        // Cari data presensi yang cocok dengan NIK/NIP
-        const att = summaries.find((s: any) => s.nik_karyawan === empNik || s.nik === empNik || s.nip === empNik) || summaries[0];
+        
+        // Ambil data pertama yang didapat (karena sudah difilter by ID, pasti ini orang yang benar)
+        const att = summaries.length > 0 ? summaries[0] : null;
 
-        // Ekstrak Nilai Absensi Sesuai Struktur Database Baru
+        // Ekstrak Nilai Absensi (Jika kosong/null, anggap 0)
         const izin = (att?.izin_lain_lain || 0) + (att?.cuti_pribadi || 0);
         const sakit = (att?.sakit_dengan_dokter || 0) + (att?.sakit_tanpa_dokter || 0);
         const alpha = att?.absent_no_permission || 0;
         const telat = att?.late_count || 0;
         
         // --- 3. AMBIL POIN LEMBUR (SINKRON DENGAN TABEL PAYROLL) ---
-        // Karena item.overtime_hours sudah dihitung totalnya oleh PayrollService,
-        // kita gunakan angka ini agar 100% cocok dengan UI Tabel di belakangnya.
         const lemburPoin = parseFloat(item.overtime_hours || 0);
         const estimasiJamLembur = (lemburPoin / 1.5).toFixed(1);
 
@@ -300,6 +300,7 @@ export class GeneratePayrollComponent implements OnInit {
               <div class="mb-4 border-b border-gray-100 pb-4">
                 <p class="text-sm font-bold text-gray-800">${empName}</p>
                 <p class="text-xs text-gray-500 font-medium">NIK: <span class="font-mono bg-gray-200 px-1 rounded">${empNik}</span></p>
+                ${!att ? `<p class="text-xs text-red-500 mt-2 font-bold flex items-center gap-1"><svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg> Data Absen Mesin Kosong / Belum Diimport</p>` : ''}
               </div>
               
               <div class="grid grid-cols-2 gap-4 text-sm mb-4">
