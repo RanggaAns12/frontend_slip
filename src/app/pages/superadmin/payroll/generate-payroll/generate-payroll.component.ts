@@ -41,6 +41,11 @@ export class GeneratePayrollComponent implements OnInit {
   selectedDepartment: string = '';
   departments: string[] = [];
 
+  // [BARU] Status Gembok & Data
+  isLocked: boolean = false;
+  currentPayrollId: number | null = null;
+  dataSource: 'live_calculation' | 'database' = 'live_calculation';
+
   constructor(
     private payrollApi: PayrollApiService,
     private attendanceApi: AttendanceSummaryApiService,
@@ -107,10 +112,17 @@ export class GeneratePayrollComponent implements OnInit {
   }
 
   // ===== Main Logic =====
-  onPreview() {
+  // [BARU] Ditambahkan parameter forceRecalculate
+  onPreview(forceRecalculate: boolean = false) {
     if (!this.selectedMonth || !this.selectedYear) {
       Swal.fire('Peringatan', 'Pilih bulan dan tahun terlebih dahulu!', 'warning');
       return;
+    }
+
+    // Jika sedang melihat preview tapi statusnya terkunci, tolak calculate ulang
+    if (forceRecalculate && this.isLocked) {
+        Swal.fire('Terkunci', 'Gaji bulan ini sudah dikunci. Silakan buka gembok (Unlock) di menu Daftar Slip Gaji terlebih dahulu.', 'error');
+        return;
     }
 
     this.isLoading = true;
@@ -118,22 +130,79 @@ export class GeneratePayrollComponent implements OnInit {
     this.searchQuery = '';
     this.selectedDepartment = '';
     
-    this.payrollApi.previewPayroll(this.selectedMonth, this.selectedYear).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
-        this.periodLabel = res.period.label;
-        this.draftData = res.data;
-        
-        const depts = this.draftData.map(d => d.department).filter(d => d);
-        this.departments = [...new Set(depts)] as string[];
+    // Cek status terlebih dahulu
+    this.payrollApi.checkStatus(this.selectedMonth, this.selectedYear).subscribe({
+      next: (statusRes: any) => {
+        this.isLocked = statusRes.payroll_status === 'locked';
+        this.currentPayrollId = statusRes.payroll_id || null;
 
-        if (this.draftData.length === 0) {
-          Swal.fire('Kosong', 'Tidak ada data karyawan aktif untuk periode ini.', 'warning');
-        }
+        // Panggil preview API dengan param recalculate jika diminta
+        this.payrollApi.previewPayroll(this.selectedMonth, this.selectedYear, forceRecalculate).subscribe({
+          next: (res: any) => {
+            this.isLoading = false;
+            this.periodLabel = res.period.label;
+            this.draftData = res.data;
+            this.dataSource = res.source; // Menandakan apakah ini dari DB atau hitung ulang baru
+            this.isLocked = res.is_locked || this.isLocked; // Update ulang status kunci dari response preview
+            
+            const depts = this.draftData.map(d => d.department).filter(d => d);
+            this.departments = [...new Set(depts)] as string[];
+
+            if (this.draftData.length === 0) {
+              Swal.fire('Kosong', 'Tidak ada data karyawan aktif untuk periode ini.', 'warning');
+            } else if (forceRecalculate) {
+              Swal.fire({
+                toast: true, position: 'top-end', icon: 'success', 
+                title: 'Data berhasil dihitung ulang dengan Master terbaru!', 
+                showConfirmButton: false, timer: 3000 
+              });
+            }
+          },
+          error: (err: any) => {
+            this.isLoading = false;
+            Swal.fire('Error', err.error?.message || 'Gagal memuat preview data.', 'error');
+          }
+        });
       },
       error: (err: any) => {
         this.isLoading = false;
-        Swal.fire('Error', err.error?.message || 'Gagal memuat preview data.', 'error');
+        console.error('Gagal mengecek status payroll', err);
+      }
+    });
+  }
+
+  // [BARU] Fungsi Buka Gembok (Sama seperti di Daftar Slip)
+  unlockPayroll() {
+    if (!this.currentPayrollId) {
+      Swal.fire('Error', 'ID Payroll tidak ditemukan.', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Buka Kunci Gaji?',
+      text: 'Dengan membuka kunci, Anda dapat mengedit potongan atau melakukan hitung ulang (Recalculate) jika ada perubahan Master Data.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#f97316',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Ya, Buka Gembok (Unlock)',
+      cancelButtonText: 'Batal'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isLoading = true;
+        this.payrollApi.unlockPayroll(this.currentPayrollId!).subscribe({
+          next: (res: any) => {
+            this.isLoading = false;
+            this.isLocked = false;
+            Swal.fire('Terbuka!', res.message || 'Gaji berhasil di-Unlock. Sekarang Anda bisa melakukan Hitung Ulang (Recalculate) atau Generate ulang.', 'success');
+            // Refresh preview tanpa paksa calculate dulu agar aman
+            this.onPreview(false); 
+          },
+          error: (err: any) => {
+            this.isLoading = false;
+            Swal.fire('Error', 'Gagal membuka kunci.', 'error');
+          }
+        });
       }
     });
   }
@@ -153,14 +222,19 @@ export class GeneratePayrollComponent implements OnInit {
   onGenerate() {
     if (this.draftData.length === 0) return;
 
+    if (this.isLocked) {
+      Swal.fire('Terkunci', 'Gaji bulan ini sudah dikunci dan tidak bisa ditimpa. Silakan Unlock terlebih dahulu.', 'error');
+      return;
+    }
+
     Swal.fire({
-      title: 'Simpan Data Penggajian?',
-      text: "Data slip gaji akan disimpan dan dapat diakses di menu Daftar Slip Gaji.",
+      title: 'Simpan & Kunci Penggajian?',
+      text: "Data slip gaji ini akan disimpan dan OTOMATIS DIKUNCI. Karyawan akan melihat slip gajinya di aplikasi.",
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#1e293b', 
       cancelButtonColor: '#94a3b8', 
-      confirmButtonText: 'Ya, Simpan',
+      confirmButtonText: 'Ya, Simpan & Kunci',
       cancelButtonText: 'Batal'
     }).then((result) => {
       if (result.isConfirmed) {
@@ -212,7 +286,7 @@ export class GeneratePayrollComponent implements OnInit {
       lembur: this.overtimeApi.getList({
         month: this.selectedMonth,
         year: this.selectedYear,
-        search: empNik // 👈 SUDAH MENGGUNAKAN NIK KARENA BACKEND OVERTIME SUDAH KITA UPDATE
+        search: empNik 
       }).pipe(catchError(() => of(null)))
     }).subscribe({
       next: (res: any) => {

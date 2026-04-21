@@ -33,16 +33,18 @@ export class PayrollApiService {
   unlockPayroll(id: number) {
     return this.http.put(`${this.baseUrl}/${id}/unlock`, {});
   }
+  
 
   /**
    * 2. Preview Kalkulasi Draft Gaji (Menerima 2 parameter month & year)
    * Backend akan membalas dengan status_ptkp, pph21_deduction otomatis, dll.
    */
-  previewPayroll(month: number, year: number): Observable<any> {
-    return this.http.post(`${this.baseUrl}/preview`, { 
-      month: month, 
-      year: year 
-    });
+ previewPayroll(month: number, year: number, recalculate: boolean = false) {
+    let params = `?month=${month}&year=${year}`;
+    if (recalculate) {
+      params += `&recalculate=true`;
+    }
+    return this.http.get(`${this.baseUrl}/preview${params}`);
   }
 
   /**

@@ -15,7 +15,7 @@
         <option *ngFor="let y of years" [value]="y">{{ y }}</option>
       </select>
 
-      <button (click)="onPreview()" [disabled]="isLoading" class="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 shadow-sm">
+      <button (click)="onPreview(false)" [disabled]="isLoading" class="px-6 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-sm font-semibold rounded-xl transition-all flex items-center gap-2 disabled:opacity-50 shadow-sm">
         <svg *ngIf="isLoading" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         <svg *ngIf="!isLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         Tampilkan Data
@@ -32,19 +32,45 @@
     
     <div class="p-5 border-b border-gray-100 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white">
       
-      <div class="flex flex-col">
-        <h2 class="font-bold text-gray-900">{{ periodLabel }}</h2>
-        <div class="flex items-center gap-2 mt-1">
-          <span class="text-xs font-bold text-orange-500 flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span> Mode Kalkulasi Aktif</span>
+      <div class="flex flex-col w-full lg:w-auto">
+        <div class="flex items-center gap-3">
+          <h2 class="font-bold text-gray-900">{{ periodLabel }}</h2>
+          <span *ngIf="isLocked" class="px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 text-[10px] font-extrabold rounded uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Terkunci
+          </span>
+          <span *ngIf="!isLocked" class="px-2.5 py-1 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-extrabold rounded uppercase tracking-wider flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Draft Terbuka
+          </span>
         </div>
+        
+        <p *ngIf="isLocked" class="text-xs text-red-400 mt-1 font-medium">Gaji sudah di-generate. Buka gembok untuk mengubah potongan atau hitung ulang.</p>
+        <p *ngIf="!isLocked && dataSource === 'database'" class="text-xs text-orange-500 mt-1 font-medium">Menampilkan draf tersimpan. Klik <b>"Tarik Data Ulang"</b> jika ada perubahan Master Gaji.</p>
+        <p *ngIf="!isLocked && dataSource === 'live_calculation'" class="text-xs text-indigo-500 mt-1 font-medium">Kalkulasi langsung dari Master Karyawan. Jangan lupa <b>Simpan</b>.</p>
       </div>
 
-      <div class="flex items-center gap-3 w-full lg:w-auto">
-        <div class="relative w-full lg:w-64">
+      <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-end">
+        
+        <button *ngIf="!isLocked" (click)="onPreview(true)" title="Tarik ulang gaji pokok & lembur dari Master" class="px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+          <span class="hidden sm:inline">Tarik Data Ulang</span>
+          <span class="sm:hidden">Refresh</span>
+        </button>
+
+        <button *ngIf="isLocked" (click)="unlockPayroll()" class="px-4 py-2.5 bg-orange-50 hover:bg-orange-100 text-orange-600 border border-orange-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+          <span class="hidden sm:inline">Buka Gembok (Unlock)</span>
+          <span class="sm:hidden">Unlock</span>
+        </button>
+
+        <div class="h-8 w-px bg-gray-200 hidden sm:block"></div>
+
+        <div class="relative w-full sm:w-56">
           <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input type="text" [(ngModel)]="searchQuery" placeholder="Cari nama / NIK..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all placeholder-gray-400">
+          <input type="text" [(ngModel)]="searchQuery" placeholder="Cari NIK/Nama..." class="w-full pl-10 pr-4 py-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all placeholder-gray-400">
         </div>
-        <select [(ngModel)]="selectedDepartment" class="py-2.5 pl-4 pr-8 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all cursor-pointer">
+        <select [(ngModel)]="selectedDepartment" class="w-full sm:w-auto py-2.5 pl-4 pr-8 bg-gray-50/50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 transition-all cursor-pointer">
           <option value="">Semua Departemen</option>
           <option *ngFor="let dept of departments" [value]="dept">{{ dept }}</option>
         </select>
@@ -64,7 +90,7 @@
         </thead>
         <tbody class="divide-y divide-gray-50">
           
-          <tr *ngFor="let item of filteredData; trackBy: trackByFn" class="hover:bg-[#FCFCFC] transition-colors duration-300 group">
+          <tr *ngFor="let item of filteredData; trackBy: trackByFn" class="hover:bg-[#FCFCFC] transition-colors duration-300 group" [ngClass]="{'opacity-80': isLocked}">
             
             <td class="px-6 py-5 align-top">
               <div class="font-bold text-gray-900 text-sm">{{ item.name }}</div>
@@ -109,7 +135,8 @@
                            [ngModel]="formatInputRupiah(item.pph21_deduction)" 
                            (ngModelChange)="onInputCurrency($event, item, 'pph21_deduction')" 
                            placeholder="0"
-                           class="w-full pl-9 pr-3 py-1.5 bg-gray-50/50 border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all">
+                           [disabled]="isLocked"
+                           class="w-full pl-9 pr-3 py-1.5 bg-gray-50/50 border border-gray-200 rounded-lg text-sm text-gray-800 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                   </div>
                 </div>
 
@@ -121,7 +148,8 @@
                            [ngModel]="formatInputRupiah(item.bpjs_kesehatan)" 
                            (ngModelChange)="onInputCurrency($event, item, 'bpjs_kesehatan')" 
                            placeholder="0"
-                           class="w-full pl-9 pr-3 py-1.5 bg-gray-50/50 border border-gray-200 rounded-lg text-sm text-gray-800 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all">
+                           [disabled]="isLocked"
+                           class="w-full pl-9 pr-3 py-1.5 bg-gray-50/50 border border-gray-200 rounded-lg text-sm text-gray-800 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                   </div>
                 </div>
 
@@ -133,7 +161,8 @@
                            [ngModel]="formatInputRupiah(item.bpjs_ketenagakerjaan)" 
                            (ngModelChange)="onInputCurrency($event, item, 'bpjs_ketenagakerjaan')" 
                            placeholder="0"
-                           class="w-full pl-9 pr-3 py-1.5 bg-gray-50/50 border border-gray-200 rounded-lg text-sm text-gray-800 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all">
+                           [disabled]="isLocked"
+                           class="w-full pl-9 pr-3 py-1.5 bg-gray-50/50 border border-gray-200 rounded-lg text-sm text-gray-800 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                   </div>
                 </div>
 
@@ -145,7 +174,8 @@
                            [ngModel]="formatInputRupiah(item.absence_deduction)" 
                            (ngModelChange)="onInputCurrency($event, item, 'absence_deduction')" 
                            placeholder="0"
-                           class="w-full pl-9 pr-3 py-1.5 bg-rose-50/30 border border-rose-200 rounded-lg text-sm text-rose-700 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all">
+                           [disabled]="isLocked"
+                           class="w-full pl-9 pr-3 py-1.5 bg-rose-50/30 border border-rose-200 rounded-lg text-sm text-rose-700 font-semibold focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-200 focus:border-rose-300 transition-all disabled:opacity-60 disabled:cursor-not-allowed">
                   </div>
                 </div>
 
@@ -156,7 +186,7 @@
               <div class="text-red-500 text-[11px] mb-2 font-bold tracking-wide">
                 Potongan: -{{ formatRupiah(item.total_deduction) }}
               </div>
-              <div class="text-xl font-extrabold text-gray-900 tracking-tight mt-1">
+              <div class="text-xl font-extrabold text-gray-900 tracking-tight mt-1" [ngClass]="{'text-gray-400': isLocked}">
                 {{ formatRupiah(item.net_salary) }}
               </div>
             </td>
@@ -172,11 +202,18 @@
       </table>
     </div>
 
-    <div *ngIf="draftData.length > 0" class="p-6 border-t border-gray-100 bg-[#FAFAFA] flex justify-end">
+    <div *ngIf="draftData.length > 0 && !isLocked" class="p-6 border-t border-gray-100 bg-[#FAFAFA] flex justify-end">
       <button (click)="onGenerate()" [disabled]="isGenerating" class="px-8 py-3 bg-gray-900 hover:bg-gray-800 text-white font-semibold rounded-xl transition-all shadow-sm flex items-center gap-2 disabled:opacity-50">
         <svg *ngIf="isGenerating" class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
         <svg *ngIf="!isGenerating" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        {{ isGenerating ? 'Menyimpan...' : 'Simpan Data Penggajian' }}
+        {{ isGenerating ? 'Menyimpan...' : 'Simpan & Kunci Penggajian' }}
+      </button>
+    </div>
+
+    <div *ngIf="draftData.length > 0 && isLocked" class="p-6 border-t border-red-100 bg-red-50 flex justify-between items-center">
+      <div class="text-sm font-bold text-red-600">Gaji bulan ini telah disimpan dan dikunci.</div>
+      <button (click)="unlockPayroll()" class="px-5 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-100 font-bold rounded-xl transition-all text-xs shadow-sm">
+        Buka Gembok
       </button>
     </div>
 
